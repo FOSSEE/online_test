@@ -28,7 +28,7 @@ SECRET_KEY = config('SECRET_KEY', default='dUmMy_s3cR3t_k3y')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # This is a required field
 DOMAIN_HOST = "http://127.0.0.1:8000"
@@ -45,6 +45,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'yaksh',
+    'yaksh.courses',
     'taggit',
     'social_django',
     'grades',
@@ -175,7 +176,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'APP_DIRS': True,
-        'DIRS': ['yaksh/templates'],
+        'DIRS': ['yaksh/templates', 'yaksh/courses/templates'],
         'OPTIONS': {
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
@@ -242,14 +243,16 @@ REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated'
     ],
-    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 1,
+    'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",
 }
 
 CORS_ORIGIN_ALLOW_ALL = True

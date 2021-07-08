@@ -1,0 +1,32 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'yaksh/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'yaksh/css/custom.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'yaksh/css/animate.min.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'yaksh/css/font-awesome.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'yaksh/css/argon.min.css' %}" />
+<script language="JavaScript" type="text/javascript" src="{% static 'yaksh/js/popper.min.js' %}"></script>
+<script language="JavaScript" type="text/javascript" src="{% static 'yaksh/js/jquery-3.3.1.min.js' %}">
+</script>
+<script type="text/javascript" src="{% static 'yaksh/js/js.cookie.js' %}">
+</script>
+<script language="JavaScript" type="text/javascript" src="{% static 'yaksh/js/bootstrap.min.js' %}">
+</script>
+<script type="text/javascript" src="{% static 'yaksh/js/argon.min.js' %}">
+</script>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary" id="nav-yaksh">
+    <a class="navbar-brand" href="{% url 'yaksh:index' %}">
+        <img src="{% static 'yaksh/images/yaksh_banner.png' %}" alt="YAKSH">
+    </a>
+</nav>
+<title>Courses</title>
+<div class="base-content">
+    <input type="hidden" id="register_url" value="{% url 'yaksh:register' %}">
+    <input type="hidden" id="google_auth" value="{% url 'social:begin' 'google-oauth2' %}">
+    <input type="hidden" id="facebook_auth" value="{% url 'social:begin' 'facebook' %}">
+    <input type="hidden" id="forgot_password" value="{% url 'password_reset' %}">
+    <div id="app"></div>
+</div>
+<link rel="stylesheet" type="text/css" href="{% static 'src/vue/dist/css/chunk-vendors.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'src/vue/dist/css/app.css' %}">
+<script type="text/javascript" src="{% static 'src/vue/dist/js/chunk-vendors.js' %}"></script>
+<script type="text/javascript" src="{% static 'src/vue/dist/js/app.js' %}"></script>
