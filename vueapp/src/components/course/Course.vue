@@ -120,6 +120,8 @@
             <th>Name:</th>
             <td>
             <input type="text" class="form-control" name="name" v-model="edit_course.name" required="">
+            <br>
+            <strong class="text-danger" v-show="error.name">{{error.name}}</strong>
             </td>
           </tr>
           <tr>
@@ -127,26 +129,34 @@
             <td>
             <select required v-model="edit_course.enrollment" name="enrollment" class="custom-select">
               <option value="default">Request</option>
-              <option value="open">Open</option>
+              <option value="open1">Open</option>
             </select>
+            <br>
+            <strong class="text-danger" v-show="error.enrollment">{{error.enrollment}}</strong>
             </td>
           </tr>
           <tr>
             <th>Active:</th>
             <td>
               <input type="checkbox" v-model="edit_course.active" v-bind:id="edit_course.id" name="active">
+              <br>
+              <strong class="text-danger" v-show="error.active">{{error.active}}</strong>
             </td>
           </tr>
           <tr>
             <th>Code:</th>
             <td>
               <input type="text" class="form-control" name="code" v-model="edit_course.code">
+              <br>
+              <strong class="text-danger" v-show="error.code">{{error.code}}</strong>
             </td>
           </tr>
           <tr>
             <th>Instructions:</th>
             <td>
               <editor api-key="no-api-key" v-model="edit_course.instructions" />
+              <br>
+              <strong class="text-danger" v-show="error.instructions">{{error.instructions}}</strong>
             </td>
           </tr>
           <tr>
@@ -155,6 +165,9 @@
               <v-date-picker v-model="edit_course.start_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD h:mm:ss'">
                  <template #default="{ inputValue, inputEvents }">
                   <input class="px-3 py-1 border rounded" :value="inputValue" v-on="inputEvents" />
+                  <br>
+                  <strong class="text-danger" v-show="error.start_enroll_time">{{error.start_enroll_time}}
+                  </strong>
                 </template>
               </v-date-picker>
             </td>
@@ -165,6 +178,8 @@
               <v-date-picker v-model="edit_course.end_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD h:mm:ss'">
                 <template #default="{ inputValue, inputEvents }">
                   <input class="px-3 py-1 border rounded" :value="inputValue" v-on="inputEvents" />
+                  <br>
+                  <strong class="text-danger" v-show="error.end_enroll_time">{{error.end_enroll_time}}</strong>
                 </template>
               </v-date-picker>
             </td>
@@ -204,6 +219,7 @@
         index: '',
         searchName: '',
         searchStatus: '',
+        error: {}
       }
     },
     computed: {
@@ -281,7 +297,12 @@
           })
           .catch(e => {
             this.$store.commit('toggleLoader', false);
-            this.$toast.error(e.message, {'position': 'top'});
+            var data = e.response.data;
+            if (data) {
+              this.showError(e.response.data)
+            } else {
+              this.$toast.error(e.message, {'position': 'top'});
+            }
           });
       },
       getCourse(course) {
@@ -303,6 +324,13 @@
           this.$store.commit('toggleLoader', false);
           this.$toast.error(e.message, {'position': 'top'});
         });
+      },
+      showError(err) {
+        if ("detail" in err) {
+          this.$toast.error(err.detail, {'position': 'top'});
+        } else {
+          this.error = err
+        }
       }
     },
   }

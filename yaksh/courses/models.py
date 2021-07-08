@@ -78,6 +78,13 @@ class Course(models.Model):
     def creator_name(self):
         return self.owner.get_full_name()
 
+    def is_valid_user(self, user_id):
+        is_creator = self.owner_id == user_id
+        is_teacher = CourseTeacher.objects.filter(
+            course_id=self.id, teacher_id=user_id
+        ).exists()
+        return is_creator or is_teacher
+
     def __str__(self):
         return self.name
 

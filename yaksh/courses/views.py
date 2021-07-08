@@ -7,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import (
     api_view, authentication_classes, permission_classes
 )
+from rest_framework.exceptions import APIException
 
 # Django Imports
 from django.shortcuts import get_object_or_404
@@ -39,8 +40,11 @@ def index2(request):
 
 class CourseDetail(APIView):
     def get_object(self, pk, user_id):
-        course = get_object_or_404(Course, pk=pk, owner_id=user_id)
-        return course
+        course = get_object_or_404(Course, pk=pk)
+        if not course.is_valid_user(user_id):
+            raise APIException(f"You are not allowed to view {course.name}")
+        else:
+            return course
 
     def get(self, request, pk, format=None):
         course = self.get_object(pk, request.user.id)
@@ -60,7 +64,6 @@ class CourseDetail(APIView):
 
     def put(self, request, pk, format=None):
         course = self.get_object(pk, request.user.id)
-        print(request.data)
         serializer = CourseSerializer(
             course, data=request.data, context={"user_id": request.user.id}
         )
