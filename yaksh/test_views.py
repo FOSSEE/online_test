@@ -2234,11 +2234,7 @@ class TestCourses(TestCase):
         self.assertTrue(expected_lesson_files.exists())
         self.assertEquals(expected_lesson_files[0].file.read(), file_content)
 
-        for lesson_file in self.all_files:
-            file_path = lesson_file.file.path
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                shutil.rmtree(os.path.dirname(file_path))
+        self.all_files.delete()
 
     def test_download_course_offline(self):
         """ Test to download course with lessons offline"""
@@ -3890,7 +3886,7 @@ class TestCourseStudents(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id
         })
         response = self.client.get(url)
@@ -3902,7 +3898,7 @@ class TestCourseStudents(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id
         })
         response = self.client.get(url)
@@ -3914,7 +3910,7 @@ class TestCourseStudents(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id
         })
         response = self.client.get(url)
@@ -3926,7 +3922,7 @@ class TestCourseStudents(TestCase):
             username=self.user1.username,
             password=self.user1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id
         })
         response = self.client.get(url)
@@ -3940,7 +3936,7 @@ class TestCourseStudents(TestCase):
             username=self.user2.username,
             password=self.user2_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id,
         })
         response = self.client.get(url)
@@ -3951,7 +3947,7 @@ class TestCourseStudents(TestCase):
             username=self.student1,
             password=self.student1_plaintext_pass
         )
-        url = reverse('yaksh:course_students', kwargs={
+        url = reverse('yaksh:course_detail', kwargs={
             'course_id': self.user1_course.id,
         })
         response = self.client.get(url)
@@ -4352,7 +4348,7 @@ class TestSelfEnroll(TestCase):
 
 
 
-class TestGrader(SimpleTestCase):
+class TestGrader(TestCase):
     allow_database_queries = True
 
     def setUp(self):

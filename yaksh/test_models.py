@@ -2611,14 +2611,14 @@ class QRcodeTestCase(unittest.TestCase):
     def test_generate_image(self):
         # Given
         qrcode = self.qrcode
-        image_name = 'qrcode/{0}.png'.format(qrcode.short_key)
+        image_name = qrcode.short_key
 
         # When
         qrcode.generate_image('test')
 
         # Then
         self.assertTrue(qrcode.is_active())
-        self.assertEqual(qrcode.image.name, image_name)
+        self.assertIn(image_name, qrcode.image.name)
 
     def test_get_qrcode(self):
         # Given
