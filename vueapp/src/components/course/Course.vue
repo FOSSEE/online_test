@@ -1,6 +1,5 @@
 <template>
-  <h1>{{message}}</h1>
-  <div class="col-md-8">
+  <div class="col-md-10">
     <button class="btn btn-outline-primary" type="button" @click="showCourse(null, false)">
       <i class="fa fa-plus-circle"></i>&nbsp;Add course
     </button>
@@ -24,7 +23,7 @@
                       <input type="text" name="search_tags" placeholder="Search by course name" class="form-control" v-model="searchName">
                       <br>
                       <select name="search_status" class="custom-select" v-model="searchStatus">
-                        <option value="select">Select Status
+                        <option value="---">Select Status
                         </option>
                         <option value="active">Active</option>
                         <option value="closed">Inactive</option>
@@ -34,6 +33,9 @@
                   <button class="btn btn-outline-success" type="submit">
                       <i class="fa fa-search"></i>&nbsp;Search
                   </button>
+                  <a href="" class="btn btn-outline-warning">
+                    <i class="fa fa-times"></i>&nbsp;Clear
+                  </a>
               </div>
           </div>
         </form>
@@ -43,7 +45,9 @@
           <div class="card-header bg-secondary">
             <div class="row">
               <div class="col-md-4">
-                {{course.name}}
+                <router-link :to="{name: 'course_detail', params: {course_id: course.id}}" @click="storeCourse(course.id)">
+                  <i class="fa fa-tasks"></i>&nbsp;{{course.name}}
+                </router-link>
               </div>
               <div class="col-md-4">
                 <span v-if="course.is_allotted" class="badge badge-pill badge-warning">Allotted Course</span>
@@ -101,100 +105,104 @@
           </div>
         </div>
         <br>
-        <button class="btn btn-primary" @click="loadCourses">
-        Load More</button>
+        <button class="btn btn-primary" @click="loadCourses" v-show="has_courses">
+        Load More
+        </button>
+        <div class="alert alert-info" v-show="!has_courses">
+          No courses found
+        </div>
         <br><br>
       </div>
     </div>
   </div>
   <div class="modal" tabindex="-1" role="dialog" id="courseModal">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add/Edit Course</h5>
-      </div>
-      <form @submit.prevent="submitCourse">
-      <div class="modal-body">
-        <table class="table table-responsive-sm">
-          <tr>
-            <th>Name:</th>
-            <td>
-            <input type="text" class="form-control" name="name" v-model="edit_course.name" required="">
-            <br>
-            <strong class="text-danger" v-show="error.name">{{error.name}}</strong>
-            </td>
-          </tr>
-          <tr>
-            <th>Enrollment:</th>
-            <td>
-            <select required v-model="edit_course.enrollment" name="enrollment" class="custom-select">
-              <option value="default">Request</option>
-              <option value="open1">Open</option>
-            </select>
-            <br>
-            <strong class="text-danger" v-show="error.enrollment">{{error.enrollment}}</strong>
-            </td>
-          </tr>
-          <tr>
-            <th>Active:</th>
-            <td>
-              <input type="checkbox" v-model="edit_course.active" v-bind:id="edit_course.id" name="active">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add/Edit Course</h5>
+        </div>
+        <form @submit.prevent="submitCourse">
+        <div class="modal-body">
+          <table class="table table-responsive-sm">
+            <tr>
+              <th>Name:</th>
+              <td>
+              <input type="text" class="form-control" name="name" v-model="edit_course.name" required="">
               <br>
-              <strong class="text-danger" v-show="error.active">{{error.active}}</strong>
-            </td>
-          </tr>
-          <tr>
-            <th>Code:</th>
-            <td>
-              <input type="text" class="form-control" name="code" v-model="edit_course.code">
+              <strong class="text-danger" v-show="error.name">{{error.name}}</strong>
+              </td>
+            </tr>
+            <tr>
+              <th>Enrollment:</th>
+              <td>
+              <select required v-model="edit_course.enrollment" name="enrollment" class="custom-select">
+                <option value="default">Request</option>
+                <option value="open">Open</option>
+              </select>
               <br>
-              <strong class="text-danger" v-show="error.code">{{error.code}}</strong>
-            </td>
-          </tr>
-          <tr>
-            <th>Instructions:</th>
-            <td>
-              <editor api-key="no-api-key" v-model="edit_course.instructions" />
-              <br>
-              <strong class="text-danger" v-show="error.instructions">{{error.instructions}}</strong>
-            </td>
-          </tr>
-          <tr>
-            <th>Enrollment Start Time:</th>
-            <td>
-              <v-date-picker v-model="edit_course.start_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD h:mm:ss'">
-                 <template #default="{ inputValue, inputEvents }">
-                  <input class="px-3 py-1 border rounded" :value="inputValue" v-on="inputEvents" />
-                  <br>
-                  <strong class="text-danger" v-show="error.start_enroll_time">{{error.start_enroll_time}}
-                  </strong>
-                </template>
-              </v-date-picker>
-            </td>
-          </tr>
-          <tr>
-            <th>Enrollment End Time:</th>
-            <td>
-              <v-date-picker v-model="edit_course.end_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD h:mm:ss'">
-                <template #default="{ inputValue, inputEvents }">
-                  <input class="px-3 py-1 border rounded" :value="inputValue" v-on="inputEvents" />
-                  <br>
-                  <strong class="text-danger" v-show="error.end_enroll_time">{{error.end_enroll_time}}</strong>
-                </template>
-              </v-date-picker>
-            </td>
-          </tr>
-        </table>
+              <strong class="text-danger" v-show="error.enrollment">{{error.enrollment}}</strong>
+              </td>
+            </tr>
+            <tr>
+              <th>Active:</th>
+              <td>
+                <input type="checkbox" v-model="edit_course.active" v-bind:id="edit_course.id" name="active">
+                <br>
+                <strong class="text-danger" v-show="error.active">{{error.active}}</strong>
+              </td>
+            </tr>
+            <tr>
+              <th>Code:</th>
+              <td>
+                <input type="text" class="form-control" name="code" v-model="edit_course.code">
+                <br>
+                <strong class="text-danger" v-show="error.code">{{error.code}}</strong>
+              </td>
+            </tr>
+            <tr>
+              <th>Instructions:</th>
+              <td>
+                <editor api-key="no-api-key" v-model="edit_course.instructions" />
+                <br>
+                <strong class="text-danger" v-show="error.instructions">{{error.instructions}}</strong>
+              </td>
+            </tr>
+            <tr>
+              <th>Enrollment Start Time:</th>
+              <td>
+                <v-date-picker v-model="edit_course.start_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD h:mm:ss'">
+                   <template #default="{ inputValue, inputEvents }">
+                    <input class="px-3 py-1 border rounded" :value="inputValue" v-on="inputEvents" />
+                    <br>
+                    <strong class="text-danger" v-show="error.start_enroll_time">{{error.start_enroll_time}}
+                    </strong>
+                  </template>
+                </v-date-picker>
+              </td>
+            </tr>
+            <tr>
+              <th>Enrollment End Time:</th>
+              <td>
+                <v-date-picker v-model="edit_course.end_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD h:mm:ss'">
+                  <template #default="{ inputValue, inputEvents }">
+                    <input class="px-3 py-1 border rounded" :value="inputValue" v-on="inputEvents" />
+                    <br>
+                    <strong class="text-danger" v-show="error.end_enroll_time">{{error.end_enroll_time}}</strong>
+                  </template>
+                </v-date-picker>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save
+          </button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" @click="closeModal">Close</button>
+        </div>
+        </form>
       </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Save
-        </button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal" @click="closeModal">Close</button>
-      </div>
-      </form>
     </div>
   </div>
-</div>
 </template>
 <script>
   import $ from 'jquery';
@@ -219,13 +227,16 @@
         index: '',
         searchName: '',
         searchStatus: '',
-        error: {}
+        error: {},
       }
     },
     computed: {
       ...mapState({
           user: (state) => state.user_id,
       }),
+      has_courses() {
+        return this.courses.length > 0
+      },
     },
     mounted() {
       try {
@@ -235,11 +246,6 @@
       this.getAllCourses();
     },
     methods: {
-      appendData(data) {
-        data.forEach((value) => {
-          this.courses.push(value);
-        });
-      },
       searchCourses() {
         this.$store.commit('toggleLoader', true);
         CourseService.findByName(this.searchName, this.searchStatus).then(response => {
@@ -257,7 +263,7 @@
         if (this.next_page != null) {
           var page = this.next_page.split("?")[1];
           this.$store.commit('toggleLoader', true);
-          CourseService.more(page, this.searchName, this.searchStatus).then(response => {
+          CourseService.more(page).then(response => {
             this.$store.commit('toggleLoader', false);
             var data = response.data;
             this.appendData(data.results);
@@ -272,18 +278,6 @@
           this.$toast.info("No more courses", {'position': 'top'});
         }
       },
-      showCourse(course, is_edit) {
-        if(is_edit) {
-          this.edit_course = this.getCourse(course)[0]
-          this.index = this.courses.findIndex(x => x.id===course);
-        } else {
-          this.edit_course = {'owner': this.user}
-        }
-        $("#courseModal").show();
-      },
-      closeModal() {
-        $("#courseModal").hide();
-      },
       submitCourse() {
         this.$store.commit('toggleLoader', true);
         CourseService.create_or_update(this.edit_course.id, this.edit_course).then(response => {
@@ -292,6 +286,7 @@
             if (this.edit_course.id) {
               this.courses[this.index] = data
             }
+            this.error = {}
             $("#courseModal").hide();
             this.$toast.success("Course saved successfully ", {'position': 'top'});
           })
@@ -304,12 +299,6 @@
               this.$toast.error(e.message, {'position': 'top'});
             }
           });
-      },
-      getCourse(course) {
-        var courses = JSON.parse(JSON.stringify(this.courses))
-        return courses.filter((item) => {
-          return (item.id === course)
-        });
       },
       getAllCourses() {
         this.$store.commit('toggleLoader', true);
@@ -325,17 +314,43 @@
           this.$toast.error(e.message, {'position': 'top'});
         });
       },
+      getCourse(course_id) {
+        var courses = JSON.parse(JSON.stringify(this.courses))
+        return courses.filter((item) => {
+          return (item.id === course_id)
+        });
+      },
       showError(err) {
         if ("detail" in err) {
           this.$toast.error(err.detail, {'position': 'top'});
         } else {
           this.error = err
         }
+      },
+      showCourse(course_id, is_edit) {
+        if(is_edit) {
+          this.edit_course = this.getCourse(course_id)[0]
+          this.index = this.courses.findIndex(x => x.id===course_id);
+        } else {
+          this.edit_course = {'owner': this.user}
+        }
+        $("#courseModal").show();
+      },
+      closeModal() {
+        $("#courseModal").hide();
+      },
+      appendData(data) {
+        data.forEach((value) => {
+          this.courses.push(value);
+        });
+      },
+      storeCourse(course_id) {
+        localStorage.setItem('course_'+course_id, this.getCourse(course_id)[0].name);
       }
-    },
+    }
   }
 </script>
-<style>
+<style scoped>
   .modal-dialog {
       overflow-y: initial !important
   }

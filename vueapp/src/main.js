@@ -4,6 +4,7 @@ import store from './store/store'
 import Toaster from '@meforma/vue-toaster'
 import VCalendar from 'v-calendar';
 import Error from './components/Error.vue'
+import router from './router'
 
 const page_mapper = {
 	"course": App,
@@ -17,6 +18,7 @@ try {
 } catch (e) {
 	app = createApp(Error)
 }
+app.use(router)
 app.use(VCalendar)
 app.use(Toaster)
 app.use(store)

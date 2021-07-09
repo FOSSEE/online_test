@@ -1,9 +1,9 @@
 <template>
-  <center>
+  <div class="container">
     <div class="alert alert-danger">
       Error in getting data. Please check the App
     </div>
-  </center>
+  </div>
 </template>
 <script>
   export default {

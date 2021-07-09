@@ -28,6 +28,10 @@ class CourseService {
     more(page) {
         return http.get(`/courses?${page}`);
     }
+
+    modules(id) {
+        return http.get(`/modules/${id}`);
+    }
 }
 
 export default new CourseService();
