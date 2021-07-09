@@ -70,9 +70,8 @@ class Course(models.Model):
                                 related_name="course_grade",
                                 on_delete=models.CASCADE)
 
-
     def get_modules(self):
-        return self.modules.all()
+        return self.modules.order_by("order")
 
     @property
     def creator_name(self):

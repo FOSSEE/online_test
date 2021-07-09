@@ -39,7 +39,21 @@ class CourseSerializer(serializers.ModelSerializer):
         return instance
 
 
+class GenericField(serializers.RelatedField):
+
+    def to_representation(self, value):
+        obj = value.content_object
+        if isinstance(obj, Lesson):
+            serializer_data = LessonSerializer(obj).data
+            serializer_data["order"] = value.order
+        else:
+            serializer_data = {}
+        return serializer_data
+
+
 class ModuleSerializer(serializers.ModelSerializer):
+    units = GenericField(read_only=True, many=True)
+
     class Meta:
         model = Module
         fields = "__all__"

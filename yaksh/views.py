@@ -65,6 +65,14 @@ from notifications_plugin.models import Notification
 import hashlib
 
 
+def course(request, course_id=None):
+    return render(request, 'courses.html')
+
+
+def index2(request):
+    return render(request, 'course_detail.html')
+
+
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing. See settings.py
     for details."""

@@ -275,5 +275,7 @@ urlpatterns = [
     path('manage/upload_marks/<int:course_id>/<int:questionpaper_id>/',
          views.upload_marks, name='upload_marks'),
     path(r'manage/upload_download_course_md/<int:course_id>',
-        views.upload_download_course_md, name="upload_download_course_md"),
+        views.upload_download_course_md, name="upload_download_course_md"),    
+    path('manage/courses', views.course),
+    path('manage/course/detail/<int:course_id>', views.course),
 ]

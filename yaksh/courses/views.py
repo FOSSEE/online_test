@@ -30,14 +30,6 @@ class BasePagination(PageNumberPagination):
     max_page_size = 1000
 
 
-def index(request):
-    return render(request, 'courses.html')
-
-
-def index2(request):
-    return render(request, 'course_detail.html')
-
-
 class CourseDetail(APIView):
     def get_object(self, pk, user_id):
         course = get_object_or_404(Course, pk=pk)
