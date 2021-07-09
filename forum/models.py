@@ -57,7 +57,7 @@ class Post(ForumBase):
 
 class Comment(ForumBase):
     post_field = models.ForeignKey(Post, on_delete=models.CASCADE,
-                                   related_name='comment')
+                                   related_name='comments')
 
     def __str__(self):
         return 'Comment by {0}: {1}'.format(self.creator.username,

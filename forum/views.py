@@ -94,7 +94,7 @@ def post_comments(request, course_id, uuid):
     if is_moderator(user):
         base_template = 'manage.html'
     post = get_object_or_404(Post, uid=uuid)
-    comments = post.comment.filter(active=True)
+    comments = post.comments.filter(active=True)
     course = get_object_or_404(Course, id=course_id)
     if (not course.is_creator(user) and not course.is_teacher(user)
             and not course.is_student(user)):
