@@ -14,10 +14,12 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.contrib.auth import authenticate
 from django.db.models import Q
+from django.contrib.contenttypes.models import ContentType
+
 
 # Local Imports
 from yaksh.courses.models import (
-    Course, Module, Lesson, Enrollment, CourseTeacher
+    Course, Module, Lesson, Enrollment, CourseTeacher, Unit
 )
 from yaksh.courses.serializers import (
     CourseSerializer, ModuleSerializer, LessonSerializer
@@ -152,34 +154,46 @@ class ModuleListDetail(APIView):
 
 
 class LessonDetail(APIView):
-    def get_object(self, pk, user_id):
-        lesson = get_object_or_404(Lesson, pk=pk, owner_id=user_id)
+    def get_object(self, pk):
+        lesson = get_object_or_404(Lesson, pk=pk)
         return lesson
 
     def get(self, request, pk, format=None):
-        lesson = self.get_object(pk, request.user.id)
+        lesson = self.get_object(pk)
         serializer = LessonSerializer(
             lesson, context={"request": request}
         )
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        serializer = LessonSerializer(
-            data=request.data, context={"request": request}
-        )
+        data = request.data
+        serializer = LessonSerializer(data=data, context={"request": request})
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            instance = serializer.save()
+            ct = ContentType.objects.get_for_model(instance)
+            Unit.objects.create(
+                module_id=data.get("module_id"),
+                order=data.get("order"), content_type=ct,
+                object_id=instance.id
+            )
+            serialized_data = serializer.data
+            serialized_data['order'] = data['order']
+            serialized_data['type'] = "Lesson"
+            return Response(serialized_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk, format=None):
-        lesson = self.get_object(pk, request.user.id)
+        data = request.data
+        lesson = self.get_object(pk)
         serializer = LessonSerializer(
-            lesson, data=request.data, context={"request": request}
+            lesson, data=data, context={"request": request}
         )
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            serialized_data = serializer.data
+            serialized_data['order'] = data['order']
+            serialized_data['type'] = "Lesson"
+            return Response(serialized_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):

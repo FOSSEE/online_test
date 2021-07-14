@@ -31,11 +31,34 @@
         </div>
         <div class="card-body">
           <div>
-            <table class="table table-responsive-sm"  v-for="(unit, idx) in module.units" :key="unit.id">
+            <button class="btn btn-primary btn-sm" type="button" @click="showUnit(module, 0, false)">
+              <i class="fa fa-plus-circle"></i>&nbsp;Add Lesson
+            </button>
+          </div>
+          <br>
+          <div>
+            <table class="table table-responsive-sm">
               <tr>
+                <th>Sr No.</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Order</th>
+                <th>Statistics</th>
+              </tr>
+              <tr v-for="(unit, idx) in module.units" :key="unit.id">
+                <td>{{idx+1}}</td>
                 <td>
                   <a href="#" @click="showUnit(module, idx, true)">{{unit.name}}
                   </a>
+                </td>
+                <td>
+                  {{unit.type}}
+                </td>
+                <td>
+                  <input type="number" v-model="unit.order" class="form-control form-control-sm">
+                </td>
+                <td>
+                  Statistics
                 </td>
               </tr>
             </table>
@@ -129,8 +152,9 @@
           } catch {
             this.last_lesson_order = 0
           }
-          this.edit_lesson = {'owner': this.user, 'order': this.last_lesson_order}
-        }
+          this.edit_lesson = {'owner': this.user, 'order': this.last_lesson_order, 'module_id': this.edit_module.id}
+          }
+          console.log(this.edit_lesson)
         this.$store.dispatch('setLesson', this.edit_lesson)
         this.$store.dispatch('toggleLesson', true)
         this.$store.dispatch('setCourseId', this.course_id)
@@ -146,8 +170,9 @@
         if (args.existing) {
           this.edit_module['units'][this.unit_index] = args.data
         } else {
-          this.edit_module.push(args.data)
+          this.edit_module.["units"].push(args.data)
         }
+        this.edit_module['has_units'] = true
       }
     }
   }

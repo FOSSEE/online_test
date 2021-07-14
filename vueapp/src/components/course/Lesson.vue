@@ -1,6 +1,6 @@
 <template>
   <div class="modal" tabindex="-1" role="dialog" id="lessonModal">
-    <div class="modal-dialog mw-100 w-75" role="document">
+    <div class="modal-dialog mw-100 w-78" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Add/Edit Lesson</h5>
@@ -105,7 +105,6 @@
     },
     mounted() {
       $("#lessonModal").show();
-      this.lesson["video_path"] = {"youtube": "3-wJZj8LeGA"}
       try{
       this.video_src = Object.keys(this.lesson["video_path"])[0];
       this.video_id = this.lesson["video_path"][this.video_src]
@@ -119,7 +118,7 @@
       },
       submitLesson() {
         this.$store.commit('toggleLoader', true);
-        this.lesson["video_path"] = {video_src: this.video_id}
+        this.lesson["video_path"] = {[this.video_src]: this.video_id}
         LessonService.create_or_update(this.lesson.id, this.lesson).then(response => {
             this.$store.commit('toggleLoader', false);
             this.$emit("updateLessons", {"data": response.data, "existing": this.existing})
@@ -127,7 +126,6 @@
           })
           .catch(e => {
             this.$store.commit('toggleLoader', false);
-            console.log(e)
             var data = e.response.data;
             if (data) {
               this.showError(e.response.data)
@@ -149,5 +147,6 @@
 <style scoped>
   .modal {
     width:  100%;
+    overflow-y: scroll;
   }
 </style>

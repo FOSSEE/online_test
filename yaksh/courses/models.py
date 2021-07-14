@@ -12,6 +12,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import (
     GenericForeignKey, GenericRelation
 )
+from django.db.models.fields.files import FieldFile
+
 
 # Local Imports
 from grades.models import GradingSystem
