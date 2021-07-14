@@ -18,7 +18,10 @@ from grades.models import GradingSystem
 
 
 def get_lesson_file_dir(instance, filename):
-    upload_dir = f"lesson_{instance.id}"
+    if isinstance(instance, Lesson):
+        upload_dir = f"lesson_{instance.id}"
+    else:
+        upload_dir = f"lesson_{instance.lesson.id}"
     return os.sep.join((upload_dir, filename))
 
 
@@ -131,6 +134,10 @@ class Module(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     modified_on = models.DateTimeField(auto_now=True)
 
+    @property
+    def has_units(self):
+        return self.units.exists()
+
     def __str__(self):
         return f"{self.name} created by {self.owner}"
 
@@ -160,6 +167,9 @@ class Lesson(models.Model):
     video_file = models.FileField(
         upload_to=get_lesson_file_dir, max_length=255, default=None,
         null=True, blank=True
+        )
+    video_path = models.JSONField(
+        default={}, null=True, blank=True,
         )
     created_on = models.DateTimeField(auto_now_add=True)
     modified_on = models.DateTimeField(auto_now=True)

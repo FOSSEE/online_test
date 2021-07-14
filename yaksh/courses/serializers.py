@@ -44,8 +44,10 @@ class GenericField(serializers.RelatedField):
     def to_representation(self, value):
         obj = value.content_object
         if isinstance(obj, Lesson):
-            serializer_data = LessonSerializer(obj).data
+            serializer_data = LessonSerializer(
+            obj, context=self.context).data
             serializer_data["order"] = value.order
+            serializer_data["type"] = "Lesson"
         else:
             serializer_data = {}
         return serializer_data
@@ -53,6 +55,7 @@ class GenericField(serializers.RelatedField):
 
 class ModuleSerializer(serializers.ModelSerializer):
     units = GenericField(read_only=True, many=True)
+    has_units = serializers.ReadOnlyField()
 
     class Meta:
         model = Module
@@ -89,5 +92,6 @@ class LessonSerializer(serializers.ModelSerializer):
         instance.owner_id = validated_data.get("owner")
         instance.active = validated_data.get("active")
         instance.video_file = validated_data.get("video_file")
+        instance.video_path = validated_data.get("video_path")
         instance.save()
         return instance

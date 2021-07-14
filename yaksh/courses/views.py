@@ -109,32 +109,32 @@ class CourseListDetail(APIView, BasePagination):
 
 
 class ModuleDetail(APIView):
-    def get_object(self, pk):
-        module = get_object_or_404(Module, pk=pk)
+    def get_object(self, course_id, pk):
+        module = get_object_or_404(Module, pk=pk, course_id=course_id)
         return module
 
-    def get(self, request, pk, format=None):
-        module = self.get_object(pk)
+    def get(self, request, course_id, pk, format=None):
+        module = self.get_object(course_id, pk)
         serializer = ModuleSerializer(module)
         return Response(serializer.data)
 
-    def post(self, request, format=None):
+    def post(self, request, course_id, format=None):
         serializer = ModuleSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, pk, format=None):
-        module = self.get_object(pk)
+    def put(self, request, course_id, pk, format=None):
+        module = self.get_object(course_id, pk)
         serializer = ModuleSerializer(module, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk, format=None):
-        module = self.get_object(pk)
+    def delete(self, request, course_id, pk, format=None):
+        module = self.get_object(course_id, pk)
         module.active = False
         module.save()
         serializer = ModuleSerializer(lesson)
@@ -145,7 +145,9 @@ class ModuleListDetail(APIView):
     def get(self, request, course_id, format=None):
         course = get_object_or_404(Course, pk=course_id)
         modules = course.get_modules()
-        serializer = ModuleSerializer(modules, many=True)
+        serializer = ModuleSerializer(
+            modules, many=True, context={"request": request}
+        )
         return Response(serializer.data)
 
 
