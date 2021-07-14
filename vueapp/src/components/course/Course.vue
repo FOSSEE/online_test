@@ -241,8 +241,8 @@
     mounted() {
       try {
         var user_id = document.getElementById("user_id").getAttribute("value");
+        this.$store.commit('setUserId', user_id);
       } catch {console.log("User error")}
-      this.$store.commit('setUserId', user_id);
       this.getAllCourses();
     },
     methods: {

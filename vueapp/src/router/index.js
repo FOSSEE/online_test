@@ -9,7 +9,7 @@ const routes = [
     component: CourseDetail,
   },
   {
-    path: '/exam/manage/courses',
+    path: '/exam/manage/mycourses',
     name: 'courses',
     component: Course,
   },

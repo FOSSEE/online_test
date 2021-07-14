@@ -5,20 +5,20 @@ class ModuleService {
         return http.get(`/modules/${course_id}`);
     }
 
-    get(id) {
-        return http.get(`/module/${id}`);
+    get(course_id, id) {
+        return http.get(`/module/${course_id}/${id}`);
     }
 
-    create_or_update(id, data) {
+    create_or_update(course_id, id, data) {
         if(id) {
-            return http.put(`/module/${id}`, data);
+            return http.put(`/module/${course_id}/${id}`, data);
         } else {
-            return http.post("/module", data);
+            return http.post(`/module/${course_id}`, data);
         }
     }
 
-    delete(id) {
-        return http.delete(`/course/${id}`);
+    delete(course_id, id) {
+        return http.delete(`/module/${course_id}/${id}`);
     }
 }
 

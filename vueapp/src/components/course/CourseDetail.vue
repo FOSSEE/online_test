@@ -1,4 +1,6 @@
 <template>
+  <Module v-if="isModule" v-on:updateModules="updateModules"></Module>
+  <Lesson v-if="isLesson" v-on:updateLessons="updateLessons"></Lesson>
   <div class="col-md-3">
     <router-link :to="{name: 'courses'}" class="btn btn-primary">
       <i class="fa fa-arrow-left"></i>&nbsp;Back
@@ -21,85 +23,74 @@
       <div class="alert alert-info course" v-show="!has_modules">
         No Modules found
       </div>
-      <div class="card" v-for="module in modules" :key="module.id">
+      <div class="card" v-for="(module, index) in modules" :key="module.id">
         <div class="card-header bg-secondary">
-          <a href="#">{{module.name}}</a>
+          {{index+1}}.
+          <a href="#" @click="showModule(index, true)"> {{module.name}}
+          </a>
         </div>
         <div class="card-body">
-          
+          <div>
+            <table class="table table-responsive-sm"  v-for="(unit, idx) in module.units" :key="unit.id">
+              <tr>
+                <td>
+                  <a href="#" @click="showUnit(module, idx, true)">{{unit.name}}
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="course" v-show="!module.has_units">
+            <span class="badge badge-warning">
+              No Lesson/quiz/exercies are added
+            </span>
+          </div>
         </div>
-      </div>
-      {{modules}}
-    </div>
-  </div>
-  <div class="modal" tabindex="-1" role="dialog" id="moduleModal">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add/Edit Course</h5>
-        </div>
-        <form @submit.prevent="submitModule">
-        <div class="modal-body">
-          <table class="table table-responsive-sm">
-            <tr>
-              <th>Name:</th>
-              <td>
-              <input type="text" class="form-control" name="name" v-model="edit_module.name" required="">
-              <br>
-              <strong class="text-danger" v-show="error.name">{{error.name}}</strong>
-              </td>
-            </tr>
-            <tr>
-              <th>Description:</th>
-              <td>
-                <textarea class="form-control" v-model="edit_module.description">
-                </textarea>
-              <br>
-              <strong class="text-danger" v-show="error.description">{{error.description}}</strong>
-              </td>
-            </tr>
-            <tr>
-              <th>Active:</th>
-              <td>
-                <input type="checkbox" v-model="edit_module.active" v-bind:id="edit_module.id" name="active">
-                <br>
-                <strong class="text-danger" v-show="error.active">{{error.active}}</strong>
-              </td>
-            </tr>
-          </table>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">Save
-          </button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal" @click="closeModal">Close</button>
-        </div>
-        </form>
       </div>
     </div>
   </div>
 </template>
 <script>
+  import { mapState } from 'vuex';
   import ModuleService from "../../services/ModuleService"
+  import Module from '../course/Module.vue'
+  import Lesson from '../course/Lesson.vue'
+
   export default {
     name: "CourseDetail",
+    components: {
+      Module, Lesson
+    },
     data() {
       return {
         course_name: '',
         modules: [],
         edit_module: {},
-        error: {}
+        edit_lesson: {},
+        error: {},
+        course_id: '',
+        last_module_order: ''
       }
     },
     computed: {
+      ...mapState({
+          user: (state) => state.user_id,
+          isModule: (state) => state.showModule,
+          isLesson: (state) => state.showLesson,
+      }),
       has_modules() {
         return this.modules.length > 0
       },
     },
     mounted() {
-      var course_id = this.$route.params.course_id
-      this.course_name = localStorage.getItem("course_"+course_id)
+      try {
+        var user_id = document.getElementById("user_id").getAttribute("value");
+        this.$store.dispatch('setUserId', user_id);
+      } catch {console.log("User error")}
+      this.course_id = this.$route.params.course_id
+      this.course_name = localStorage.getItem("course_"+this.course_id)
       this.$store.commit('toggleLoader', true);
-      ModuleService.getall(course_id).then(response => {
+      ModuleService.getall(this.course_id).then(response => {
           this.$store.commit('toggleLoader', false);
           var data = response.data;
           this.modules = data;
@@ -110,7 +101,54 @@
         });
     },
     methods: {
-
+      showModule(index, is_edit) {
+        if(is_edit) {
+          this.edit_module = this.modules[index]
+          this.module_index = index
+        } else {
+          try {
+            this.last_module_order = this.modules[this.modules.length-1].order+1
+          } catch {
+            this.last_module_order = 0
+          }
+          this.edit_module = {'owner': this.user, "course": this.course_id, 'order': this.last_module_order}
+        }
+        this.$store.dispatch('setModule', this.edit_module)
+        this.$store.dispatch('toggleModule', true)
+        this.$store.dispatch('setCourseId', this.course_id)
+      },
+      showUnit(c_module, unit_index, is_edit) {
+        this.edit_module = c_module
+        if(is_edit) {
+          this.edit_lesson = c_module['units'][unit_index]
+          this.unit_index = unit_index
+        } else {
+          try {
+            var units = c_module["units"]
+            this.last_lesson_order = units[units.length-1].order+1
+          } catch {
+            this.last_lesson_order = 0
+          }
+          this.edit_lesson = {'owner': this.user, 'order': this.last_lesson_order}
+        }
+        this.$store.dispatch('setLesson', this.edit_lesson)
+        this.$store.dispatch('toggleLesson', true)
+        this.$store.dispatch('setCourseId', this.course_id)
+      },
+      updateModules(args) {
+        if (args.existing) {
+          this.modules[this.module_index] = args.data
+        } else {
+          this.modules.push(args.data)
+        }
+      },
+      updateLessons(args) {
+        if (args.existing) {
+          this.edit_module['units'][this.unit_index] = args.data
+        } else {
+          this.edit_module.push(args.data)
+        }
+      }
     }
   }
 </script>
