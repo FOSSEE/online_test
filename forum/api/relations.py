@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from yaksh.models import Course, Lesson
@@ -14,4 +15,4 @@ class PostObjectRelatedField(serializers.RelatedField):
 
 class UserRelatedSerializer(serializers.RelatedField):
     def to_representation(self, value):
-        return value.username
+        return value.id
