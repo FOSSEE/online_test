@@ -25,7 +25,19 @@ class CoursePostList(generics.ListCreateAPIView):
         return posts
 
 
-class PostComments(generics.ListCreateAPIView):
+class CoursePostDetail(generics.RetrieveUpdateDestroyAPIView):
+
+    serializer_class = PostSerializer
+
+    def get_object(self):
+        try:
+            post = Post.objects.get(id=self.kwargs['post_id'])
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return post
+
+
+class CoursePostComments(generics.ListCreateAPIView):
 
     serializer_class = CommentSerializer
 
@@ -37,6 +49,17 @@ class PostComments(generics.ListCreateAPIView):
         comments = post.comments.filter(active=True)
         return comments
 
+
+class CoursePostCommentDetail(generics.RetrieveUpdateDestroyAPIView):
+
+    serializer_class = CommentSerializer
+
+    def get_object(self):
+        try:
+            comment = Comment.objects.get(id=self.kwargs['comment_id'])
+        except Comment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return comment
 
 class LessonPostList(generics.ListCreateAPIView):
 
@@ -57,3 +80,38 @@ class LessonPostList(generics.ListCreateAPIView):
             'lesson': 'lesson'
         })
         return context
+
+
+class LessonPostDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = PostSerializer
+
+    def get_object(self):
+        try:
+            post = Post.objects.get(id=self.kwargs['post_id'])
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return post
+
+
+class LessonPostComments(generics.ListCreateAPIView):
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        try:
+            post = Post.objects.get(id=self.kwargs['post_id'])
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        comments = post.comments.filter(active=True)
+        return comments
+
+
+class LessonPostCommentDetail(generics.RetrieveUpdateDestroyAPIView):
+
+    serializer_class = CommentSerializer
+
+    def get_object(self):
+        try:
+            comment = Comment.objects.get(id=self.kwargs['comment_id'])
+        except Comment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return comment
