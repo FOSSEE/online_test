@@ -2,54 +2,58 @@ from django.contrib.contenttypes.models import ContentType
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import status, generics, viewsets
 
 from forum.models import Post, Comment
 from yaksh.models import Course, Lesson
 from .serializers import PostSerializer, CommentSerializer
 
 
-@api_view(['GET', 'POST'])
-def course_post_list(request, course_id):
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+class CoursePostList(generics.ListCreateAPIView):
 
-    if request.method == 'GET':
+    serializer_class = PostSerializer
+
+    def get_queryset(self):
+        try:
+            course = Course.objects.get(id=self.kwargs['course_id'])
+        except Course.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         course_ct = ContentType.objects.get_for_model(course)
         posts = Post.objects.filter(target_ct=course_ct,
                                     target_id=course.id,
                                     active=True)
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
-
-    elif request.method == 'POST':
-        data = request.data
-        serializer = PostSerializer(data=data)
-        if serializer.is_valid():
-            course_id = serializer.validated_data.get("target_id")
-            course = Course.objects.get(id=course_id)
-            serializer.validated_data['target'] = course
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return posts
 
 
 class PostComments(generics.ListCreateAPIView):
-    queryset = Comment.objects.all()
+
     serializer_class = CommentSerializer
 
+    def get_queryset(self):
+        try:
+            post = Post.objects.get(id=self.kwargs['post_id'])
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        comments = post.comments.filter(active=True)
+        return comments
 
-@api_view(['GET'])
-def lesson_post_list(request, course_id):
-    try:
-        course = Course.objects.get(id=course_id)
-    except Course.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'GET':
+class LessonPostList(generics.ListCreateAPIView):
+
+    serializer_class = PostSerializer
+
+    def get_queryset(self):
+        try:
+            course = Course.objects.get(id=self.kwargs['course_id'])
+        except Course.DoesNotExists:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         course_ct = ContentType.objects.get_for_model(course)
         lesson_posts = course.get_lesson_posts()
-        serializer = PostSerializer(lesson_posts, many=True)
-        return Response(serializer.data)
+        return lesson_posts
+
+    def get_serializer_context(self):
+        context = super(LessonPostList, self).get_serializer_context()
+        context.update({
+            'lesson': 'lesson'
+        })
+        return context
