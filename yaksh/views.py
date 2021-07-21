@@ -2848,13 +2848,13 @@ def show_lesson(request, lesson_id, module_id, course_id):
             raise Http404(f'Post does not exist for lesson {title}')
     else:
         form = CommentForm()
-        comments = post.comment.filter(active=True)
+        comments = post.comments.filter(active=True)
     context = {'lesson': learn_unit.lesson, 'user': user,
                'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
                'learning_module': learn_module, 'toc': toc,
                'contents_by_time': contents_by_time, 'track_id': track.id,
-               'comments': comments, 'form': form, 'post': post}
+                'comments': comments, 'form': form, 'post': post}
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
