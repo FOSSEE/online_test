@@ -61,35 +61,27 @@ class CoursePostCommentDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return comment
 
-class LessonPostList(generics.ListCreateAPIView):
-
-    serializer_class = PostSerializer
-
-    def get_queryset(self):
-        try:
-            course = Course.objects.get(id=self.kwargs['course_id'])
-        except Course.DoesNotExists:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        course_ct = ContentType.objects.get_for_model(course)
-        lesson_posts = course.get_lesson_posts()
-        return lesson_posts
-
-    def get_serializer_context(self):
-        context = super(LessonPostList, self).get_serializer_context()
-        context.update({
-            'lesson': 'lesson'
-        })
-        return context
 
 
 class LessonPostDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PostSerializer
 
     def get_object(self):
+        lesson_id = self.kwargs['lesson_id']
+        lesson = Lesson.objects.get(id=lesson_id)
+        lesson_ct = ContentType.objects.get_for_model(lesson)
         try:
-            post = Post.objects.get(id=self.kwargs['post_id'])
+            post = Post.objects.get(
+                target_ct=lesson_ct, target_id=lesson_id,
+                active=True, title=lesson.name
+            )
         except Post.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            post = Post.objects.create(
+                target_ct=lesson_ct, target_id=lesson_id,
+                active=True, title=lesson.name, creator=self.request.user,
+                description=f'Discussion on {lesson.name} lesson',
+            )
+
         return post
 
 

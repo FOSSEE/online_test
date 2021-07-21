@@ -29,10 +29,7 @@ class PostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         target_id = validated_data.get('target_id')
         post = Post(**validated_data)
-        if 'lesson' in self.context:
-            object = Lesson.objects.get(id=target_id)
-        else:
-            object = Course.objects.get(id=target_id)
+        object = Course.objects.get(id=target_id)
         post.target = object
         post.save()
         return post

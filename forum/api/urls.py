@@ -1,7 +1,7 @@
 from django.urls import path, include
 
 from .views import CoursePostList, CoursePostDetail, CoursePostComments, \
-                   CoursePostCommentDetail, LessonPostList, LessonPostDetail, \
+                   CoursePostCommentDetail, LessonPostDetail, \
                    LessonPostComments, LessonPostCommentDetail
 
 app_name = 'forum_api'
@@ -23,10 +23,6 @@ urlpatterns = [
     ),
     path(
         'lesson_forum/<int:course_id>/<int:lesson_id>/',
-        LessonPostList.as_view()
-    ),
-    path(
-        'lesson_forum/<int:course_id>/<int:lesson_id>/<int:post_id>/',
         LessonPostDetail.as_view()
     ),
     path(
