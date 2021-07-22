@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from forum.models import Post, Comment
 from yaksh.models import Course, Lesson
-from .relations import PostObjectRelatedField, UserRelatedSerializer
+from .relations import PostObjectRelatedField
 
 
 class CommentSerializer(serializers.ModelSerializer):

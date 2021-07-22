@@ -2,16 +2,20 @@ from django.contrib.contenttypes.models import ContentType
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status, generics, viewsets
+from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated
 
 from forum.models import Post, Comment
 from yaksh.models import Course, Lesson
 from .serializers import PostSerializer, CommentSerializer
+from .permissions import IsAuthorOrReadOnly
 
 
 class CoursePostList(generics.ListCreateAPIView):
 
     serializer_class = PostSerializer
+    # permissions for only course registered students
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         try:
@@ -36,10 +40,24 @@ class CoursePostDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return post
 
+    def get_permissions(self):
+        # permissions for only course registered students
+        permission_classes = []
+        if self.request.method == 'GET':
+            permission_classes = [IsAuthenticated]
+        elif self.request.method == 'PUT' \
+            or self.request.method == 'DELETE' \
+                or self.request.method == 'PATCH':
+            permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+
+        return [permission() for permission in permission_classes]
+
 
 class CoursePostComments(generics.ListCreateAPIView):
 
     serializer_class = CommentSerializer
+    # permissions for only course registered students
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         try:
@@ -61,6 +79,17 @@ class CoursePostCommentDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return comment
 
+    def get_permissions(self):
+        # permissions for only course registered students
+        permission_classes = []
+        if self.request.method == 'GET':
+            permission_classes = [IsAuthenticated]
+        elif self.request.method == 'PUT' \
+            or self.request.method == 'DELETE' \
+                or self.request.method == 'PATCH':
+            permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+
+        return [permission() for permission in permission_classes]
 
 
 class LessonPostDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -84,9 +113,23 @@ class LessonPostDetail(generics.RetrieveUpdateDestroyAPIView):
 
         return post
 
+    def get_permissions(self):
+        # permissions for only course registered students
+        permission_classes = []
+        if self.request.method == 'GET':
+            permission_classes = [IsAuthenticated]
+        elif self.request.method == 'PUT' \
+            or self.request.method == 'DELETE' \
+                or self.request.method == 'PATCH':
+            permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+
+        return [permission() for permission in permission_classes]
+
 
 class LessonPostComments(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
+    # permissions for only course registered students
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         try:
@@ -107,3 +150,15 @@ class LessonPostCommentDetail(generics.RetrieveUpdateDestroyAPIView):
         except Comment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return comment
+
+    def get_permissions(self):
+        # permissions for only course registered students
+        permission_classes = []
+        if self.request.method == 'GET':
+            permission_classes = [IsAuthenticated]
+        elif self.request.method == 'PUT' \
+            or self.request.method == 'DELETE' \
+                or self.request.method == 'PATCH':
+            permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+
+        return [permission() for permission in permission_classes]

@@ -11,8 +11,3 @@ class PostObjectRelatedField(serializers.RelatedField):
         elif isinstance(value, Lesson):
             return 'Lesson: ' + value.name
         raise Exception('Unexpected type of tagged object')
-
-
-class UserRelatedSerializer(serializers.RelatedField):
-    def to_representation(self, value):
-        return value.id
