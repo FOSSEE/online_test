@@ -14,14 +14,18 @@ from .permissions import IsAuthorOrReadOnly
 class CoursePostList(generics.ListCreateAPIView):
 
     serializer_class = PostSerializer
-    # permissions for only course registered students
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
+    def get_course(self, course_id):
         try:
-            course = Course.objects.get(id=self.kwargs['course_id'])
+            course = Course.objects.get(id=course_id)
         except Course.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        return course
+
+    def get_queryset(self):
+        course_id = self.kwargs['course_id']
+        course = self.get_course(course_id)
         course_ct = ContentType.objects.get_for_model(course)
         posts = Post.objects.filter(target_ct=course_ct,
                                     target_id=course.id,
@@ -41,7 +45,6 @@ class CoursePostDetail(generics.RetrieveUpdateDestroyAPIView):
         return post
 
     def get_permissions(self):
-        # permissions for only course registered students
         permission_classes = []
         if self.request.method == 'GET':
             permission_classes = [IsAuthenticated]
@@ -56,7 +59,6 @@ class CoursePostDetail(generics.RetrieveUpdateDestroyAPIView):
 class CoursePostComments(generics.ListCreateAPIView):
 
     serializer_class = CommentSerializer
-    # permissions for only course registered students
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -80,7 +82,6 @@ class CoursePostCommentDetail(generics.RetrieveUpdateDestroyAPIView):
         return comment
 
     def get_permissions(self):
-        # permissions for only course registered students
         permission_classes = []
         if self.request.method == 'GET':
             permission_classes = [IsAuthenticated]
@@ -114,7 +115,6 @@ class LessonPostDetail(generics.RetrieveUpdateDestroyAPIView):
         return post
 
     def get_permissions(self):
-        # permissions for only course registered students
         permission_classes = []
         if self.request.method == 'GET':
             permission_classes = [IsAuthenticated]
@@ -128,7 +128,6 @@ class LessonPostDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class LessonPostComments(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
-    # permissions for only course registered students
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -152,7 +151,6 @@ class LessonPostCommentDetail(generics.RetrieveUpdateDestroyAPIView):
         return comment
 
     def get_permissions(self):
-        # permissions for only course registered students
         permission_classes = []
         if self.request.method == 'GET':
             permission_classes = [IsAuthenticated]
