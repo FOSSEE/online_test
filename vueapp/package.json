@@ -9,10 +9,12 @@
   },
   "dependencies": {
     "@meforma/vue-toaster": "^1.2.2",
+    "@popperjs/core": "^2.9.2",
     "@tinymce/tinymce-vue": "^4.0.3",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "jquery": "^3.6.0",
+    "plyr": "^3.6.8",
     "v-calendar": "^3.0.0-alpha.5",
     "vue": "^3.0.0",
     "vue-loading-overlay": "^4.0.3",

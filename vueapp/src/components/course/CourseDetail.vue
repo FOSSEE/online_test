@@ -152,9 +152,9 @@
           } catch {
             this.last_lesson_order = 0
           }
-          this.edit_lesson = {'owner': this.user, 'order': this.last_lesson_order, 'module_id': this.edit_module.id}
-          }
-          console.log(this.edit_lesson)
+          this.edit_lesson = {'owner': this.user, 'order': this.last_lesson_order}
+        }
+        this.edit_lesson['module_id'] = this.edit_module.id
         this.$store.dispatch('setLesson', this.edit_lesson)
         this.$store.dispatch('toggleLesson', true)
         this.$store.dispatch('setCourseId', this.course_id)

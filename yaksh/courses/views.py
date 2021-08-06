@@ -8,6 +8,8 @@ from rest_framework.decorators import (
     api_view, authentication_classes, permission_classes
 )
 from rest_framework.exceptions import APIException
+from rest_framework import permissions
+
 
 # Django Imports
 from django.shortcuts import get_object_or_404
@@ -19,10 +21,12 @@ from django.contrib.contenttypes.models import ContentType
 
 # Local Imports
 from yaksh.courses.models import (
-    Course, Module, Lesson, Enrollment, CourseTeacher, Unit
+    Course, Module, Lesson, Enrollment, CourseTeacher, Unit, Topic,
+    TableOfContent
 )
 from yaksh.courses.serializers import (
-    CourseSerializer, ModuleSerializer, LessonSerializer
+    CourseSerializer, ModuleSerializer, LessonSerializer, TopicSerializer,
+    TOCSerializer
 )
 
 
@@ -30,6 +34,16 @@ class BasePagination(PageNumberPagination):
     page_size = 2
     page_size_query_param = 'page_size'
     max_page_size = 1000
+
+
+class CoursePermissions(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.groups.filter(name="moderator").exists()
+
+    def has_object_permission(self, request, view, obj):
+
+        # check if user is owner
+        return request.user == obj.owner
 
 
 class CourseDetail(APIView):
@@ -42,6 +56,8 @@ class CourseDetail(APIView):
 
     def get(self, request, pk, format=None):
         course = self.get_object(pk, request.user.id)
+        self.check_permissions(request)
+        self.check_object_permissions(request, course)
         serializer = CourseSerializer(
             course, context={"user_id": request.user.id}
         )
@@ -158,20 +174,24 @@ class LessonDetail(APIView):
         lesson = get_object_or_404(Lesson, pk=pk)
         return lesson
 
-    def get(self, request, pk, format=None):
+    def get_module_object(self, pk):
+        module = get_object_or_404(Module, pk=pk)
+        return module
+
+    def get(self, request, module_id, pk, format=None):
         lesson = self.get_object(pk)
         serializer = LessonSerializer(
             lesson, context={"request": request}
         )
         return Response(serializer.data)
 
-    def post(self, request, format=None):
+    def post(self, request, module_id, format=None):
         data = request.data
         serializer = LessonSerializer(data=data, context={"request": request})
         if serializer.is_valid():
             instance = serializer.save()
             ct = ContentType.objects.get_for_model(instance)
-            Unit.objects.create(
+            unit = Unit.objects.create(
                 module_id=data.get("module_id"),
                 order=data.get("order"), content_type=ct,
                 object_id=instance.id
@@ -179,10 +199,11 @@ class LessonDetail(APIView):
             serialized_data = serializer.data
             serialized_data['order'] = data['order']
             serialized_data['type'] = "Lesson"
+            serialized_data['unit_id'] = unit.id
             return Response(serialized_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, pk, format=None):
+    def put(self, request, module_id, pk, format=None):
         data = request.data
         lesson = self.get_object(pk)
         serializer = LessonSerializer(
@@ -193,11 +214,12 @@ class LessonDetail(APIView):
             serialized_data = serializer.data
             serialized_data['order'] = data['order']
             serialized_data['type'] = "Lesson"
+            serialized_data['unit_id'] = data['unit_id']
             return Response(serialized_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk, format=None):
-        lesson = self.get_object(pk, request.user.id)
+    def delete(self, request, module_id, pk, format=None):
+        lesson = self.get_object(pk)
         lesson.active = False
         lesson.save()
         serializer = LessonSerializer(
@@ -205,3 +227,61 @@ class LessonDetail(APIView):
         )
         return Response(serializer.data)
 
+
+class TocDetail(APIView):
+    def get_object(self, pk):
+        toc = get_object_or_404(TableOfContent, pk=pk)
+        return toc
+
+    def get(self, request, lesson_id, pk, format=None):
+        toc = self.get_object(pk)
+        serializer = TopicSerializer(toc.content_object)
+        serialized_data = serializer.data
+        serialized_data["toc_id"] = toc.id
+        serialized_data["time"] = toc.time
+        serialized_data["type"] = toc.content
+        return Response(serialized_data)
+
+    def post(self, request, lesson_id, format=None):
+        data = request.data
+        serializer = TopicSerializer(data=data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            ct = ContentType.objects.get_for_model(instance)
+            toc = TableOfContent.objects.create(
+                lesson_id=lesson_id, content=data.get("type"),
+                time=data.get("time"), content_type=ct, object_id=instance.id
+            )
+            serialized_data = serializer.data
+            serialized_data["toc_id"] = toc.id
+            serialized_data["time"] = toc.time
+            serialized_data["type"] = toc.content
+            return Response(serialized_data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, lesson_id, pk, format=None):
+        data = request.data
+        toc = self.get_object(pk)
+        serializer = TopicSerializer(toc.content_object, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            toc.time = data.get("time")
+            toc.save()
+            serialized_data = serializer.data
+            serialized_data["toc_id"] = toc.id
+            serialized_data["time"] = toc.time
+            serialized_data["type"] = toc.content
+            return Response(serialized_data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, lesson_id, pk, format=None):
+        toc = self.get_object(pk)
+        toc.content_object.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TocListDetail(APIView):
+    def get(self, request, lesson_id, format=None):
+        toc = TableOfContent.objects.filter(lesson_id=lesson_id)
+        serializer = TOCSerializer(toc, many=True)
+        return Response(serializer.data)

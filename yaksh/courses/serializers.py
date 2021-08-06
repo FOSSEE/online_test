@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
 # Local imports
-from yaksh.courses.models import Course, Module, Lesson
+from yaksh.courses.models import (
+    Course, Module, Lesson, Topic, TableOfContent
+)
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -48,6 +50,7 @@ class GenericField(serializers.RelatedField):
             obj, context=self.context).data
             serializer_data["order"] = value.order
             serializer_data["type"] = "Lesson"
+            serializer_data['unit_id'] = value.id
         else:
             serializer_data = {}
         return serializer_data
@@ -96,3 +99,39 @@ class LessonSerializer(serializers.ModelSerializer):
         instance.video_path = validated_data.get("video_path")
         instance.save()
         return instance
+
+
+class TopicSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Topic
+        fields = "__all__"
+
+    def create(self, validated_data):
+        topic = Topic.objects.create(**validated_data)
+        return topic
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get("name")
+        instance.description = validated_data.get("description")
+        instance.save()
+        return instance
+
+
+class TOCSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TableOfContent
+        exclude = ["object_id",]
+
+    def to_representation(self, value):
+        obj = value.content_object
+        if isinstance(obj, Topic):
+            serializer_data = TopicSerializer(obj).data
+        else:
+            serializer_data = {}
+        serializer_data["toc_id"] = value.id
+        serializer_data["type"] = value.get_content_display()
+        serializer_data["time"] = value.time
+        return serializer_data
+
