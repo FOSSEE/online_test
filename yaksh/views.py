@@ -17,12 +17,14 @@ from django.utils import timezone
 from django.core.exceptions import (
     MultipleObjectsReturned, ObjectDoesNotExist
 )
+import datetime
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from taggit.models import Tag
 from django.urls import reverse
 from django.conf import settings
 import json
+import numpy as np
 from textwrap import dedent
 import zipfile
 import markdown
@@ -1056,10 +1058,12 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
 
         paper.update_marks()
         paper.set_end_time(timezone.now())
+        questionpaper_id=str(paper.question_paper.id)
+
         message = reason or "Quiz has been submitted"
         context = {'message': message, 'paper': paper,
                    'module_id': learning_module.id,
-                   'course_id': course_id, 'learning_unit': learning_unit}
+                   'course_id': course_id, 'learning_unit': learning_unit,questionpaper_id:'questionpaper_id'}
         if is_moderator(user):
             context['user'] = "moderator"
         return my_render_to_response(request, 'yaksh/complete.html', context)
@@ -4233,3 +4237,23 @@ def upload_download_course_md(request, course_id):
             'is_upload_download_md': True,
         }
         return my_render_to_response(request, 'yaksh/course_detail.html', context)
+
+
+@login_required
+@email_verified
+def displaygrade(request,questionpaper_id):
+    uuser=request.user
+    idd=questionpaper_id
+    print(idd)
+    x=datetime.datetime.now()
+    a=AnswerPaper.objects.all().filter(user=uuser).filter(question_paper_id=idd).values()
+    for item in a :
+        item['marks_obtained']   
+    grade=item['marks_obtained']
+    precent=item['percent']
+    times=item['end_time']
+    context = {
+        'precent': precent,
+        'user':uuser
+    }  
+    return render(request,'displayscore.html',context)
