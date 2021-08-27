@@ -13,7 +13,7 @@
                   <tr>
                     <th>Name:</th>
                     <td>
-                    <input type="text" class="form-control" name="name" v-model="lesson.name" required="">
+                    <input type="text" class="form-control"  v-model="lesson.name" required="">
                     <br>
                     <strong class="text-danger" v-show="error.name">{{error.name}}</strong>
                     </td>
@@ -29,7 +29,7 @@
                   <tr>
                     <th>Active:</th>
                     <td>
-                      <input type="checkbox" v-model="lesson.active" v-bind:id="lesson.id" name="active">
+                      <input type="checkbox" v-model="lesson.active" v-bind:id="lesson.id">
                       <br>
                       <strong class="text-danger" v-show="error.active">{{error.active}}</strong>
                     </td>
@@ -37,7 +37,7 @@
                   <tr>
                     <th>Video Source:</th>
                     <td>
-                      <select name="video_option" class="custom-select" v-model="video_src">
+                      <select class="custom-select" v-model="video_src">
                         <option value="---">Select Video Option</option>
                         <option value="youtube" selected="">Youtube</option>
                         <option value="vimeo">Vimeo</option>
@@ -167,7 +167,6 @@
           }
           this.video_id = this.lesson["video_path"][this.video_src]
           this.has_video = true
-          this.setPlayersource()
         } catch(e) {
           console.log(e)
         }
