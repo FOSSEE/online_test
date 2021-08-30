@@ -1,4 +1,5 @@
 <template>
+<div>
   <h3>Add/Edit Topic</h3>
   <form @submit.prevent="submitTopic">
     <p>
@@ -16,6 +17,7 @@
       Save
     </button>
   </form>
+</div>
 </template>
 <script>
   import Editor from '@tinymce/tinymce-vue'
@@ -53,18 +55,19 @@
         this.topic_data["ctype"] = 1
         LessonService.add_or_edit_toc(this.lesson_id, this.topic_data.toc_id, this.topic_data).then(response => {
             console.log(response.data)
-            this.$store.commit('toggleLoader', false);
             this.$toast.success("Topic saved successfully ", {'position': 'top'});
             this.$emit("updateToc", {"tocs": response.data})
           })
           .catch(e => {
-            this.$store.commit('toggleLoader', false);
             var data = e.response.data;
             if (data) {
               this.showError(e.response.data)
             } else {
               this.$toast.error(e.message, {'position': 'top'});
             }
+          })
+          .finally(() => {
+            this.$store.commit('toggleLoader', false);
           });
       },
       showError(err) {

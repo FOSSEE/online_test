@@ -175,18 +175,19 @@
       submitQuestion() {
         this.$store.commit('toggleLoader', true);
         LessonService.add_or_edit_toc(this.lesson_id, this.que_data.toc_id, this.que_data).then(response => {
-            this.$store.commit('toggleLoader', false);
             this.$toast.success("Question saved successfully ", {'position': 'top'});
             this.$emit("updateToc", {"tocs": response.data})
           })
           .catch(e => {
-            this.$store.commit('toggleLoader', false);
             var data = e.response.data;
             if (data) {
               this.showError(e.response.data)
             } else {
               this.$toast.error(e.message, {'position': 'top'});
             }
+          })
+          .finally(() => {
+            this.$store.commit('toggleLoader', false);
           });
       },
       showError(err) {

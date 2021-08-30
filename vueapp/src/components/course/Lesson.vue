@@ -121,18 +121,19 @@
             if(this.lesson && !this.lesson.id) {
               this.closeModal();
             }
-            this.$store.commit('toggleLoader', false);
             this.$emit("updateLessons", {"data": response.data, "existing": this.existing})
             this.$toast.success("Lesson saved successfully ", {'position': 'top'});
           })
           .catch(e => {
-            this.$store.commit('toggleLoader', false);
             var data = e.response.data;
             if (data) {
               this.showError(e.response.data)
             } else {
               this.$toast.error(e.message, {'position': 'top'});
             }
+          })
+          .finally(() => {
+            this.$store.commit('toggleLoader', false);
           });
         try {
           this.has_video = false

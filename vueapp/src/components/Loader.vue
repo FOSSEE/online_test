@@ -1,5 +1,5 @@
 <template>
-  <loading v-model:active="loading"
+  <loading v-bind:active="loading"
    :can-cancel="false"
    :is-full-page="true"/>
 </template>

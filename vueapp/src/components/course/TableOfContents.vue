@@ -1,4 +1,5 @@
 <template>
+<div>
   <div class="card">
     <div class="card-header">
       Table of Contents
@@ -60,12 +61,13 @@
         </div>
       </form>
       <hr>
-      <topic v-if="enable_topic" v-model:lesson_id="lessonId" v-model:topic="topic" v-model:time="time" v-on:updateToc="updateToc">
+      <topic v-if="enable_topic" v-bind:lesson_id="lessonId" v-bind:topic="topic" v-bind:time="time" v-on:updateToc="updateToc">
       </topic>
-      <question v-if="enable_ques" v-model:lesson_id="lessonId" v-model:question="question" v-model:time="time" v-on:updateToc="updateToc" v-model:content_type="content_type">
+      <question v-if="enable_ques" v-bind:lesson_id="lessonId" v-bind:question="question" v-bind:time="time" v-on:updateToc="updateToc" v-bind:content_type="content_type">
       </question>
     </div>
   </div>
+</div>
 </template>
 <script>
   import { mapState } from 'vuex';
@@ -140,18 +142,18 @@
       this.lessonId = this.lesson_id;
       this.$store.commit('toggleLoader', true);
       LessonService.get_toc(this.lesson_id).then(response => {
-
-          this.$store.commit('toggleLoader', false);
           this.contents = response.data
         })
         .catch(e => {
-          this.$store.commit('toggleLoader', false);
           var data = e.response.data;
           if (data) {
             this.showError(e.response.data)
           } else {
             this.$toast.error(e.message, {'position': 'top'});
           }
+        })
+        .finally(() => {
+          this.$store.commit('toggleLoader', false);
         });
       this.$nextTick(() => {
         this.player = new Plyr('#player');
@@ -167,7 +169,6 @@
         }
       },
       deleteToc(toc_id, type) {
-        this.$store.commit('toggleLoader', true);
         LessonService.delete_toc(this.lesson_id, toc_id)
           .then(response => {
             this.$store.commit('toggleLoader', false);
@@ -175,13 +176,15 @@
             this.$toast.success(`${type} deleted successfully`, {'position': 'top'});
           })
           .catch(e => {
-            this.$store.commit('toggleLoader', false);
             var data = e.response.data;
             if (data) {
               this.showError(e.response.data)
             } else {
               this.$toast.error(e.message, {'position': 'top'});
             }
+          })
+          .finally(() => {
+            this.$store.commit('toggleLoader', false);
           });
       },
       editToc(toc, type) {

@@ -251,14 +251,15 @@
       searchCourses() {
         this.$store.commit('toggleLoader', true);
         CourseService.findByName(this.searchName, this.searchStatus).then(response => {
-          this.$store.commit('toggleLoader', false);
           var data = response.data;
           this.courses = data.results
           this.next_page = data.next;
         })
         .catch(e => {
-          this.$store.commit('toggleLoader', false);
           this.$toast.error(e.message, {'position': 'top'});
+        })
+        .finally(() => {
+          this.$store.commit('toggleLoader', false);
         });
       },
       loadCourses() {
@@ -266,15 +267,16 @@
           var page = this.next_page.split("?")[1];
           this.$store.commit('toggleLoader', true);
           CourseService.more(page).then(response => {
-            this.$store.commit('toggleLoader', false);
             var data = response.data;
             this.appendData(data.results);
             this.count = this.courses.length;
             this.next_page = data.next;
           })
           .catch(e => {
-            this.$store.commit('toggleLoader', false);
             this.$toast.error(e.message, {'position': 'top'});
+          })
+          .finally(() => {
+            this.$store.commit('toggleLoader', false);
           });
         } else {
           this.$toast.info("No more courses", {'position': 'top'});
@@ -283,7 +285,6 @@
       submitCourse() {
         this.$store.commit('toggleLoader', true);
         CourseService.create_or_update(this.edit_course.id, this.edit_course).then(response => {
-            this.$store.commit('toggleLoader', false);
             var data = response.data;
             if (this.edit_course.id) {
               this.courses[this.index] = data
@@ -293,27 +294,30 @@
             this.$toast.success("Course saved successfully ", {'position': 'top'});
           })
           .catch(e => {
-            this.$store.commit('toggleLoader', false);
             var data = e.response.data;
             if (data) {
               this.showError(e.response.data)
             } else {
               this.$toast.error(e.message, {'position': 'top'});
             }
+          })
+          .finally(() => {
+            this.$store.commit('toggleLoader', false);
           });
       },
       getAllCourses() {
         this.$store.commit('toggleLoader', true);
         CourseService.getall().then(response => {
-          this.$store.commit('toggleLoader', false);
           var data = response.data;
           this.courses = data.results;
           this.previous_page = data.previous;
           this.next_page = data.next;
         })
         .catch(e => {
-          this.$store.commit('toggleLoader', false);
           this.$toast.error(e.message, {'position': 'top'});
+        })
+        .finally(() => {
+          this.$store.commit('toggleLoader', false);
         });
       },
       getCourse(course_id) {
