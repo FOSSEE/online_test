@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 import pytz
+from textwrap import dedent
 
 # Django Imports
 from django.db import models
@@ -31,15 +32,34 @@ languages = (
     )
 
 question_types = (
-        ("mcq", "Single Correct Choice"),
-        ("mcc", "Multiple Correct Choices"),
-        ("code", "Code"),
-        ("upload", "Assignment Upload"),
-        ("integer", "Answer in Integer"),
-        ("string", "Answer in String"),
-        ("float", "Answer in Float"),
-        ("arrange", "Arrange in Correct Order"),
+    ("mcq", "Single Correct Choice"),
+    ("mcc", "Multiple Correct Choices"),
+    ("code", "Code"),
+    ("upload", "Assignment Upload"),
+    ("integer", "Answer in Integer"),
+    ("string", "Answer in String"),
+    ("float", "Answer in Float"),
+    ("arrange", "Arrange in Correct Order"),
+)
+
+
+test_case_types = (
+    ("standardtestcase", "Standard Testcase"),
+    ("stdiobasedtestcase", "StdIO Based Testcase"),
+    ("mcqtestcase", "MCQ Testcase"),
+    ("hooktestcase", "Hook Testcase"),
+    ("integertestcase", "Integer Testcase"),
+    ("stringtestcase", "String Testcase"),
+    ("floattestcase", "Float Testcase"),
+    ("arrangetestcase", "Arrange Testcase"),
+)
+
+
+string_check_type = (
+    ("lower", "Case Insensitive"),
+    ("exact", "Case Sensitive"),
     )
+
 
 def get_lesson_file_dir(instance, filename):
     if isinstance(instance, Lesson):
@@ -761,6 +781,144 @@ class Question(models.Model):
 
     def __str__(self):
         return self.summary
+
+
+class TestCase(models.Model):
+    question = models.ForeignKey(Question, blank=True, null=True,
+                                 on_delete=models.CASCADE,
+                                 related_name="test_cases")
+    type = models.CharField(max_length=24, choices=test_case_types, null=True)
+
+
+class StandardTestCase(TestCase):
+    test_case = models.TextField()
+    weight = models.FloatField(default=1.0)
+    test_case_args = models.TextField(blank=True)
+    hidden = models.BooleanField(default=False)
+
+    def get_field_value(self):
+        return {"test_case_type": "standardtestcase",
+                "test_case": self.test_case,
+                "weight": self.weight,
+                "hidden": self.hidden,
+                "test_case_args": self.test_case_args}
+
+    def __str__(self):
+        return u'Standard TestCase | Test Case: {0}'.format(self.test_case)
+
+
+class StdIOBasedTestCase(TestCase):
+    expected_input = models.TextField(default=None, blank=True, null=True)
+    expected_output = models.TextField(default=None)
+    weight = models.IntegerField(default=1.0)
+    hidden = models.BooleanField(default=False)
+
+    def get_field_value(self):
+        return {"test_case_type": "stdiobasedtestcase",
+                "expected_output": self.expected_output,
+                "expected_input": self.expected_input,
+                "hidden": self.hidden,
+                "weight": self.weight}
+
+    def __str__(self):
+        return u'StdIO Based Testcase | Exp. Output: {0} | Exp. Input: {1}'.\
+            format(
+                self.expected_output, self.expected_input
+            )
+
+
+class McqTestCase(TestCase):
+    options = models.TextField(default=None)
+    correct = models.BooleanField(default=False)
+
+    def get_field_value(self):
+        return {"test_case_type": "mcqtestcase",
+                "options": self.options, "correct": self.correct}
+
+    def __str__(self):
+        return u'MCQ Testcase | Correct: {0}'.format(self.correct)
+
+
+class HookTestCase(TestCase):
+    hook_code = models.TextField(default=dedent(
+        """\
+        def check_answer(user_answer):
+           ''' Evaluates user answer to return -
+           success - Boolean, indicating if code was executed correctly
+           mark_fraction - Float, indicating fraction of the
+                          weight to a test case
+           error - String, error message if success is false
+
+           In case of assignment upload there will be no user answer '''
+
+           success = False
+           err = "Incorrect Answer" # Please make this more specific
+           mark_fraction = 0.0
+
+           # write your code here
+
+           return success, err, mark_fraction
+
+        """)
+
+    )
+    weight = models.FloatField(default=1.0)
+    hidden = models.BooleanField(default=False)
+
+    def get_field_value(self):
+        return {"test_case_type": "hooktestcase", "hook_code": self.hook_code,
+                "hidden": self.hidden, "weight": self.weight}
+
+    def __str__(self):
+        return u'Hook Testcase | Correct: {0}'.format(self.hook_code)
+
+
+class IntegerTestCase(TestCase):
+    correct_ans = models.IntegerField(default=None)
+
+    def get_field_value(self):
+        return {"test_case_type": "integertestcase", "correct": self.correct_ans}
+
+    def __str__(self):
+        return u'Integer Testcase | Correct: {0}'.format(self.correct_ans)
+
+
+class StringTestCase(TestCase):
+    correct_ans = models.TextField(default=None)
+    string_check = models.CharField(max_length=200, choices=string_check_type)
+
+    def get_field_value(self):
+        return {"test_case_type": "stringtestcase", "correct": self.correct_ans,
+                "string_check": self.string_check}
+
+    def __str__(self):
+        return u'String Testcase | Correct: {0}'.format(self.correct_ans)
+
+
+class FloatTestCase(TestCase):
+    correct_ans = models.FloatField(default=None)
+    error_margin = models.FloatField(default=0.0, null=True, blank=True,
+                                     help_text="Margin of error")
+
+    def get_field_value(self):
+        return {"test_case_type": "floattestcase", "correct": self.correct_ans,
+                "error_margin": self.error_margin}
+
+    def __str__(self):
+        return u'Testcase | Correct: {0} | Error Margin: +or- {1}'.format(
+                self.correct_ans, self.error_margin
+                )
+
+
+class ArrangeTestCase(TestCase):
+    options = models.TextField(default=None)
+
+    def get_field_value(self):
+        return {"test_case_type": "arrangetestcase",
+                "options": self.options}
+
+    def __str__(self):
+        return u'Arrange Testcase | Option: {0}'.format(self.options)
 
 
 class Answer(models.Model):

@@ -79,13 +79,11 @@
       submitModule() {
         this.$store.commit('toggleLoader', true);
         ModuleService.create_or_update(this.course_id, this.edit_module.id, this.edit_module).then(response => {
-            this.$store.commit('toggleLoader', false);
             this.$emit("updateModules", {"data": response.data, "existing": this.existing})
             this.$store.dispatch('toggleModule', false)
             this.$toast.success("Module saved successfully ", {'position': 'top'});
           })
           .catch(e => {
-            this.$store.commit('toggleLoader', false);
             console.log(e)
             var data = e.response.data;
             if (data) {
@@ -93,6 +91,9 @@
             } else {
               this.$toast.error(e.message, {'position': 'top'});
             }
+          })
+          .finally(() => {
+            this.$store.commit('toggleLoader', false);
           });
       },
       showError(err) {

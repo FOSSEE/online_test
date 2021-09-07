@@ -1,4 +1,5 @@
 <template>
+<div>
   <Module v-if="isModule" v-on:updateModules="updateModules"></Module>
   <Lesson v-if="isLesson" v-on:updateLessons="updateLessons"></Lesson>
   <div class="col-md-3">
@@ -72,6 +73,7 @@
       </div>
     </div>
   </div>
+</div>
 </template>
 <script>
   import { mapState } from 'vuex';
@@ -114,13 +116,14 @@
       this.course_name = localStorage.getItem("course_"+this.course_id)
       this.$store.commit('toggleLoader', true);
       ModuleService.getall(this.course_id).then(response => {
-          this.$store.commit('toggleLoader', false);
           var data = response.data;
           this.modules = data;
         })
         .catch(e => {
-          this.$store.commit('toggleLoader', false);
           this.$toast.error(e.message, {'position': 'top'});
+        })
+        .finally(() => {
+          this.$store.commit('toggleLoader', false);
         });
     },
     methods: {
@@ -170,7 +173,7 @@
         if (args.existing) {
           this.edit_module['units'][this.unit_index] = args.data
         } else {
-          this.edit_module.["units"].push(args.data)
+          this.edit_module["units"].push(args.data)
         }
         this.edit_module['has_units'] = true
       }

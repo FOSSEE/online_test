@@ -1,12 +1,15 @@
 <template>
+<div>
   <h3>Add/Edit Topic</h3>
   <form @submit.prevent="submitTopic">
     <p>
-      <label for="id_name">Name:</label> <input type="text" v-model="topic_data.name" maxlength="255" class="form-control" placeholder="Name" required="" id="id_name">
-      <strong class="text-danger" v-show="error.name">{{error.name}}</strong>
+      <label for="id_name">Summary:</label> <input type="text" v-model="topic_data.name" maxlength="255" class="form-control" placeholder="Name" required="" id="id_name">
+      <strong class="text-danger" v-show="error.name">{{error.name}}
+      </strong>
     </p>
     <p>
-      <label for="id_description">Description:</label> <textarea v-model="topic_data.description" cols="40" rows="10" class="form-control" placeholder="Description" id="id_description"></textarea></p>
+      <label for="id_description">Description:</label> <editor api-key="no-api-key" v-model="topic_data.description" id="id_description" />
+    </p>
       <strong class="text-danger" v-show="error.description">{{error.description}}</strong>
       <p><label for="id_timer">Timer:</label> <input type="text" v-model="topic_data.time" class="form-control" placeholder="Time" required="" id="id_timer"></p>
     <br>
@@ -14,51 +17,57 @@
       Save
     </button>
   </form>
+</div>
 </template>
 <script>
+  import Editor from '@tinymce/tinymce-vue'
   import LessonService from "../../services/LessonService"
   export default {
     name: "Topic",
-    props: {
-      video_src: String,
-      video_id: String,
-      lesson_id: Number,
-      time: String,
+    components: {
+      'editor': Editor,
     },
+    props: {
+      time: String,
+      lesson_id: Number,
+      topic: Object
+    },
+    emits: ["updateToc"],
     watch: {
       time(val) {
         this.topic_data.time = val
+      },
+      topic(val) {
+       this.topic_data = val
       }
     },
     data() {
       return {
         error: {},
-        topic_data : {
-          name: "",
-          description: "",
-          time: "",
-          type: 1
-        }
+        topic_data: {}
       }
     },
     mounted() {
-      this.topic_data.time = this.time
+      this.topic_data = this.topic
     },
     methods: {
       submitTopic() {
-        LessonService.add_or_edit_topic(this.lesson_id, this.topic_data.id, this.topic_data).then(response => {
+        this.topic_data["ctype"] = 1
+        LessonService.add_or_edit_toc(this.lesson_id, this.topic_data.toc_id, this.topic_data).then(response => {
             console.log(response.data)
-            this.$store.commit('toggleLoader', false);
             this.$toast.success("Topic saved successfully ", {'position': 'top'});
+            this.$emit("updateToc", {"tocs": response.data})
           })
           .catch(e => {
-            this.$store.commit('toggleLoader', false);
             var data = e.response.data;
             if (data) {
               this.showError(e.response.data)
             } else {
               this.$toast.error(e.message, {'position': 'top'});
             }
+          })
+          .finally(() => {
+            this.$store.commit('toggleLoader', false);
           });
       },
       showError(err) {
