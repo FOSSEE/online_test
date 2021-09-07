@@ -14,6 +14,7 @@ urlpatterns = [
     path('toc/<int:lesson_id>', views.TocListDetail.as_view()),
     path('topic/<int:lesson_id>', views.TocDetail.as_view()),
     path('topic/<int:lesson_id>/<int:pk>', views.TocDetail.as_view()),
+    path('moderator_dashboard/', views.ModeratorDashboard.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
