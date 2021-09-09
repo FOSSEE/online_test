@@ -12,6 +12,7 @@ urlpatterns = [
     path('unit/order/<int:module_id>', views.UnitListDetail.as_view()),
     path('lesson/<int:module_id>', views.LessonDetail.as_view()),
     path('lesson/<int:module_id>/<int:pk>', views.LessonDetail.as_view()),
+    path('moderator_dashboard/', views.ModeratorDashboard.as_view()),
     path('all/toc/<int:lesson_id>', views.TocListDetail.as_view()),
     path('toc/<int:lesson_id>', views.TocDetail.as_view()),
     path('toc/<int:lesson_id>/<int:pk>', views.TocDetail.as_view()),

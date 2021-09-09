@@ -73,6 +73,12 @@ def index2(request):
     return render(request, 'course_detail.html')
 
 
+def moderator_dashboard(request):
+    return render(request, 'moderator_dasboard.html')
+
+def addcourse(request):
+    return render(request, 'add_course.html')
+
 def my_redirect(url):
     """An overridden redirect to deal with URL_ROOT-ing. See settings.py
     for details."""

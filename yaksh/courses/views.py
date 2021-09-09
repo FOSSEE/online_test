@@ -9,6 +9,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.exceptions import APIException
 from rest_framework import permissions
+from rest_framework import generics, status
 
 
 # Django Imports
@@ -43,6 +44,23 @@ class CoursePermissions(permissions.BasePermission):
 
         # check if user is owner
         return request.user == obj.owner
+
+
+
+class ModeratorDashboard(generics.ListCreateAPIView):
+    serializer_class = CourseSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        course_as_ta = CourseTeacher.objects.filter(
+            teacher_id=user.id
+        ).values_list("course_id", flat=True)
+        courses = Course.objects.filter(
+            Q(owner_id=user.id) | Q(id__in=course_as_ta),
+            is_trial=False
+        ).distinct().order_by('-active')
+        return courses
+
 
 
 class CourseDetail(APIView):
