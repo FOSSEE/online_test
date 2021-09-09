@@ -167,7 +167,9 @@
             this.is_others = true;
           }
           this.video_id = this.lesson["video_path"][this.video_src]
-          this.has_video = true
+          if(this.lesson.id !== undefined && this.video_id) {
+            this.has_video = true
+          }
         } catch(e) {
           console.log(e)
         }

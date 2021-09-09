@@ -84,7 +84,6 @@
             this.$toast.success("Module saved successfully ", {'position': 'top'});
           })
           .catch(e => {
-            console.log(e)
             var data = e.response.data;
             if (data) {
               this.showError(e.response.data)
