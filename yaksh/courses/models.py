@@ -148,6 +148,8 @@ class Enrollment(models.Model):
         Course, related_name='course', on_delete=models.CASCADE
     )
     status = models.IntegerField(choices=enrollment_status)
+    created_on = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    modified_on = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     def __str__(self):
         return f"Enrollment status of {self.student} in {self.course}"
@@ -195,6 +197,9 @@ class Unit(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
     check_prerequisite = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['order']
 
     def __str__(self):
         return f"Unit for {self.module.name}"

@@ -20,6 +20,10 @@ class ModuleService {
     delete(course_id, id) {
         return http.delete(`/module/${course_id}/${id}`);
     }
+
+    changeUnits(module_id, data) {
+        return http.post(`/unit/order/${module_id}`, data)
+    }
 }
 
 export default new ModuleService();

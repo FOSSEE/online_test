@@ -39,31 +39,46 @@
           <br>
           <div>
             <table class="table table-responsive-sm">
-              <tr>
-                <th>Sr No.</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Order</th>
-                <th>Statistics</th>
-              </tr>
-              <tr v-for="(unit, idx) in module.units" :key="unit.id">
-                <td>{{idx+1}}</td>
-                <td>
-                  <a href="#" @click="showUnit(module, idx, true)">{{unit.name}}
-                  </a>
-                </td>
-                <td>
-                  {{unit.type}}
-                </td>
-                <td>
-                  <input type="number" v-model="unit.order" class="form-control form-control-sm">
-                </td>
-                <td>
-                  Statistics
-                </td>
-              </tr>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Sr No.</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Order</th>
+                  <th>Statistics</th>
+                </tr>
+              </thead>
+              <draggable tag="tbody" v-model="module.units" @change="updateOrder(module.units, $event)">
+                <tr
+                  v-for="(unit, idx) in module.units"
+                  :key="unit.id"
+                >
+                  <td>
+                  <i class="fa fa-align-justify handle"></i>
+                  </td>
+                  <td>{{idx+1}}</td>
+                  <td>
+                    <a href="#" @click="showUnit(module, idx, true)">{{unit.name}}
+                    </a>
+                  </td>
+                  <td>
+                    {{unit.type}}
+                  </td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm" v-model="unit.order" />
+                  </td>
+                  <td>
+                    Statistics
+                  </td>
+                </tr>
+              </draggable>
             </table>
+            <button class="btn btn-outline-success btn-sm" @click="submitUnits(module.id, module.units)" v-show="module.has_units">
+              Save Units
+            </button>
           </div>
+          <br>
           <div class="course" v-show="!module.has_units">
             <span class="badge badge-warning">
               No Lesson/quiz/exercies are added
@@ -77,6 +92,7 @@
 </template>
 <script>
   import { mapState } from 'vuex';
+  import { VueDraggableNext } from 'vue-draggable-next'
   import ModuleService from "../../services/ModuleService"
   import Module from '../course/Module.vue'
   import Lesson from '../course/Lesson.vue'
@@ -84,7 +100,8 @@
   export default {
     name: "CourseDetail",
     components: {
-      Module, Lesson
+      Module, Lesson,
+      "draggable": VueDraggableNext
     },
     data() {
       return {
@@ -176,6 +193,36 @@
           this.edit_module["units"].push(args.data)
         }
         this.edit_module['has_units'] = true
+      },
+      updateOrder(units) {
+        for(let i = 0; i < units.length; i++) {
+          units[i].order = i
+        }
+      },
+      submitUnits(module_id, units) {
+        this.$store.commit('toggleLoader', true);
+        let data = {"units": units}
+        ModuleService.changeUnits(module_id, data).then(response => {
+            let msg = response.data.message;
+            let status = response.data.success
+            if(status) {
+              this.$toast.success(msg, {'position': 'top'});
+            } else {
+              this.$toast.error(msg, {'position': 'top'});
+            }
+          })
+          .catch(e => {
+            console.log(e)
+            var data = e.response.data;
+            if (data) {
+              this.showError(e.response.data)
+            } else {
+              this.$toast.error(e.message, {'position': 'top'});
+            }
+          })
+          .finally(() => {
+            this.$store.commit('toggleLoader', false);
+          });
       }
     }
   }

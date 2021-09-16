@@ -1,12 +1,41 @@
+from django.forms.models import model_to_dict
 from rest_framework import serializers
 
 # Local imports
 from yaksh.courses.models import (
-    Course, Module, Lesson, Topic, TableOfContent, Question,
+    Course, Enrollment, Module, Lesson, Topic, TableOfContent, Question,
     TestCase, StandardTestCase, StdIOBasedTestCase, McqTestCase,
     HookTestCase, IntegerTestCase, StringTestCase,
-    FloatTestCase, ArrangeTestCase
+    FloatTestCase, ArrangeTestCase, Enrollment
 )
+
+from yaksh.models import (Profile)
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Profile
+    
+    def to_representation(self, instance):
+        serialized_data = {}
+        serialized_data.update(
+            model_to_dict(
+                instance.user,
+                fields=(
+                    "first_name", "last_name", "email", "last_login"
+                )
+            )
+        )
+        serialized_data.update(
+            model_to_dict(
+                instance,
+                exclude=(
+                    "activation_key", "key_expiry_time", "is_email_verified"
+                )
+            )
+        )
+        return serialized_data
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -44,7 +73,7 @@ class CourseSerializer(serializers.ModelSerializer):
         return instance
 
 
-class GenericField(serializers.RelatedField):
+class UnitSerializer(serializers.RelatedField):
 
     def to_representation(self, value):
         obj = value.content_object
@@ -53,14 +82,14 @@ class GenericField(serializers.RelatedField):
             obj, context=self.context).data
             serializer_data["order"] = value.order
             serializer_data["type"] = "Lesson"
-            serializer_data['unit_id'] = value.id
         else:
             serializer_data = {}
+        serializer_data['unit_id'] = value.id
         return serializer_data
 
 
 class ModuleSerializer(serializers.ModelSerializer):
-    units = GenericField(read_only=True, many=True)
+    units = UnitSerializer(read_only=True, many=True)
     has_units = serializers.ReadOnlyField()
 
     class Meta:
@@ -428,3 +457,18 @@ class TOCSerializer(serializers.ModelSerializer):
         serializer_data["ctype"] = value.get_content_display()
         serializer_data["time"] = value.time
         return serializer_data
+
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Enrollment
+        fields = "__all__"
+    
+    def to_representation(self, instance):
+        profile = instance.student.profile
+        serializer_data = {}
+        serializer_data["student"] = ProfileSerializer(profile).data
+        serializer_data["status"] = instance.status
+        return serializer_data
+

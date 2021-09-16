@@ -14,7 +14,6 @@ from rest_framework import generics, status
 
 # Django Imports
 from django.shortcuts import get_object_or_404
-from django.shortcuts import render
 from django.contrib.auth import authenticate
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
@@ -22,12 +21,12 @@ from django.contrib.contenttypes.models import ContentType
 
 # Local Imports
 from yaksh.courses.models import (
-    Course, Module, Lesson, Enrollment, CourseTeacher, Unit, Topic,
-    TableOfContent, TestCase
+    Course, Module, Lesson, Enrollment, CourseTeacher, Unit,
+    TableOfContent, Enrollment
 )
 from yaksh.courses.serializers import (
     CourseSerializer, ModuleSerializer, LessonSerializer, TopicSerializer,
-    TOCSerializer, QuestionSerializer, TestCaseSerializer
+    TOCSerializer, QuestionSerializer, EnrollmentSerializer
 )
 
 
@@ -173,7 +172,7 @@ class ModuleDetail(APIView):
         module = self.get_object(course_id, pk)
         module.active = False
         module.save()
-        serializer = ModuleSerializer(lesson)
+        serializer = ModuleSerializer(module)
         return Response(serializer.data)
 
 
@@ -186,10 +185,29 @@ class ModuleListDetail(APIView):
         )
         return Response(serializer.data)
 
-    def post(self, request, course_id, format=None):
-        data = request.data
-        print(data)
-        return Response(status.HTTP_200_OK)
+
+class UnitListDetail(APIView):
+    def get_object(self, module_id):
+        module = get_object_or_404(Module, pk=module_id)
+        return module
+
+    def post(self, request, module_id, format=None):
+        module = self.get_object(module_id)
+        units = request.data.get("units")
+        if units:
+            unit_bulk_update = []
+            for u in units:
+                unit = get_object_or_404(Unit, id=u.get("unit_id"))
+                unit.order = u.get("order")
+                unit_bulk_update.append(unit)
+            Unit.objects.bulk_update(unit_bulk_update, ["order"])
+            message = "Units updated successfully"
+            success = True
+        else:
+            message = "No units found"
+            success = False
+        response = {"message": message, "success": success}
+        return Response(response, status.HTTP_200_OK)
 
 
 class LessonDetail(APIView):
@@ -263,7 +281,7 @@ class TocDetail(APIView):
 
     def get(self, request, lesson_id, pk, format=None):
         toc = self.get_object(pk)
-        if data.get("ctype") == 1:
+        if toc.content == 1:
             serializer = TopicSerializer(toc.content_object)
         else:
             serializer = QuestionSerializer(toc.content_object)
@@ -319,3 +337,22 @@ class TocListDetail(APIView):
         toc = TableOfContent.objects.filter(lesson_id=lesson_id)
         serializer = TOCSerializer(toc, many=True)
         return Response(serializer.data)
+
+
+class CourseEnrollmentDetail(APIView):
+    def get_object(self, course_id, user_id):
+        course = get_object_or_404(Course, id=course_id)
+        if not course.is_valid_user(user_id):
+            raise APIException(f"You are not allowed to view {course.name}")
+        else:
+            return course
+
+    def get(self, request, course_id, format=None):
+        user = request.user
+        course = self.get_object(course_id, user.id)
+        enrollments = Enrollment.objects.filter(course_id=course_id)
+        print(enrollments)
+        serializer = EnrollmentSerializer(enrollments, many=True)
+        return Response(serializer.data)
+
+
