@@ -42,17 +42,19 @@ from yaksh.models import (
     QuestionPaper, QuestionSet, Quiz, Question, StandardTestCase,
     StdIOBasedTestCase, StringTestCase, TestCase, User,
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
-    LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
+    LearningUnit, LearningModule, CourseStatus, question_types,
     Topic, TableOfContents, LessonQuizAnswer, MicroManager, QRcode,
     QRcodeHandler, dict_to_yaml
 )
 from stats.models import TrackLesson
+from forum.models import Post
+from forum.forms import CommentForm
 from yaksh.forms import (
     UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
     QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm,
-    SearchFilterForm, PostForm, CommentForm, TopicForm, VideoQuizForm
+    SearchFilterForm, TopicForm, VideoQuizForm
 )
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 from .settings import URL_ROOT
@@ -2860,13 +2862,13 @@ def show_lesson(request, lesson_id, module_id, course_id):
             raise Http404(f'Post does not exist for lesson {title}')
     else:
         form = CommentForm()
-        comments = post.comment.filter(active=True)
+        comments = post.comments.filter(active=True)
     context = {'lesson': learn_unit.lesson, 'user': user,
                'course': course, 'state': "lesson", "all_modules": all_modules,
                'learning_units': learning_units, "current_unit": learn_unit,
                'learning_module': learn_module, 'toc': toc,
                'contents_by_time': contents_by_time, 'track_id': track.id,
-               'comments': comments, 'form': form, 'post': post}
+                'comments': comments, 'form': form, 'post': post}
     return my_render_to_response(request, 'yaksh/show_video.html', context)
 
 
@@ -3461,148 +3463,6 @@ def mark_notification(request, message_uid=None):
                 user.id, msg_uuids, True)
     messages.success(request, "Marked notifcation(s) as read")
     return redirect(reverse("yaksh:view_notifications"))
-
-
-@login_required
-@email_verified
-def course_forum(request, course_id):
-    user = request.user
-    base_template = 'user.html'
-    moderator = False
-    if is_moderator(user):
-        base_template = 'manage.html'
-        moderator = True
-    course = get_object_or_404(Course, id=course_id)
-    course_ct = ContentType.objects.get_for_model(course)
-    if (not course.is_creator(user) and not course.is_teacher(user)
-            and not course.is_student(user)):
-        raise Http404('You are not enrolled in {0} course'.format(course.name))
-    search_term = request.GET.get('search_post')
-    if search_term:
-        posts = Post.objects.filter(
-                Q(title__icontains=search_term) |
-                Q(description__icontains=search_term),
-                target_ct=course_ct, target_id=course.id, active=True
-            )
-    else:
-        posts = Post.objects.filter(
-            target_ct=course_ct, target_id=course.id, active=True
-        ).order_by('-modified_at')
-    paginator = Paginator(posts, 10)
-    page = request.GET.get('page')
-    posts = paginator.get_page(page)
-    if request.method == "POST":
-        form = PostForm(request.POST, request.FILES)
-        if form.is_valid():
-            new_post = form.save(commit=False)
-            new_post.creator = user
-            new_post.target = course
-            new_post.anonymous = request.POST.get('anonymous', '') == 'on'
-            new_post.save()
-            messages.success(request, "Added post successfully")
-            return redirect('yaksh:post_comments',
-                            course_id=course.id, uuid=new_post.uid)
-    else:
-        form = PostForm()
-    return render(request, 'yaksh/course_forum.html', {
-        'user': user,
-        'course': course,
-        'base_template': base_template,
-        'moderator': moderator,
-        'objects': posts,
-        'form': form,
-        'user': user
-        })
-
-
-@login_required
-@email_verified
-def lessons_forum(request, course_id):
-    user = request.user
-    base_template = 'user.html'
-    moderator = False
-    if is_moderator(user):
-        base_template = 'manage.html'
-        moderator = True
-    course = get_object_or_404(Course, id=course_id)
-    course_ct = ContentType.objects.get_for_model(course)
-    lesson_posts = course.get_lesson_posts()
-    return render(request, 'yaksh/lessons_forum.html', {
-        'user': user,
-        'base_template': base_template,
-        'moderator': moderator,
-        'course': course,
-        'posts': lesson_posts,
-    })
-
-
-@login_required
-@email_verified
-def post_comments(request, course_id, uuid):
-    user = request.user
-    base_template = 'user.html'
-    if is_moderator(user):
-        base_template = 'manage.html'
-    post = get_object_or_404(Post, uid=uuid)
-    comments = post.comment.filter(active=True)
-    course = get_object_or_404(Course, id=course_id)
-    if (not course.is_creator(user) and not course.is_teacher(user)
-            and not course.is_student(user)):
-        raise Http404('You are not enrolled in {0} course'.format(course.name))
-    form = CommentForm()
-    if request.method == "POST":
-        form = CommentForm(request.POST, request.FILES)
-        if form.is_valid():
-            new_comment = form.save(commit=False)
-            new_comment.creator = request.user
-            new_comment.post_field = post
-            new_comment.anonymous = request.POST.get('anonymous', '') == 'on'
-            new_comment.save()
-            messages.success(request, "Added comment successfully")
-            return redirect(request.path_info)
-    return render(request, 'yaksh/post_comments.html', {
-        'post': post,
-        'comments': comments,
-        'base_template': base_template,
-        'form': form,
-        'user': user,
-        'course': course
-        })
-
-
-@login_required
-@email_verified
-def hide_post(request, course_id, uuid):
-    user = request.user
-    course = get_object_or_404(Course, id=course_id)
-    if (not course.is_creator(user) and not course.is_teacher(user)):
-        raise Http404(
-            'Only a course creator or a teacher can delete the post.'
-        )
-    post = get_object_or_404(Post, uid=uuid)
-    post.comment.active = False
-    post.active = False
-    post.save()
-    messages.success(request, "Post deleted successfully")
-    return redirect('yaksh:course_forum', course_id)
-
-
-@login_required
-@email_verified
-def hide_comment(request, course_id, uuid):
-    user = request.user
-    if course_id:
-        course = get_object_or_404(Course, id=course_id)
-        if (not course.is_creator(user) and not course.is_teacher(user)):
-            raise Http404(
-                'Only a course creator or a teacher can delete the comments'
-            )
-    comment = get_object_or_404(Comment, uid=uuid)
-    post_uid = comment.post_field.uid
-    comment.active = False
-    comment.save()
-    messages.success(request, "Post comment deleted successfully")
-    return redirect('yaksh:post_comments', course_id, post_uid)
 
 
 @login_required
