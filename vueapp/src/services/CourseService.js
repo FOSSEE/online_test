@@ -32,6 +32,14 @@ class CourseService {
     modules(id) {
         return http.get(`/modules/${id}`);
     }
+
+    getEnrollments(id) {
+        return http.get(`/course/enrollments/${id}`);
+    }
+
+    setEnrollments(id, data) {
+        return http.post(`/course/enrollments/${id}`, data);
+    }
 }
 
 export default new CourseService();

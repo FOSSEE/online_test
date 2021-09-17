@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import CourseDetail from '../components/course/CourseDetail.vue';
+import CourseContents from '../components/course/CourseContents.vue';
+import CourseEnrollments from '../components/course/CourseEnrollments.vue';
 import Course from '../components/course/Course.vue'
 import ModeratorDashboard from '../components/course/ModeratorDashboard.vue';
 import AddCourse from '../components/course/AddCourse'
@@ -7,8 +8,13 @@ import AddCourse from '../components/course/AddCourse'
 const routes = [
   {
     path: '/exam/manage/course/detail/:course_id',
-    name: 'course_detail',
-    component: CourseDetail,
+    name: 'course_contents',
+    component: CourseContents,
+  },
+  {
+    path: '/exam/manage/course/enrollments/:course_id',
+    name: 'course_enrollments',
+    component: CourseEnrollments,
   },
   {
     path: '/exam/manage/mycourses',

@@ -73,7 +73,7 @@
   import { mapState } from 'vuex';
   import Plyr from 'plyr'
   import Topic from "../course/Topic.vue"
-  import Question from "../course/question/Question.vue"
+  import Question from "../question/Question.vue"
   import Utils from "../../services/Utils"
   import LessonService from "../../services/LessonService"
   export default {

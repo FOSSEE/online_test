@@ -46,7 +46,7 @@
             <div class="card-header bg-secondary">
               <div class="row">
                 <div class="col-md-4">
-                  <router-link :to="{name: 'course_detail', params: {course_id: course.id}}" @click="storeCourse(course.id)">
+                  <router-link :to="{name: 'course_contents', params: {course_id: course.id}}" @click="storeCourse(course.id)">
                     <i class="fa fa-tasks"></i>&nbsp;{{course.name}}
                   </router-link>
                 </div>

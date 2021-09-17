@@ -1,90 +1,89 @@
 <template>
 <div>
-  <Module v-if="isModule" v-on:updateModules="updateModules"></Module>
-  <Lesson v-if="isLesson" v-on:updateLessons="updateLessons"></Lesson>
   <div class="col-md-3">
-    <router-link :to="{name: 'courses'}" class="btn btn-primary">
+    <router-link :to="{name: 'courses'}" class="btn btn-outline-primary btn-sm">
       <i class="fa fa-arrow-left"></i>&nbsp;Back
     </router-link>
   </div>
+  <div class="course">
+    <h1>{{course_name}}</h1>
+  </div>
   <div class="container-fluid">
-    <div class="course">
-      <h1>{{course_name}}</h1>
-    </div>
-    <br>
-    <div class="container">
-      <div class="col-md-12">
-        <button class="btn btn-outline-primary" type="button" @click="showModule(null, false)">
-          <i class="fa fa-plus-circle"></i>&nbsp;Add Module
-        </button>
+    <div class="row">
+      <div class="col-md-3">
+        <CourseOptions v-if=is_ready v-bind:course_id=course_id />
       </div>
-    </div>
-    <br>
-    <div class="container">
-      <div class="alert alert-info course" v-show="!has_modules">
-        No Modules found
-      </div>
-      <div class="card" v-for="(module, index) in modules" :key="module.id">
-        <div class="card-header bg-secondary">
-          {{index+1}}.
-          <a href="#" @click="showModule(index, true)"> {{module.name}}
-          </a>
-        </div>
-        <div class="card-body">
-          <div>
-            <button class="btn btn-primary btn-sm" type="button" @click="showUnit(module, 0, false)">
-              <i class="fa fa-plus-circle"></i>&nbsp;Add Lesson
-            </button>
+      <div class="col-md-7">
+        <Module v-if="isModule" v-on:updateModules="updateModules"></Module>
+        <Lesson v-if="isLesson" v-on:updateLessons="updateLessons"></Lesson>
+          <button class="btn btn-outline-primary" type="button" @click="showModule(null, false)">
+            <i class="fa fa-plus-circle"></i>&nbsp;Add Module
+          </button>
+          <br><br>
+          <div class="alert alert-info course" v-show="!has_modules">
+            No Modules found
           </div>
-          <br>
-          <div>
-            <table class="table table-responsive-sm">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>Sr No.</th>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Order</th>
-                  <th>Statistics</th>
-                </tr>
-              </thead>
-              <draggable tag="tbody" v-model="module.units" @change="updateOrder(module.units, $event)">
-                <tr
-                  v-for="(unit, idx) in module.units"
-                  :key="unit.id"
-                >
-                  <td>
-                  <i class="fa fa-align-justify handle"></i>
-                  </td>
-                  <td>{{idx+1}}</td>
-                  <td>
-                    <a href="#" @click="showUnit(module, idx, true)">{{unit.name}}
-                    </a>
-                  </td>
-                  <td>
-                    {{unit.type}}
-                  </td>
-                  <td>
-                    <input type="text" class="form-control form-control-sm" v-model="unit.order" />
-                  </td>
-                  <td>
-                    Statistics
-                  </td>
-                </tr>
-              </draggable>
-            </table>
-            <button class="btn btn-outline-success btn-sm" @click="submitUnits(module.id, module.units)" v-show="module.has_units">
-              Save Units
-            </button>
+          <div class="card" v-for="(module, index) in modules" :key="module.id">
+            <div class="card-header bg-secondary">
+              {{index+1}}.
+              <a href="#" @click="showModule(index, true)"> {{module.name}}
+              </a>
+            </div>
+            <div class="card-body">
+              <div>
+                <button class="btn btn-primary btn-sm" type="button" @click="showUnit(module, 0, false)">
+                  <i class="fa fa-plus-circle"></i>&nbsp;Add Lesson
+                </button>
+              </div>
+              <br>
+              <table class="table table-responsive" v-show="module.has_units">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Sr No.</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Order</th>
+                    <th>Statistics</th>
+                  </tr>
+                </thead>
+                <draggable tag="tbody" v-model="module.units" @change="updateOrder(module.units, $event)">
+                  <tr
+                    v-for="(unit, idx) in module.units"
+                    :key="unit.id"
+                  >
+                    <td>
+                    <i class="fa fa-align-justify handle"></i>
+                    </td>
+                    <td>{{idx+1}}</td>
+                    <td>
+                      <a href="#" @click="showUnit(module, idx, true)">{{unit.name}}
+                      </a>
+                    </td>
+                    <td>
+                      {{unit.type}}
+                    </td>
+                    <td>
+                      <input type="text" class="form-control form-control-sm" v-model="unit.order" />
+                    </td>
+                    <td>
+                      Statistics
+                    </td>
+                  </tr>
+                </draggable>
+              </table>
+              <br>
+              <button class="btn btn-outline-success btn-sm" @click="submitUnits(module.id, module.units)" v-show="module.has_units">
+                Save Units
+              </button>
+              <br>
+              <div class="course" v-show="!module.has_units">
+                <span class="badge badge-warning">
+                  No Lesson/quiz/exercies are added
+                </span>
+              </div>
+            </div>
           </div>
-          <br>
-          <div class="course" v-show="!module.has_units">
-            <span class="badge badge-warning">
-              No Lesson/quiz/exercies are added
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -94,14 +93,16 @@
   import { mapState } from 'vuex';
   import { VueDraggableNext } from 'vue-draggable-next'
   import ModuleService from "../../services/ModuleService"
-  import Module from '../course/Module.vue'
-  import Lesson from '../course/Lesson.vue'
+  import Module from './Module.vue'
+  import Lesson from './Lesson.vue'
+  import CourseOptions from './CourseOptions.vue'
 
   export default {
-    name: "CourseDetail",
+    name: "CourseContents",
     components: {
       Module, Lesson,
-      "draggable": VueDraggableNext
+      "draggable": VueDraggableNext,
+      CourseOptions
     },
     data() {
       return {
@@ -111,7 +112,8 @@
         edit_lesson: {},
         error: {},
         course_id: '',
-        last_module_order: ''
+        last_module_order: '',
+        is_ready: false
       }
     },
     computed: {
@@ -130,6 +132,7 @@
         this.$store.dispatch('setUserId', user_id);
       } catch {console.log("User error")}
       this.course_id = this.$route.params.course_id
+      this.is_ready = true
       this.course_name = localStorage.getItem("course_"+this.course_id)
       this.$store.commit('toggleLoader', true);
       ModuleService.getall(this.course_id).then(response => {
