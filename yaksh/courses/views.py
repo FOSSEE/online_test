@@ -351,8 +351,21 @@ class CourseEnrollmentDetail(APIView):
         user = request.user
         course = self.get_object(course_id, user.id)
         enrollments = Enrollment.objects.filter(course_id=course_id)
-        print(enrollments)
         serializer = EnrollmentSerializer(enrollments, many=True)
         return Response(serializer.data)
 
-
+    def post(self, request, course_id, format=None):
+        user = request.user
+        students = request.data.get("students")
+        status = request.data.get("status")
+        if students:
+            enrollment_bulk_update = []
+            for u in students:
+                enrollment = get_object_or_404(Enrollment, id=u)
+                enrollment.status = status
+                enrollment_bulk_update.append(enrollment)
+            Enrollment.objects.bulk_update(enrollment_bulk_update, ["status"])
+        course = self.get_object(course_id, user.id)
+        enrollments = Enrollment.objects.filter(course_id=course_id)
+        serializer = EnrollmentSerializer(enrollments, many=True)
+        return Response(serializer.data)

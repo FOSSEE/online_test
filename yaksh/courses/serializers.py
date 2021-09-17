@@ -1,5 +1,7 @@
+import pytz
 from django.forms.models import model_to_dict
 from rest_framework import serializers
+from django.utils import timezone
 
 # Local imports
 from yaksh.courses.models import (
@@ -9,33 +11,28 @@ from yaksh.courses.models import (
     FloatTestCase, ArrangeTestCase, Enrollment
 )
 
-from yaksh.models import (Profile)
+from yaksh.models import (Profile, User)
+
+
+def convert_to_localtime(utctime, tz_info, format="%Y-%m-%d %H:%M:%S %p"):
+    utc = utctime.replace(tzinfo=tz_info)
+    localtz = utc.astimezone()
+    return localtz.strftime(format)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        exclude = ("username", "password", "is_staff", "is_active",
+                   "groups", "user_permissions", "is_superuser")
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
 
     class Meta:
         model = Profile
-    
-    def to_representation(self, instance):
-        serialized_data = {}
-        serialized_data.update(
-            model_to_dict(
-                instance.user,
-                fields=(
-                    "first_name", "last_name", "email", "last_login"
-                )
-            )
-        )
-        serialized_data.update(
-            model_to_dict(
-                instance,
-                exclude=(
-                    "activation_key", "key_expiry_time", "is_email_verified"
-                )
-            )
-        )
-        return serialized_data
+        exclude = ("activation_key", "key_expiry_time", "is_email_verified")
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -464,11 +461,12 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = "__all__"
-    
+
     def to_representation(self, instance):
         profile = instance.student.profile
         serializer_data = {}
         serializer_data["student"] = ProfileSerializer(profile).data
-        serializer_data["status"] = instance.status
+        serializer_data.update(model_to_dict(instance, fields=["id", "status"]))
+        serializer_data["requested_on"] = instance.created_on.strftime(
+            "%Y-%m-%d %H:%M:%S %p")
         return serializer_data
-
