@@ -13,13 +13,13 @@
                 <div class="col-md-3">
                     <CourseOptions v-if=is_ready v-bind:course_id=course_id />
                 </div>
-                <div class="col-md-9">
+                <div class="col">
                     <div class="row">
                         <div class="col-md-2">
                             <h3>Filter By:</h3>
                         </div>
                         <div class="col-md-3">
-                            <div class="btn-group" role="group" aria-label="Basic example">
+                            <div class="btn-group" role="group">
                                 <button type="button" class="btn btn-secondary btn-md" @click="filterStudents(3)">Enrolled</button>
                                 <button type="button" class="btn btn-secondary btn-md" @click="filterStudents(2)">Rejected</button>
                                 <button type="button" class="btn btn-secondary btn-md" @click="filterStudents(1)">Pending</button>
@@ -28,39 +28,53 @@
                         </div>
                     </div>
                     <br><br>
-                    <table class="table table-responsive">
-                        <thead>
-                            <tr>
-                            <th v-show="has_filtered"><input type="checkbox" v-model="allSelected" @change="selectAll()">&nbsp;Select all</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Roll Number</th>
-                            <th>Institute</th>
-                            <th>Department</th>
-                            <th>Status</th>
-                            <th>Requested time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="enroll in filtered"
-                                :key="enroll.id"
+                    <div v-show="has_filtered">
+                    <input type="checkbox" v-model="allSelected" @change="selectAll()">&nbsp;Select all
+                    </div>
+                    <div class="list-group">
+                        <DynamicScroller
+                            class="scroller"
+                            :items="filtered"
+                            :min-item-size="54"
+                            key-field="id"
                             >
-                                <td><input type="checkbox" :value="enroll.id" v-model="selected" @change="select()" /></td>
-                                <td>{{getFullName(enroll.student.user.first_name, enroll.student.user.last_name)}}</td>
-                                <td>{{enroll.student.user.email}}</td>
-                                <td>{{enroll.student.roll_number}}</td>
-                                <td>{{enroll.student.institute}}</td>
-                                <td>{{enroll.student.department}}</td>
-                                <td>
-                                    <span :class="Badge(enroll.status)">
-                                        {{getEnrollmentStatus(enroll.status)}}
-                                    </span>
-                                </td>
-                                <td>{{enroll.requested_on}}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                <template v-slot="{ item, index, active }">
+                                    <DynamicScrollerItem
+                                        :item="item"
+                                        :active="active"
+                                        :size-dependencies="[
+                                            item.student.profile.institute,
+                                        ]"
+                                        :data-index="index"
+                                    >
+                                        <div class="list-group-item flex-column align-items-start user">
+                                            <div class="row">
+                                                <div class="col-md-1">
+                                                    <input type="checkbox" :value="item.id" v-model="selected" @change="select()" />
+                                                </div>
+                                                <div class="col-md-3">
+                                                    {{getFullName(item.student.first_name, item.student.last_name)}}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {{item.student.email}}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {{item.student.profile.roll_number}}
+                                                </div>
+                                            </div>
+                                            <div class="d-flex w-100 justify-content-end">
+                                            <small>
+                                                <span :class="Badge(item.status)">
+                                                {{getEnrollmentStatus(item.status)}}
+                                                </span>
+                                            </small>
+                                            <small>&nbsp;{{item.created_on}}</small>
+                                            </div>
+                                        </div>
+                                    </DynamicScrollerItem>
+                                </template>
+                        </DynamicScroller>
+                    </div>
                     <br>
                     <button class="btn btn-success btn-md" @click="submitEnrollment(3)" v-show="has_filtered" :disabled="!has_selected">
                         Enroll
@@ -74,14 +88,15 @@
     </div>
 </template>
 <script>
-
 import CourseService from "../../services/CourseService"
 import CourseOptions from '../course/CourseOptions.vue';
+import { DynamicScroller, DynamicScrollerItem } from 'vue3-virtual-scroller';
+import 'vue3-virtual-scroller/dist/vue3-virtual-scroller.css'
 
 export default {
     name: "CourseEnrollments",
     components: {
-        CourseOptions
+        CourseOptions, DynamicScroller, DynamicScrollerItem
     },
     data() {
         return {
@@ -89,13 +104,13 @@ export default {
             course_id: '',
             is_ready: false,
             course_name: "",
+            filtered: [],
+            selected: [],
             enrollment_status: {
                 1: "Pending",
                 2: "Rejected",
                 3: "Enrolled"
             },
-            filtered: [],
-            selected: [],
             allSelected: false,
         }
     },
@@ -106,6 +121,11 @@ export default {
       has_selected() {
         return this.selected.length > 0;
       }
+    },
+    watch: {
+        allSelected: function() {
+            this.selectAll();
+        }
     },
     mounted() {
         this.course_id = this.$route.params.course_id
@@ -185,13 +205,21 @@ export default {
         },
         select() {
             this.allSelected = false;
+        },
+        showPopover(institute, department) {
+            alert(institute + department);
         }
     }
 }
 </script>
 <style scoped>
-  .course {
-    display: flex;
-    justify-content: center;
-  }
+.course {
+display: flex;
+justify-content: center;
+}
+
+.scroller {
+height: 100vh;
+}
+
 </style>
