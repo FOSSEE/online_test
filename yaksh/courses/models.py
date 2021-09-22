@@ -117,6 +117,9 @@ class Course(models.Model):
                                 related_name="course_grade",
                                 on_delete=models.CASCADE)
 
+    class Meta:
+        ordering = ['created_on', 'active']
+
     def get_modules(self):
         return self.modules.order_by("order")
 

@@ -350,7 +350,8 @@ class CourseEnrollmentDetail(APIView):
     def get(self, request, course_id, format=None):
         user = request.user
         course = self.get_object(course_id, user.id)
-        enrollments = Enrollment.objects.filter(course_id=course_id)
+        enrollments = Enrollment.objects.select_related(
+            "student", "course", "student__profile").filter(course_id=course_id)
         serializer = EnrollmentSerializer(enrollments, many=True)
         return Response(serializer.data)
 
