@@ -3,10 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.authtoken.models import Token
-from rest_framework.decorators import (
-    api_view, authentication_classes, permission_classes
-)
+
 from rest_framework.exceptions import APIException
 from rest_framework import permissions
 from rest_framework import generics, status
@@ -14,7 +11,6 @@ from rest_framework import generics, status
 
 # Django Imports
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import authenticate
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 
@@ -22,12 +18,15 @@ from django.contrib.contenttypes.models import ContentType
 # Local Imports
 from yaksh.courses.models import (
     Course, Module, Lesson, Enrollment, CourseTeacher, Unit,
-    TableOfContent, Enrollment
+    TableOfContent, Enrollment, CourseTeacher
 )
 from yaksh.courses.serializers import (
     CourseSerializer, ModuleSerializer, LessonSerializer, TopicSerializer,
-    TOCSerializer, QuestionSerializer, EnrollmentSerializer
+    TOCSerializer, QuestionSerializer, EnrollmentSerializer,
+    CourseTeacherSerializer, UserSerializer
 )
+from yaksh.models import User
+from yaksh.send_emails import send_bulk_mail
 
 
 class BasePagination(PageNumberPagination):
@@ -349,9 +348,12 @@ class CourseEnrollmentDetail(APIView):
 
     def get(self, request, course_id, format=None):
         user = request.user
+        enrollment_status = request.query_params.get("status")
         course = self.get_object(course_id, user.id)
         enrollments = Enrollment.objects.select_related(
             "student", "course", "student__profile").filter(course_id=course_id)
+        if enrollment_status:
+            enrollments = enrollments.filter(status=enrollment_status)
         serializer = EnrollmentSerializer(enrollments, many=True)
         return Response(serializer.data)
 
@@ -370,3 +372,65 @@ class CourseEnrollmentDetail(APIView):
         enrollments = Enrollment.objects.filter(course_id=course_id)
         serializer = EnrollmentSerializer(enrollments, many=True)
         return Response(serializer.data)
+
+
+class CourseTeacherDetail(APIView):
+    def get_object(self, course_id, user_id):
+        course = get_object_or_404(Course, id=course_id)
+        if not course.is_valid_user(user_id):
+            raise APIException(f"You are not allowed to view {course.name}")
+        else:
+            return course
+
+    def get(self, request, course_id, format=None):
+        user = request.user
+        course = self.get_object(course_id, user.id)
+        courseteachers = CourseTeacher.objects.filter(course_id=course_id)
+        serializer = CourseTeacherSerializer(courseteachers, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, course_id, format=None):
+        user = request.user
+        course = self.get_object(course_id, user.id)
+        data = request.data
+        if data.get("action") == "delete":
+            CourseTeacher.objects.deleteUsers(
+                data.get("users"), course_id
+            )
+        elif data.get("action") == 'search':
+            search_by = data.get('search_by', "username")
+            u_name = data.get("u_name")
+            users = CourseTeacher.objects.searchUsers(
+                search_by, u_name, user.id, course_id
+            )
+            serializer = UserSerializer(users, many=True)
+            return Response(serializer.data)
+        else:
+            CourseTeacher.objects.addUsers(
+                data.get("users"), course_id
+            )
+
+        courseteachers = CourseTeacher.objects.filter(course_id=course_id)
+        serializer = CourseTeacherSerializer(courseteachers, many=True)
+        return Response(serializer.data)
+
+
+class CourseSendMail(APIView):
+    def get_object(self, course_id, user_id):
+        course = get_object_or_404(Course, id=course_id)
+        if not course.is_valid_user(user_id):
+            raise APIException(f"You are not allowed to view {course.name}")
+        else:
+            return course
+
+    def post(self, request, course_id, format=None):
+        user = request.user
+        course = self.get_object(course_id, user.id)
+        user_ids = request.data.get("students")
+        subject = request.data.get("subject")
+        body = request.data.get("body")
+        students = User.objects.filter(id__in=user_ids).values_list("email", flat=True)
+        print(students)
+        message = send_bulk_mail(subject, body, students, None)
+        return Response({"message": message})
+

@@ -457,3 +457,8 @@ class EnrollmentSerializer(serializers.Serializer):
     status = serializers.IntegerField()
     created_on = serializers.DateTimeField()
 
+
+class CourseTeacherSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    teacher = UserSerializer(read_only=True)
+    course_id = serializers.IntegerField(read_only=True)

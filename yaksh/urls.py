@@ -280,4 +280,7 @@ urlpatterns = [
     path('manage/moderator_dashboard/', views.moderator_dashboard),
     path('manage/course/detail/<int:course_id>', views.course),
     path('manage/addcourse/', views.addcourse),
+    path('manage/course/enrollments/<int:course_id>', views.course),
+    path('manage/course/view/teachers/<int:course_id>', views.course),
+    path('manage/course/send_mail/<int:course_id>', views.course),
 ]

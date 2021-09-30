@@ -4,6 +4,7 @@ from datetime import datetime
 import pytz
 from textwrap import dedent
 
+
 # Django Imports
 from django.db import models
 from django.contrib.auth.models import User
@@ -15,10 +16,13 @@ from django.contrib.contenttypes.fields import (
 )
 from django.db.models.fields.files import FieldFile
 from taggit.managers import TaggableManager
+from django.db.models import Q
 
 
 # Local Imports
 from grades.models import GradingSystem
+from yaksh.models import User
+
 
 languages = (
         ("python", "Python"),
@@ -158,6 +162,38 @@ class Enrollment(models.Model):
         return f"Enrollment status of {self.student} in {self.course}"
 
 
+class CourseTeacherManager(models.Manager):
+
+    def deleteUsers(self, users, course_id):
+        teachers = CourseTeacher.objects.filter(id__in=users, course_id=course_id)
+        teachers.delete()
+
+    def searchUsers(self, search_by, u_name, user_id, course_creator):
+        if search_by == "username":
+            users = User.objects.filter(username__icontains=u_name)
+        elif search_by == "name":
+            users = User.objects.filter(
+                Q(first_name__icontains=u_name) |
+                Q(last_name__icontains=u_name)
+            )
+        else:
+            users = User.objects.filter(
+                Q(email__icontains=u_name)
+            )
+        users.exclude(
+            Q(id=user_id) |
+            Q(is_superuser=1) |
+            Q(id=course_creator)
+        )
+        return users
+
+    def addUsers(self, users, course_id):
+        teachers = []
+        for uid in users:
+            teachers.append(CourseTeacher(teacher_id=uid, course_id=course_id))
+        CourseTeacher.objects.bulk_create(teachers)
+
+
 class CourseTeacher(models.Model):
     teacher = models.ForeignKey(
         User, related_name='teacher', on_delete=models.CASCADE
@@ -166,8 +202,10 @@ class CourseTeacher(models.Model):
         Course, related_name='allotted', on_delete=models.CASCADE
     )
 
+    objects = CourseTeacherManager()
+
     def __str__(self):
-        return f"{self.allotted_user.get_full_name()} teacher in {self.course}"
+        return f"{self.teacher.get_full_name()} teacher in {self.course}"
 
 
 class Module(models.Model):
