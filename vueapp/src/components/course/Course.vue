@@ -24,7 +24,7 @@
                         <input type="text" name="search_tags" placeholder="Search by course name" class="form-control" v-model="searchName">
                         <br>
                         <select name="search_status" class="custom-select" v-model="searchStatus">
-                          <option value="---">Select Status
+                          <option value="">Select Status
                           </option>
                           <option value="active">Active</option>
                           <option value="closed">Inactive</option>

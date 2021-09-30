@@ -33,12 +33,28 @@ class CourseService {
         return http.get(`/modules/${id}`);
     }
 
-    getEnrollments(id) {
-        return http.get(`/course/enrollments/${id}`);
+    getEnrollments(id, enrollmentStatus) {
+        if (enrollmentStatus) {
+            return http.get(`/course/enrollments/${id}?status=${enrollmentStatus}`);
+        } else {
+            return http.get(`/course/enrollments/${id}`);
+        }
     }
 
     setEnrollments(id, data) {
         return http.post(`/course/enrollments/${id}`, data);
+    }
+
+    getTeachers(id) {
+        return http.get(`/course/teachers/${id}`);
+    }
+
+    setTeachers(id, data) {
+        return http.post(`/course/teachers/${id}`, data);
+    }
+
+    sendMail(id, data) {
+        return http.post(`/course/send_mail/${id}`, data);
     }
 }
 

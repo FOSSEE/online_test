@@ -1,13 +1,6 @@
 <template>
 <div>
-  <div class="col-md-3">
-    <router-link :to="{name: 'courses'}" class="btn btn-outline-primary btn-sm">
-      <i class="fa fa-arrow-left"></i>&nbsp;Back
-    </router-link>
-  </div>
-  <div class="course">
-    <h1>{{course_name}}</h1>
-  </div>
+  <CourseHeader v-if=is_ready v-bind:course_name=course_name />
   <div class="container-fluid">
     <div class="row">
       <div class="col-md-3">
@@ -93,6 +86,7 @@
   import { mapState } from 'vuex';
   import { VueDraggableNext } from 'vue-draggable-next'
   import ModuleService from "../../services/ModuleService"
+  import CourseHeader from '../course/CourseHeader.vue';
   import Module from './Module.vue'
   import Lesson from './Lesson.vue'
   import CourseOptions from './CourseOptions.vue'
@@ -102,7 +96,7 @@
     components: {
       Module, Lesson,
       "draggable": VueDraggableNext,
-      CourseOptions
+      CourseOptions, CourseHeader
     },
     data() {
       return {
@@ -230,9 +224,3 @@
     }
   }
 </script>
-<style scoped>
-  .course {
-    display: flex;
-    justify-content: center;
-  }
-</style>

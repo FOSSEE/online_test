@@ -1,13 +1,6 @@
 <template>
     <div>
-        <div class="col-md-3">
-            <router-link :to="{name: 'courses'}" class="btn btn-outline-primary btn-sm">
-            <i class="fa fa-arrow-left"></i>&nbsp;Back
-            </router-link>
-        </div>
-        <div class="course">
-            <h1>{{course_name}}</h1>
-        </div>
+        <CourseHeader v-if=is_ready v-bind:course_name=course_name />
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-3">
@@ -90,13 +83,15 @@
 <script>
 import CourseService from "../../services/CourseService"
 import CourseOptions from '../course/CourseOptions.vue';
+import CourseHeader from '../course/CourseHeader.vue';
 import { DynamicScroller, DynamicScrollerItem } from 'vue3-virtual-scroller';
 import 'vue3-virtual-scroller/dist/vue3-virtual-scroller.css'
 
 export default {
     name: "CourseEnrollments",
     components: {
-        CourseOptions, DynamicScroller, DynamicScrollerItem
+        CourseOptions, DynamicScroller, DynamicScrollerItem,
+        CourseHeader
     },
     data() {
         return {
@@ -213,13 +208,7 @@ export default {
 }
 </script>
 <style scoped>
-.course {
-display: flex;
-justify-content: center;
-}
-
 .scroller {
 height: 100vh;
 }
-
 </style>
