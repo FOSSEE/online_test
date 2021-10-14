@@ -64,6 +64,9 @@ string_check_type = (
     ("exact", "Case Sensitive"),
     )
 
+attempts = [(i, i) for i in range(1, 6)]
+attempts.append((-1, 'Infinite'))
+
 
 def get_lesson_file_dir(instance, filename):
     if isinstance(instance, Lesson):
@@ -503,6 +506,252 @@ class Topic(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class QuizManager(models.Manager):
+    def get_active_quizzes(self):
+        return self.filter(active=True, is_trial=False)
+
+    def create_trial_quiz(self, user):
+        """Creates a trial quiz for testing questions"""
+        trial_quiz = self.create(
+            duration=1000, description="trial_questions",
+            is_trial=True, time_between_attempts=0, creator=user
+        )
+        return trial_quiz
+
+    def create_trial_from_quiz(self, original_quiz_id, user, godmode,
+                               course_id):
+        """Creates a trial quiz from existing quiz"""
+        trial_course_name = "Trial_course_for_course_{0}_{1}".format(
+            course_id, "godmode" if godmode else "usermode")
+        trial_quiz_name = "Trial_orig_id_{0}_{1}".format(
+            original_quiz_id,
+            "godmode" if godmode else "usermode"
+        )
+        # Get or create Trial Course for usermode/godmode
+        trial_course = Course.objects.filter(name=trial_course_name)
+        if trial_course.exists():
+            trial_course = trial_course.get(name=trial_course_name)
+        else:
+            trial_course = Course.objects.create(
+                name=trial_course_name, creator=user, enrollment="open",
+                is_trial=True)
+
+        # Get or create Trial Quiz for usermode/godmode
+        if self.filter(description=trial_quiz_name).exists():
+            trial_quiz = self.get(description=trial_quiz_name)
+
+        else:
+            trial_quiz = self.get(id=original_quiz_id)
+            trial_quiz.user = user
+            trial_quiz.pk = None
+            trial_quiz.description = trial_quiz_name
+            trial_quiz.is_trial = True
+            trial_quiz.prerequisite = None
+            if godmode:
+                trial_quiz.time_between_attempts = 0
+                trial_quiz.duration = 1000
+                trial_quiz.attempts_allowed = -1
+                trial_quiz.active = True
+                trial_quiz.start_date_time = timezone.now()
+                trial_quiz.end_date_time = datetime(
+                    2199, 1, 1, 0, 0, 0, 0, tzinfo=pytz.utc
+                )
+            trial_quiz.save()
+
+        # Get or create Trial Ordered Lesson for usermode/godmode
+        learning_modules = trial_course.get_learning_modules()
+        if learning_modules:
+            quiz = learning_modules[0].learning_unit.filter(quiz=trial_quiz)
+            if not quiz.exists():
+                trial_learning_unit = Unit.objects.create(
+                    order=1, quiz=trial_quiz, type="quiz",
+                    check_prerequisite=False)
+                learning_modules[0].learning_unit.add(trial_learning_unit.id)
+            trial_learning_module = learning_modules[0]
+        else:
+            trial_learning_module = Module.objects.create(
+                name="Trial for {}".format(trial_course), order=1,
+                check_prerequisite=False, creator=user, is_trial=True)
+            trial_learning_unit = Unit.objects.create(
+                order=1, quiz=trial_quiz, type="quiz",
+                check_prerequisite=False)
+            trial_learning_module.learning_unit.add(trial_learning_unit.id)
+            trial_course.learning_module.add(trial_learning_module.id)
+
+        # Add user to trial_course
+        trial_course.enroll(False, user)
+        return trial_quiz, trial_course, trial_learning_module
+
+
+class Quiz(models.Model):
+    """A quiz that students will participate in. One can think of this
+    as the "examination" event.
+    """
+
+    # The start date of the quiz.
+    start_date_time = models.DateTimeField(
+        "Start Date and Time of the quiz",
+        default=timezone.now,
+        null=True
+    )
+
+    # The end date and time of the quiz
+    end_date_time = models.DateTimeField(
+        "End Date and Time of the quiz",
+        default=datetime(
+            2199, 1, 1,
+            tzinfo=pytz.timezone(timezone.get_current_timezone_name())
+        ),
+        null=True
+    )
+
+    # This is always in minutes.
+    duration = models.IntegerField("Duration of quiz in minutes", default=20)
+
+    # Is the quiz active. The admin should deactivate the quiz once it is
+    # complete.
+    active = models.BooleanField(default=True)
+
+    # Description of quiz.
+    description = models.CharField(max_length=256)
+
+    # Mininum passing percentage condition.
+    pass_criteria = models.FloatField("Passing percentage", default=40)
+
+    # Number of attempts for the quiz
+    attempts_allowed = models.IntegerField(default=1, choices=attempts)
+
+    time_between_attempts = models.FloatField(
+        "Time Between Quiz Attempts in hours", default=0.0
+    )
+
+    is_trial = models.BooleanField(default=False)
+
+    instructions = models.TextField('Instructions for Students',
+                                    default=None, blank=True, null=True)
+
+    view_answerpaper = models.BooleanField('Allow student to view their answer\
+                                            paper', default=False)
+
+    allow_skip = models.BooleanField("Allow students to skip questions",
+                                     default=True)
+
+    weightage = models.FloatField(help_text='Will be considered as percentage',
+                                  default=100)
+
+    is_exercise = models.BooleanField(default=False)
+
+    owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name="quiz_creator")
+
+    objects = QuizManager()
+
+    class Meta:
+        verbose_name_plural = "Quizzes"
+
+    def is_expired(self):
+        return not self.start_date_time <= timezone.now() < self.end_date_time
+
+    def create_demo_quiz(self, user):
+        demo_quiz = Quiz.objects.create(
+            start_date_time=timezone.now(),
+            end_date_time=timezone.now() + timedelta(176590),
+            duration=30, active=True,
+            attempts_allowed=-1, time_between_attempts=0,
+            description='Yaksh Demo quiz', pass_criteria=0,
+            creator=user, instructions="<b>This is a demo quiz.</b>"
+        )
+        return demo_quiz
+
+    def get_total_students(self, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        return AnswerPaper.objects.filter(
+            question_paper=qp,
+            course=course
+        ).values_list("user", flat=True).distinct().count()
+
+    def get_passed_students(self, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        return AnswerPaper.objects.filter(
+            question_paper=qp,
+            course=course, passed=True
+        ).values_list("user", flat=True).distinct().count()
+
+    def get_failed_students(self, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        return AnswerPaper.objects.filter(
+            question_paper=qp,
+            course=course, passed=False
+        ).values_list("user", flat=True).distinct().count()
+
+    def get_answerpaper_status(self, user, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        ans_ppr = AnswerPaper.objects.filter(
+            user_id=user.id, course_id=course.id, question_paper_id=qp
+        ).order_by("-attempt_number")
+        if ans_ppr.exists():
+            status = ans_ppr.first().status
+        else:
+            status = "not attempted"
+        return status
+
+    def get_answerpaper_passing_status(self, user, course):
+        try:
+            qp = self.questionpaper_set.get().id
+        except QuestionPaper.DoesNotExist:
+            qp = None
+        ans_ppr = AnswerPaper.objects.filter(
+            user_id=user.id, course_id=course.id, question_paper_id=qp
+        ).order_by("-attempt_number")
+        if ans_ppr.exists():
+            return any([paper.passed for paper in ans_ppr])
+        return False
+
+    def _create_quiz_copy(self, user):
+        question_papers = self.questionpaper_set.all()
+        new_quiz = self
+        new_quiz.id = None
+        new_quiz.creator = user
+        new_quiz.save()
+        for qp in question_papers:
+            qp._create_duplicate_questionpaper(new_quiz)
+        return new_quiz
+
+    def __str__(self):
+        desc = self.description or 'Quiz'
+        return '%s: on %s for %d minutes' % (desc, self.start_date_time,
+                                             self.duration)
+
+    def _add_quiz_to_zip(self, next_unit, module, course, zip_file, path):
+        quiz_name = self.description.replace(" ", "_")
+        course_name = course.name.replace(" ", "_")
+        module_name = module.name.replace(" ", "_")
+        sub_folder_name = os.sep.join((
+            course_name, module_name, quiz_name
+        ))
+        unit_file_path = os.sep.join((
+            path, "templates", "yaksh", "download_course_templates",
+            "quiz.html"
+        ))
+        quiz_data = {"course": course, "module": module,
+                     "quiz": self, "next_unit": next_unit}
+
+        write_templates_to_zip(zip_file, unit_file_path, quiz_data,
+                               quiz_name, sub_folder_name)
+
 
 
 class Question(models.Model):
@@ -1080,3 +1329,67 @@ class LessonQuizAnswer(models.Model):
 
     def __str__(self):
         return f"Lesson answer of {self.toc} by {self.student.get_full_name()}"
+
+
+class CourseStatus(models.Model):
+    completed_units = models.ManyToManyField(Unit,
+                                             related_name="completed_units")
+    current_unit = models.ForeignKey(Unit, related_name="current_unit",
+                                     null=True, blank=True,
+                                     on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="status")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="enroll_user")
+    grade = models.CharField(max_length=255, null=True, blank=True)
+    percentage = models.FloatField(default=0.0)
+    percent_completed = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('user', "course")
+
+    def get_grade(self):
+        return self.grade
+
+    def set_grade(self):
+        if self.is_course_complete():
+            self.calculate_percentage()
+            if self.course.grading_system is None:
+                grading_system = GradingSystem.objects.get(
+                    name__contains='default'
+                )
+            else:
+                grading_system = self.course.grading_system
+            grade = grading_system.get_grade(self.percentage)
+            self.grade = grade
+            self.save()
+
+    def calculate_percentage(self):
+        quizzes = self.course.get_quizzes()
+        if self.is_course_complete() and quizzes:
+            total_weightage = 0
+            sum = 0
+            for quiz in quizzes:
+                total_weightage += quiz.weightage
+                marks = AnswerPaper.objects.get_user_best_of_attempts_marks(
+                    quiz, self.user.id, self.course.id)
+                out_of = quiz.questionpaper_set.first().total_marks
+                sum += (marks/out_of)*quiz.weightage
+            self.percentage = (sum/total_weightage)*100
+            self.save()
+
+    def is_course_complete(self):
+        modules = self.course.get_learning_modules()
+        complete = False
+        for module in modules:
+            complete = module.get_status(self.user, self.course) == 'completed'
+            if not complete:
+                break
+        return complete
+
+    def set_current_unit(self, unit):
+        self.current_unit = unit
+        self.save()
+
+    def __str__(self):
+        return "{0} status for {1}".format(
+            self.course.name, self.user.username
+        )

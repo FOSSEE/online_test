@@ -1,7 +1,7 @@
 # Restframework Imports
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import serializers, status
+from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 
 from rest_framework.exceptions import APIException
@@ -13,17 +13,18 @@ from rest_framework import generics, status
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
+from yaksh.courses import serializers
 
 
 # Local Imports
 from yaksh.courses.models import (
     Course, Module, Lesson, Enrollment, CourseTeacher, Unit,
-    TableOfContent, Enrollment, CourseTeacher
+    TableOfContent, Enrollment, CourseTeacher, Quiz, CourseStatus
 )
 from yaksh.courses.serializers import (
-    CourseSerializer, ModuleSerializer, LessonSerializer, TopicSerializer,
+    CourseProgressSerializer, CourseSerializer, ModuleSerializer, LessonSerializer, TopicSerializer,
     TOCSerializer, QuestionSerializer, EnrollmentSerializer,
-    CourseTeacherSerializer, UserSerializer
+    CourseTeacherSerializer, UserSerializer, QuizSerializer
 )
 from yaksh.models import User
 from yaksh.send_emails import send_bulk_mail
@@ -430,7 +431,70 @@ class CourseSendMail(APIView):
         subject = request.data.get("subject")
         body = request.data.get("body")
         students = User.objects.filter(id__in=user_ids).values_list("email", flat=True)
-        print(students)
         message = send_bulk_mail(subject, body, students, None)
         return Response({"message": message})
 
+
+class CourseProgressDetail(APIView):
+
+    def get_objects(self, course_id):
+        course_status = CourseStatus.objects.filter(course_id=course_id)
+        return course_status
+
+    def get(self, request, course_id, format=None):
+        course_status = self.get_objects(course_id)
+        serializer = CourseProgressSerializer(course_status, many=True)
+        return Response(serializer.data)
+
+
+class QuizDetail(APIView):
+    def get_object(self, pk):
+        quiz = get_object_or_404(Quiz, pk=pk)
+        return quiz
+
+    def get_module_object(self, pk):
+        module = get_object_or_404(Module, pk=pk)
+        return module
+
+    def get(self, request, module_id, pk, format=None):
+        quiz = self.get_object(pk)
+        serializer = QuizSerializer(quiz)
+        return Response(serializer.data)
+
+    def post(self, request, module_id=None, format=None):
+        data = request.data
+        serializer = QuizSerializer(data=data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            ct = ContentType.objects.get_for_model(instance)
+            unit = Unit.objects.create(
+                module_id=module_id,
+                order=data.get("order"), content_type=ct,
+                object_id=instance.id
+            )
+            serialized_data = serializer.data
+            serialized_data['order'] = data['order']
+            serialized_data['type'] = "Quiz"
+            serialized_data['unit_id'] = unit.id
+            return Response(serialized_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, module_id, pk, format=None):
+        data = request.data
+        quiz = self.get_object(pk)
+        serializer = QuizSerializer(quiz, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            serialized_data = serializer.data
+            serialized_data['order'] = data['order']
+            serialized_data['type'] = "Quiz"
+            serialized_data['unit_id'] = data['unit_id']
+            return Response(serialized_data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, module_id, pk, format=None):
+        quiz = self.get_object(pk)
+        quiz.active = False
+        quiz.save()
+        serializer = QuizSerializer(quiz)
+        return Response(serializer.data)

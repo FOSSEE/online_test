@@ -283,4 +283,5 @@ urlpatterns = [
     path('manage/course/enrollments/<int:course_id>', views.course),
     path('manage/course/view/teachers/<int:course_id>', views.course),
     path('manage/course/send_mail/<int:course_id>', views.course),
+    path('manage/course/statistics/<int:course_id>', views.course),
 ]

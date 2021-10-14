@@ -1,3 +1,4 @@
+from re import search
 from rest_framework import serializers
 
 # Local imports
@@ -5,7 +6,7 @@ from yaksh.courses.models import (
     Course, Module, Lesson, Topic, TableOfContent, Question,
     TestCase, StandardTestCase, StdIOBasedTestCase, McqTestCase,
     HookTestCase, IntegerTestCase, StringTestCase,
-    FloatTestCase, ArrangeTestCase
+    FloatTestCase, ArrangeTestCase, Quiz
 )
 
 
@@ -59,6 +60,8 @@ class CourseSerializer(serializers.ModelSerializer):
             instance.hidden = False
         instance.owner = validated_data.get("owner")
         instance.instructions = validated_data.get("instructions")
+        instance.start_enroll_time = validated_data.get("start_enroll_time")
+        instance.end_enroll_time = validated_data.get("end_enroll_time")
         instance.view_grade = validated_data.get("view_grade")
         instance.save()
         return instance
@@ -71,10 +74,11 @@ class UnitSerializer(serializers.RelatedField):
         if isinstance(obj, Lesson):
             serializer_data = LessonSerializer(
             obj, context=self.context).data
-            serializer_data["order"] = value.order
             serializer_data["type"] = "Lesson"
         else:
-            serializer_data = {}
+            serializer_data = QuizSerializer(obj).data
+            serializer_data["type"] = "Quiz"
+        serializer_data["order"] = value.order
         serializer_data['unit_id'] = value.id
         return serializer_data
 
@@ -450,6 +454,37 @@ class TOCSerializer(serializers.ModelSerializer):
         return serializer_data
 
 
+class QuizSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Quiz
+        fields = "__all__"
+    
+    def create(self, validated_data):
+        quiz = Quiz.objects.create(**validated_data)
+        return quiz
+
+    def update(self, instance, validated_data):
+        instance.start_date_time = validated_data.get("start_date_time")
+        instance.end_date_time = validated_data.get("end_date_time")
+        instance.duration = validated_data.get("duration")
+        instance.active = validated_data.get("active")
+        instance.description = validated_data.get("description")
+        instance.pass_criteria = validated_data.get("pass_criteria")
+        instance.attempts_allowed = validated_data.get("attempts_allowed")
+        instance.time_between_attempts = validated_data.get("time_between_attempts")
+        instance.is_trial = validated_data.get("is_trial")
+        instance.instructions = validated_data.get("instructions")
+        instance.view_answerpaper = validated_data.get("view_answerpaper")
+        instance.allow_skip = validated_data.get("allow_skip")
+        instance.weightage = validated_data.get("weightage")
+        instance.is_exercise = validated_data.get("is_exercise")
+        instance.owner = validated_data.get("owner")
+        instance.save()
+
+        return instance
+
+
 class EnrollmentSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     student = UserSerializer()
@@ -462,3 +497,23 @@ class CourseTeacherSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     teacher = UserSerializer(read_only=True)
     course_id = serializers.IntegerField(read_only=True)
+
+
+class CourseProgressSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    course_id = serializers.IntegerField()
+    user = UserSerializer()
+    grade = serializers.CharField()
+    percent_completed = serializers.IntegerField()
+    unit = serializers.SerializerMethodField('current_unit')
+
+    def current_unit(self, obj):
+        unit = obj.current_unit
+        NoneType = type(None)
+        if not isinstance(unit, NoneType):
+            if isinstance(unit.content_object, Lesson):
+                return unit.content_object.name
+            else:
+                return unit.content_object.summary
+        else:
+            return None
