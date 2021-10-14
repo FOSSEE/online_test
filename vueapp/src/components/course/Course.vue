@@ -124,7 +124,7 @@
           </div>
           <form @submit.prevent="submitCourse">
           <div class="modal-body">
-            <table class="table table-responsive-sm">
+            <table class="table table-responsive">
               <tr>
                 <th>Name:</th>
                 <td>
@@ -171,7 +171,7 @@
               <tr>
                 <th>Enrollment Start Time:</th>
                 <td>
-                  <v-date-picker v-model="edit_course.start_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD h:mm:ss'">
+                  <v-date-picker v-model="edit_course.start_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD HH:mm'" is24hr>
                     <template #default="{ inputValue, inputEvents }">
                       <input class="px-3 py-1 border rounded" :value="inputValue" v-on="inputEvents" />
                       <br>
@@ -184,7 +184,7 @@
               <tr>
                 <th>Enrollment End Time:</th>
                 <td>
-                  <v-date-picker v-model="edit_course.end_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD h:mm:ss'">
+                  <v-date-picker v-model="edit_course.end_enroll_time" mode="dateTime" :timezone="timezone" :date-formatter="'YYYY-MM-DD HH:mm'" is24hr>
                     <template #default="{ inputValue, inputEvents }">
                       <input class="px-3 py-1 border rounded" :value="inputValue" v-on="inputEvents" />
                       <br>
@@ -352,16 +352,16 @@
       },
       storeCourse(course_id) {
         localStorage.setItem('course_'+course_id, this.getCourse(course_id)[0].name);
-      }
+      },
+      updateStartTime(val) {
+        console.log(val)
+      } 
     }
   }
 </script>
 <style scoped>
-  .modal-dialog {
-      overflow-y: initial !important
-  }
-  .modal-body {
-      height: 80vh;
-      overflow-y: auto;
+  .modal {
+    width:  100%;
+    overflow-y: scroll;
   }
 </style>

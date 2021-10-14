@@ -87,7 +87,7 @@
       ...mapState({
         user: (state) => state.user_id,
         course_id: (state) => state.course_id,
-        lesson: (state) => state.lesson
+        lesson: (state) => state.unit
       }),
       existing() {
         return 'id' in this.lesson
@@ -112,7 +112,7 @@
     },
     methods: {
       closeModal() {
-        this.$store.dispatch('toggleLesson', false)
+        this.$store.dispatch('toggleUnit', false)
       },
       submitLesson() {
         this.$store.commit('toggleLoader', true);
@@ -121,7 +121,7 @@
             if(this.lesson && !this.lesson.id) {
               this.closeModal();
             }
-            this.$emit("updateLessons", {"data": response.data, "existing": this.existing})
+            this.$emit("updateUnits", {"data": response.data, "existing": this.existing})
             this.$toast.success("Lesson saved successfully ", {'position': 'top'});
           })
           .catch(e => {

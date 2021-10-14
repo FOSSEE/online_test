@@ -8,7 +8,8 @@
       </div>
       <div class="col-md-7">
         <Module v-if="isModule" v-on:updateModules="updateModules"></Module>
-        <Lesson v-if="isLesson" v-on:updateLessons="updateLessons"></Lesson>
+        <Lesson v-if="isLesson" v-on:updateUnits="updateUnits"></Lesson>
+        <Quiz v-if="isQuiz" v-on:updateUnits="updateUnits"></Quiz>
           <button class="btn btn-outline-primary" type="button" @click="showModule(null, false)">
             <i class="fa fa-plus-circle"></i>&nbsp;Add Module
           </button>
@@ -24,8 +25,11 @@
             </div>
             <div class="card-body">
               <div>
-                <button class="btn btn-primary btn-sm" type="button" @click="showUnit(module, 0, false)">
+                <button class="btn btn-primary btn-sm" type="button" @click="showUnit(module, 0, false, 'Lesson')">
                   <i class="fa fa-plus-circle"></i>&nbsp;Add Lesson
+                </button>
+                <button class="btn btn-primary btn-sm" type="button" @click="showUnit(module, 0, false, 'Quiz')">
+                  <i class="fa fa-plus-circle"></i>&nbsp;Add Quiz/Exercise
                 </button>
               </div>
               <br>
@@ -49,8 +53,12 @@
                     <i class="fa fa-align-justify handle"></i>
                     </td>
                     <td>{{idx+1}}</td>
-                    <td>
+                    <td v-if="unit.type == 'Lesson'">
                       <a href="#" @click="showUnit(module, idx, true)">{{unit.name}}
+                      </a>
+                    </td>
+                    <td v-else>
+                      <a href="#" @click="showUnit(module, idx, true)">{{unit.description}}
                       </a>
                     </td>
                     <td>
@@ -89,12 +97,13 @@
   import CourseHeader from '../course/CourseHeader.vue';
   import Module from './Module.vue'
   import Lesson from './Lesson.vue'
+  import Quiz from './Quiz.vue'
   import CourseOptions from './CourseOptions.vue'
 
   export default {
     name: "CourseContents",
     components: {
-      Module, Lesson,
+      Module, Lesson, Quiz,
       "draggable": VueDraggableNext,
       CourseOptions, CourseHeader
     },
@@ -103,7 +112,7 @@
         course_name: '',
         modules: [],
         edit_module: {},
-        edit_lesson: {},
+        edit_unit: {},
         error: {},
         course_id: '',
         last_module_order: '',
@@ -115,6 +124,7 @@
           user: (state) => state.user_id,
           isModule: (state) => state.showModule,
           isLesson: (state) => state.showLesson,
+          isQuiz: (state) => state.showQuiz,
       }),
       has_modules() {
         return this.modules.length > 0
@@ -157,23 +167,25 @@
         this.$store.dispatch('toggleModule', true)
         this.$store.dispatch('setCourseId', this.course_id)
       },
-      showUnit(c_module, unit_index, is_edit) {
+      showUnit(c_module, unit_index, is_edit, type) {
         this.edit_module = c_module
         if(is_edit) {
-          this.edit_lesson = c_module['units'][unit_index]
+          this.edit_unit = c_module['units'][unit_index]
           this.unit_index = unit_index
         } else {
           try {
             var units = c_module["units"]
-            this.last_lesson_order = units[units.length-1].order+1
+            this.last_unit_order = units[units.length-1].order+1
           } catch {
-            this.last_lesson_order = 0
+            this.last_unit_order = 1
           }
-          this.edit_lesson = {'owner': this.user, 'order': this.last_lesson_order}
+          this.edit_unit = {'owner': this.user, 'order': this.last_unit_order, 'type': type}
         }
-        this.edit_lesson['module_id'] = this.edit_module.id
-        this.$store.dispatch('setLesson', this.edit_lesson)
-        this.$store.dispatch('toggleLesson', true)
+        this.edit_unit['module_id'] = this.edit_module.id
+        var isLesson = this.edit_unit["type"] == "Lesson"
+        var isQuiz = this.edit_unit["type"] == "Quiz"
+        this.$store.dispatch('setUnit', this.edit_unit)
+        this.$store.dispatch('toggleUnit', {"isLesson": isLesson, "isQuiz": isQuiz})
         this.$store.dispatch('setCourseId', this.course_id)
       },
       updateModules(args) {
@@ -183,7 +195,7 @@
           this.modules.push(args.data)
         }
       },
-      updateLessons(args) {
+      updateUnits(args) {
         if (args.existing) {
           this.edit_module['units'][this.unit_index] = args.data
         } else {

@@ -56,6 +56,10 @@ class CourseService {
     sendMail(id, data) {
         return http.post(`/course/send_mail/${id}`, data);
     }
+
+    getStatistics(id) {
+        return http.get(`/course/progress/${id}`);
+    }
 }
 
 export default new CourseService();

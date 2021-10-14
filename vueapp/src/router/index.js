@@ -4,6 +4,7 @@ import CourseEnrollments from '../components/course/CourseEnrollments.vue';
 import Course from '../components/course/Course.vue'
 import CourseTeachers from '../components/course/CourseTeachers.vue'
 import CourseSendMail from '../components/course/CourseSendMail.vue'
+import CourseStatistics from '../components/course/CourseStatistics.vue'
 import ModeratorDashboard from '../components/course/ModeratorDashboard.vue';
 import AddCourse from '../components/course/AddCourse'
 
@@ -27,6 +28,11 @@ const routes = [
     path: '/exam/manage/course/send_mail/:course_id',
     name: 'course_send_mail',
     component: CourseSendMail,
+  },
+  {
+    path: '/exam/manage/course/statistics/:course_id',
+    name: 'course_statistics',
+    component: CourseStatistics,
   },
   {
     path: '/exam/manage/mycourses',

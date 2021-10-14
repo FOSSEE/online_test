@@ -12,7 +12,7 @@
         </router-link>
       </li>
       <li class="list-group-item">
-        <router-link :to="{name: 'course_teachers', params: {course_id: course_id}}">
+        <router-link :to="{name: 'course_statistics', params: {course_id: course_id}}">
           Statistics
         </router-link>
       </li>
