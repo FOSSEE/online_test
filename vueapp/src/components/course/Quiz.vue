@@ -1,6 +1,5 @@
 <template>
   <div>
-    {{quiz}}
      <div class="modal" tabindex="-1" role="dialog" id="quizModal">
        <div class="modal-dialog mw-100 w-78" role="document">
          <div class="modal-content">

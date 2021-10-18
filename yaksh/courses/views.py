@@ -62,7 +62,6 @@ class ModeratorDashboard(generics.ListCreateAPIView):
         return courses
 
 
-
 class CourseDetail(APIView):
     def get_object(self, pk, user_id):
         course = get_object_or_404(Course, pk=pk)
@@ -258,6 +257,7 @@ class LessonDetail(APIView):
             serialized_data['unit_id'] = data['unit_id']
             return Response(serialized_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def delete(self, request, module_id, pk, format=None):
         lesson = self.get_object(pk)

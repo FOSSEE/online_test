@@ -85,11 +85,14 @@ class UnitSerializer(serializers.RelatedField):
 
 class ModuleSerializer(serializers.ModelSerializer):
     units = UnitSerializer(read_only=True, many=True)
+    owner_id = serializers.IntegerField()
+    course_id = serializers.IntegerField()
     has_units = serializers.ReadOnlyField()
 
     class Meta:
         model = Module
-        fields = "__all__"
+        fields = ("id", "name", "description", "owner_id", "units",
+                  "course_id", "order", "html_data", "active", "has_units")
 
     def create(self, validated_data):
         module = Module.objects.create(**validated_data)
@@ -99,18 +102,20 @@ class ModuleSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get("name")
         instance.description = validated_data.get("description")
         instance.active = validated_data.get("active")
-        instance.owner_id = validated_data.get("owner")
-        instance.course_id = validated_data.get("course")
+        instance.owner_id = validated_data.get("owner_id")
+        instance.course_id = validated_data.get("course_id")
         instance.order = validated_data.get("order")
         instance.save()
         return instance
 
 
 class LessonSerializer(serializers.ModelSerializer):
+    owner_id = serializers.IntegerField()
 
     class Meta:
         model = Lesson
-        fields = "__all__"
+        fields = ("id", "name", "description", "html_data", "owner_id",
+                  "active", "video_file", "video_path")
 
     def create(self, validated_data):
         lesson = Lesson.objects.create(**validated_data)
@@ -120,7 +125,7 @@ class LessonSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get("name")
         instance.description = validated_data.get("description")
         instance.html_data = validated_data.get("html_data")
-        instance.owner_id = validated_data.get("owner")
+        instance.owner_id = validated_data.get("owner_id")
         instance.active = validated_data.get("active")
         instance.video_file = validated_data.get("video_file")
         instance.video_path = validated_data.get("video_path")

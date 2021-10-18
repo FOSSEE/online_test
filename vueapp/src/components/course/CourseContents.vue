@@ -161,8 +161,9 @@
           } catch {
             this.last_module_order = 0
           }
-          this.edit_module = {'owner': this.user, "course": this.course_id, 'order': this.last_module_order}
+          this.edit_module = {'owner_id': this.user, 'course_id': this.course_id, 'order': this.last_module_order}
         }
+        console.log(this.edit_module['owner_id'])
         this.$store.dispatch('setModule', this.edit_module)
         this.$store.dispatch('toggleModule', true)
         this.$store.dispatch('setCourseId', this.course_id)
@@ -179,7 +180,7 @@
           } catch {
             this.last_unit_order = 1
           }
-          this.edit_unit = {'owner': this.user, 'order': this.last_unit_order, 'type': type}
+          this.edit_unit = {'owner_id': this.user, 'order': this.last_unit_order, 'type': type}
         }
         this.edit_unit['module_id'] = this.edit_module.id
         var isLesson = this.edit_unit["type"] == "Lesson"
