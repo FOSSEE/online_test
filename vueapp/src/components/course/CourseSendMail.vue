@@ -4,9 +4,12 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-3">
-                    <CourseOptions v-if=is_ready v-bind:course_id=course_id />
+                    <CourseOptions v-if="is_ready" v-bind:course_id="course_id" v-bind:activeTab="active"/>
                 </div>
                 <div class="col">
+                    <div class="alert alert-warning"  v-show="!has_filtered">
+                        No Students Found
+                    </div>
                     <br><br>
                     <div v-show="has_filtered">
                     <input type="checkbox" v-model="allSelected" @change="selectAll()">&nbsp;Select all
@@ -48,16 +51,16 @@
                         </DynamicScroller>
                     </div>
                     <br>
-                    <form @submit.prevent="sendMail()">
+                    <form @submit.prevent="sendMail()"  v-show="has_filtered">
                     <div class="card">
                         <div class="card-body">
                             <textarea v-model="subject" placeholder="Enter email subject" class="form-control" required></textarea>
                             <br>
-                            <editor api-key="no-api-key" v-model="body" />
+                            <editor api-key="no-api-key" v-model="body"/>
                         </div>
                     </div>
                     <br>
-                    <button type="submit" class="btn btn-success btn-md" v-show="has_filtered" :disabled="!enableButton">
+                    <button type="submit" class="btn btn-success btn-md" :disabled="!enableButton">
                         Send
                     </button>
                     </form>
@@ -89,7 +92,8 @@
                 selected: [],
                 allSelected: false,
                 subject: "",
-                body: ""
+                body: "",
+                active: 5
             }
         },
         computed: {

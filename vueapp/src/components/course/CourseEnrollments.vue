@@ -4,7 +4,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-3">
-                    <CourseOptions v-if=is_ready v-bind:course_id=course_id />
+                    <CourseOptions v-if="is_ready" v-bind:course_id="course_id" v-bind:activeTab="active"/>
                 </div>
                 <div class="col">
                     <div class="row">
@@ -19,6 +19,10 @@
                                 <button type="button" class="btn btn-secondary btn-md" @click="filterStudents(0)">All</button>
                             </div>
                         </div>
+                    </div>
+                    <br><br>
+                    <div class="alert alert-warning"  v-show="!has_filtered">
+                        No Students Found
                     </div>
                     <br><br>
                     <div v-show="has_filtered">
@@ -107,6 +111,7 @@ export default {
                 3: "Enrolled"
             },
             allSelected: false,
+            active: 2
         }
     },
     computed: {

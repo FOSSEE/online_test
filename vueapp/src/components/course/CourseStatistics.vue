@@ -4,7 +4,7 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-md-3">
-            <CourseOptions v-if=is_ready v-bind:course_id=course_id />
+            <CourseOptions v-if="is_ready" v-bind:course_id="course_id" v-bind:activeTab="active"/>
         </div>
         <div class="col">
           <table class="table table-responsive">
@@ -49,7 +49,8 @@
         course_id: "",
         is_ready: false,
         course_name: "",
-        statistics: []
+        statistics: [],
+        active: 3
       }
     },
     mounted() {

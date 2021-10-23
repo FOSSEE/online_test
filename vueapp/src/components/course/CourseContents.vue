@@ -4,7 +4,7 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-md-3">
-        <CourseOptions v-if=is_ready v-bind:course_id=course_id />
+        <CourseOptions v-if="is_ready" v-bind:course_id="course_id" v-bind:activeTab="active"/>
       </div>
       <div class="col-md-7">
         <Module v-if="isModule" v-on:updateModules="updateModules"></Module>
@@ -116,7 +116,8 @@
         error: {},
         course_id: '',
         last_module_order: '',
-        is_ready: false
+        is_ready: false,
+        active: 1
       }
     },
     computed: {

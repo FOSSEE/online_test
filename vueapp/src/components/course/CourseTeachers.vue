@@ -4,7 +4,7 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-3">
-                    <CourseOptions v-if=is_ready v-bind:course_id=course_id />
+                    <CourseOptions v-if="is_ready" v-bind:course_id="course_id" v-bind:activeTab="active"/>
                 </div>
                 <div class="col">
                     <div>
@@ -134,7 +134,8 @@ export default {
             allSelected: false,
             search_by: "",
             search_text: "",
-            course_id: ''
+            course_id: '',
+            active: 4
         }
     },
     computed: {
