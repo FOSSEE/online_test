@@ -1,6 +1,6 @@
 <template>
   <div>
-      <h4>Add Course</h4>
+    <h4>Add Course</h4>
     <div class="row">
       <div class="col-md-8">
         <ul class="nav nav-pills" id="course_tabs">
@@ -144,10 +144,6 @@
 
 import CourseService from "../../services/CourseService"
 import Editor from '@tinymce/tinymce-vue';
-import axios from 'axios';
-
-axios.defaults.xsrfCookieName = 'csrftoken';
-axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 
 export default {
   name: "AddCourse",
@@ -178,10 +174,10 @@ export default {
     'editor': Editor
   },
   methods: {
-    async submitCourse () {
+    submitCourse () {
       const user_id = document.getElementById("user_id").getAttribute("value");
-      this.fieldErrors = this.validateForm(this.fields);
-      if(Object.keys(this.fieldErrors).length) return;
+      // this.fieldErrors = this.validateForm(this.fields);
+      // if(Object.keys(this.fieldErrors).length) return;
       const data = {
           'name': this.fields.courseName,
           'enrollment': this.fields.courseEnrollmentType,

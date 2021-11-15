@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from yaksh.models import Course
+from yaksh.courses.models import Course
 
 
 class IsAuthorOrReadOnly(permissions.BasePermission):

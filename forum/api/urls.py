@@ -1,5 +1,5 @@
 from django.urls import path, include
-
+from django.conf.urls import url
 from .views import CoursePostList, CoursePostDetail, CoursePostComments, \
                    CoursePostCommentDetail, LessonPostDetail, \
                    LessonPostComments, LessonPostCommentDetail
@@ -14,6 +14,7 @@ urlpatterns = [
          CoursePostDetail.as_view(),
          name='course_post_detail'
     ),
+    path('course_forum/<int:course_id>/<str:search>/', CoursePostList().as_view(), name='search_course_post_list'),
     path(
         'course_forum/<int:course_id>/<int:post_id>/comments/',
         CoursePostComments.as_view(),

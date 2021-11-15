@@ -29,5 +29,18 @@ urlpatterns = [
         r'^(?P<course_id>\d+)/comment/(?P<uuid>[0-9a-f-]+)/delete/',
         views.hide_comment,
         name='hide_comment'
-    ),   
+    ),
+    url(
+         r'^courseforum/(?P<course_id>\d+)/$',
+        views.courseforum,
+        name='courseforum'
+    ),
+    # url(
+    #     r'^' lesson_forum
+    # )
+    url(
+        r'^courseforum/(?P<course_id>\d+)/post/(?P<id>\d+)/$',
+        views.postcomments,
+        name='postcomments'
+    ),
 ]

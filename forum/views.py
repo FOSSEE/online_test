@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
+from django.db.models import Q
 
 from yaksh.models import Course
 from yaksh.views import is_moderator
@@ -11,6 +12,32 @@ from yaksh.decorators import email_verified, has_profile
 
 from .models import Post, Comment
 from .forms import PostForm, CommentForm
+
+
+def courseforum(request, course_id):
+    user = request.user
+    base_template = 'user.html'
+    moderator = False
+    if is_moderator(user):
+        base_template = 'manage.html'
+        moderator = True
+
+    return render(request, 'forum/courseforum.html', {
+        'base_template': base_template
+    })
+
+
+def postcomments(request, course_id, id):
+    user = request.user
+    base_template = 'user.html'
+    moderator = False
+    if is_moderator(user):
+        base_template = 'manage.html'
+        moderator = True
+
+    return render(request, 'forum/courseforum.html', {
+        'base_template': base_template
+    })
 
 
 @login_required

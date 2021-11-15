@@ -1,4 +1,5 @@
 import uuid
+import os
 
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
@@ -49,10 +50,12 @@ class Post(ForumBase):
         return self.title
 
     def get_last_comment(self):
-        return self.comment.last()
+        if self.comments.exists():
+            return self.comments.filter(active=True).last()
 
     def get_comments_count(self):
-        return self.comment.filter(active=True).count()
+        if self.comments.exists():
+            return self.comments.filter(active=True).count()
 
 
 class Comment(ForumBase):

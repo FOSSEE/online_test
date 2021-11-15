@@ -3,6 +3,8 @@ import CourseDetail from '../components/course/CourseDetail.vue';
 import Course from '../components/course/Course.vue'
 import ModeratorDashboard from '../components/course/ModeratorDashboard.vue';
 import AddCourse from '../components/course/AddCourse'
+import CourseForum from '../components/forum/CourseForum'
+import PostComments from '../components/forum/PostComments'
 
 const routes = [
   {
@@ -24,6 +26,16 @@ const routes = [
     path: '/exam/manage/addcourse/',
     name: 'add_course',
     component: AddCourse
+  },
+  {
+    path: '/forum/courseforum/:course_id/',
+    name: 'course_forum',
+    component: CourseForum,
+  },
+  {
+    path: '/forum/courseforum/:course_id/post/:post_id/',
+    name: 'post_comments',
+    component: PostComments,
   }
 ];
 

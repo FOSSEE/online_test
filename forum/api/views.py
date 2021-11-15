@@ -1,20 +1,27 @@
+from collections import OrderedDict
+
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import status, generics, pagination
 from rest_framework.permissions import IsAuthenticated
 
 from forum.models import Post, Comment
-from yaksh.models import Course, Lesson
+from yaksh.courses.models import Course, Lesson
 from .serializers import PostSerializer, CommentSerializer
 from .permissions import IsAuthorOrReadOnly
 
+
+class PostListPagination(pagination.PageNumberPagination):
+    page_size = 20
 
 class CoursePostList(generics.ListCreateAPIView):
 
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = PostListPagination
 
     def get_course(self, course_id):
         try:
@@ -24,13 +31,45 @@ class CoursePostList(generics.ListCreateAPIView):
         return course
 
     def get_queryset(self):
+        search = None
+        if 'search' in self.kwargs:
+            search = self.kwargs['search']
         course_id = self.kwargs['course_id']
         course = self.get_course(course_id)
         course_ct = ContentType.objects.get_for_model(course)
-        posts = Post.objects.filter(target_ct=course_ct,
-                                    target_id=course.id,
-                                    active=True)
+
+        if search:
+            posts = Post.objects.filter(
+                Q(title__icontains=search) |
+                Q(description__icontains=search),
+                target_ct=course_ct,
+                target_id=course.id,
+                active=True,
+            ).order_by('-modified_at')
+        else:
+            posts = Post.objects.filter(target_ct=course_ct,
+                                        target_id=course.id,
+                                        active=True).order_by('-modified_at')
         return posts
+
+    def create(self, request, *args, **kwargs):
+        data = OrderedDict()
+        data.update(request.data)
+        creator = request.user
+        course_id = self.kwargs['course_id']
+        course = self.get_course(course_id)
+        course_ct = ContentType.objects.get_for_model(course)
+        data['target_id'] = course_id
+        data['target_ct'] = course_ct.id
+        data['target'] = course
+        data['creator'] = creator.id
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
 
 class CoursePostDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -69,6 +108,16 @@ class CoursePostComments(generics.ListCreateAPIView):
         comments = post.comments.filter(active=True)
         return comments
 
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        data['post_field'] = self.kwargs['post_id']
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED
+        )
 
 class CoursePostCommentDetail(generics.RetrieveUpdateDestroyAPIView):
 
