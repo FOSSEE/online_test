@@ -15,7 +15,8 @@ from .permissions import IsAuthorOrReadOnly
 
 
 class PostListPagination(pagination.PageNumberPagination):
-    page_size = 20
+    page_size = 10
+
 
 class CoursePostList(generics.ListCreateAPIView):
 
@@ -109,14 +110,17 @@ class CoursePostComments(generics.ListCreateAPIView):
         return comments
 
     def create(self, request, *args, **kwargs):
-        data = request.data
+        data = OrderedDict()
+        data.update(request.data)
+        print(request.FILES['file'])
         data['post_field'] = self.kwargs['post_id']
+        data['image'] = request.FILES.get('file', None)
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(
-            serializer.data, status=status.HTTP_201_CREATED
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
 
 class CoursePostCommentDetail(generics.RetrieveUpdateDestroyAPIView):

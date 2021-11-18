@@ -43,7 +43,7 @@
                   </div>
                   <div class="mb-3">
                     <label for="image" class="form-label">Image</label>
-                    <input @change="onFileChange($event)" type="file" class="form-control" id="formFile">
+                    <input @change="onFileChange($event)" type="file" class="form-control" id="formFile" ref="inputFile">
                   </div>
                   <div class="form-check">
                     <input type="checkbox" id="checkbox" v-model="anonymous" class="form-check-input">
@@ -256,14 +256,21 @@ export default {
       this.user_id = document.getElementById("user_id").getAttribute("value");
     },
 
+    resetFields() {
+      this.title = '';
+      this.description = '';
+      this.file = '';
+      this.anonymous = false;
+      this.$refs.inputFile.value = '';
+    },
+
     submitPost() {
-      const data = {
-        'title': this.title,
-        'description': this.description,
-        // 'image': this.file,
-        'anonymous': this.anonymous,
-        'target_id': this.course_id,
-      }
+      const data = new FormData();
+      data.append('title', this.title);
+      data.append('description', this.description);
+      data.append('image', this.file);
+      data.append('anonymous', this.anonymous);
+      data.append('target_id', this.course_id);
       this.$store.commit('toggleLoader', true);
       ForumService.create_or_update(this.course_id, null, data)
         .then((response) => {
@@ -272,6 +279,7 @@ export default {
         .catch((e) => {
           console.log(e);
         })
+      this.resetFields();
       this.$refs.Close.click();
       this.$store.commit('toggleLoader', false);
     },
@@ -317,12 +325,7 @@ export default {
     },
 
     onFileChange(event) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (e) => {
-        this.file = e.target.result;
-      }
+      this.file = event.target.files[0];
     },
   },
 }

@@ -14,6 +14,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'is_superuser', 'username', 'first_name', 'last_name')
 
 class CommentSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(
+        max_length=None, use_url=True, required=False,
+    )
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
