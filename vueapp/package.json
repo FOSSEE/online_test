@@ -18,10 +18,11 @@
     "v-calendar": "^3.0.0-alpha.5",
     "vue": "^3.0.0",
     "vue-draggable-next": "^2.0.1",
+    "vue-loader": "^15.9.8",
     "vue-loading-overlay": "^4.0.3",
     "vue-router": "^4.0.10",
-    "vuex": "^4.0.2",
-    "yarn": "^1.22.11"
+    "vue3-virtual-scroller": "^0.2.3",
+    "vuex": "^4.0.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

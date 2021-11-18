@@ -1,12 +1,9 @@
 # Restframework Imports
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import serializers, status
+from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.authtoken.models import Token
-from rest_framework.decorators import (
-    api_view, authentication_classes, permission_classes
-)
+
 from rest_framework.exceptions import APIException
 from rest_framework import permissions
 from rest_framework import generics, status
@@ -14,20 +11,23 @@ from rest_framework import generics, status
 
 # Django Imports
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import authenticate
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
+from yaksh.courses import serializers
 
 
 # Local Imports
 from yaksh.courses.models import (
     Course, Module, Lesson, Enrollment, CourseTeacher, Unit,
-    TableOfContent, Enrollment
+    TableOfContent, Enrollment, CourseTeacher, Quiz, CourseStatus
 )
 from yaksh.courses.serializers import (
-    CourseSerializer, ModuleSerializer, LessonSerializer, TopicSerializer,
-    TOCSerializer, QuestionSerializer, EnrollmentSerializer
+    CourseProgressSerializer, CourseSerializer, ModuleSerializer, LessonSerializer, TopicSerializer,
+    TOCSerializer, QuestionSerializer, EnrollmentSerializer,
+    CourseTeacherSerializer, UserSerializer, QuizSerializer
 )
+from yaksh.models import User
+from yaksh.send_emails import send_bulk_mail
 
 
 class BasePagination(PageNumberPagination):
@@ -60,7 +60,6 @@ class ModeratorDashboard(generics.ListCreateAPIView):
             is_trial=False
         ).distinct().order_by('-active')
         return courses
-
 
 
 class CourseDetail(APIView):
@@ -259,6 +258,7 @@ class LessonDetail(APIView):
             return Response(serialized_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
     def delete(self, request, module_id, pk, format=None):
         lesson = self.get_object(pk)
         lesson.active = False
@@ -349,10 +349,152 @@ class CourseEnrollmentDetail(APIView):
 
     def get(self, request, course_id, format=None):
         user = request.user
+        enrollment_status = request.query_params.get("status")
+        course = self.get_object(course_id, user.id)
+        enrollments = Enrollment.objects.select_related(
+            "student", "course", "student__profile").filter(course_id=course_id)
+        if enrollment_status:
+            enrollments = enrollments.filter(status=enrollment_status)
+        serializer = EnrollmentSerializer(enrollments, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, course_id, format=None):
+        user = request.user
+        students = request.data.get("students")
+        status = request.data.get("status")
+        if students:
+            enrollment_bulk_update = []
+            for u in students:
+                enrollment = get_object_or_404(Enrollment, id=u)
+                enrollment.status = status
+                enrollment_bulk_update.append(enrollment)
+            Enrollment.objects.bulk_update(enrollment_bulk_update, ["status"])
         course = self.get_object(course_id, user.id)
         enrollments = Enrollment.objects.filter(course_id=course_id)
-        print(enrollments)
         serializer = EnrollmentSerializer(enrollments, many=True)
         return Response(serializer.data)
 
 
+class CourseTeacherDetail(APIView):
+    def get_object(self, course_id, user_id):
+        course = get_object_or_404(Course, id=course_id)
+        if not course.is_valid_user(user_id):
+            raise APIException(f"You are not allowed to view {course.name}")
+        else:
+            return course
+
+    def get(self, request, course_id, format=None):
+        user = request.user
+        course = self.get_object(course_id, user.id)
+        courseteachers = CourseTeacher.objects.filter(course_id=course_id)
+        serializer = CourseTeacherSerializer(courseteachers, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, course_id, format=None):
+        user = request.user
+        course = self.get_object(course_id, user.id)
+        data = request.data
+        if data.get("action") == "delete":
+            CourseTeacher.objects.deleteUsers(
+                data.get("users"), course_id
+            )
+        elif data.get("action") == 'search':
+            search_by = data.get('search_by', "username")
+            u_name = data.get("u_name")
+            users = CourseTeacher.objects.searchUsers(
+                search_by, u_name, user.id, course_id
+            )
+            serializer = UserSerializer(users, many=True)
+            return Response(serializer.data)
+        else:
+            CourseTeacher.objects.addUsers(
+                data.get("users"), course_id
+            )
+
+        courseteachers = CourseTeacher.objects.filter(course_id=course_id)
+        serializer = CourseTeacherSerializer(courseteachers, many=True)
+        return Response(serializer.data)
+
+
+class CourseSendMail(APIView):
+    def get_object(self, course_id, user_id):
+        course = get_object_or_404(Course, id=course_id)
+        if not course.is_valid_user(user_id):
+            raise APIException(f"You are not allowed to view {course.name}")
+        else:
+            return course
+
+    def post(self, request, course_id, format=None):
+        user = request.user
+        course = self.get_object(course_id, user.id)
+        user_ids = request.data.get("students")
+        subject = request.data.get("subject")
+        body = request.data.get("body")
+        students = User.objects.filter(id__in=user_ids).values_list("email", flat=True)
+        message = send_bulk_mail(subject, body, students, None)
+        return Response({"message": message})
+
+
+class CourseProgressDetail(APIView):
+
+    def get_objects(self, course_id):
+        course_status = CourseStatus.objects.filter(course_id=course_id)
+        return course_status
+
+    def get(self, request, course_id, format=None):
+        course_status = self.get_objects(course_id)
+        serializer = CourseProgressSerializer(course_status, many=True)
+        return Response(serializer.data)
+
+
+class QuizDetail(APIView):
+    def get_object(self, pk):
+        quiz = get_object_or_404(Quiz, pk=pk)
+        return quiz
+
+    def get_module_object(self, pk):
+        module = get_object_or_404(Module, pk=pk)
+        return module
+
+    def get(self, request, module_id, pk, format=None):
+        quiz = self.get_object(pk)
+        serializer = QuizSerializer(quiz)
+        return Response(serializer.data)
+
+    def post(self, request, module_id=None, format=None):
+        data = request.data
+        serializer = QuizSerializer(data=data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            ct = ContentType.objects.get_for_model(instance)
+            unit = Unit.objects.create(
+                module_id=module_id,
+                order=data.get("order"), content_type=ct,
+                object_id=instance.id
+            )
+            serialized_data = serializer.data
+            serialized_data['order'] = data['order']
+            serialized_data['type'] = "Quiz"
+            serialized_data['unit_id'] = unit.id
+            return Response(serialized_data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, module_id, pk, format=None):
+        data = request.data
+        quiz = self.get_object(pk)
+        serializer = QuizSerializer(quiz, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            serialized_data = serializer.data
+            serialized_data['order'] = data['order']
+            serialized_data['type'] = "Quiz"
+            serialized_data['unit_id'] = data['unit_id']
+            return Response(serialized_data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, module_id, pk, format=None):
+        quiz = self.get_object(pk)
+        quiz.active = False
+        quiz.save()
+        serializer = QuizSerializer(quiz)
+        return Response(serializer.data)

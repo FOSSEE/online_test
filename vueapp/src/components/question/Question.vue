@@ -111,7 +111,7 @@
 </template>
 <script>
   import Editor from '@tinymce/tinymce-vue'
-  import LessonService from "../../../services/LessonService"
+  import LessonService from "../../services/LessonService"
   import McqType from "../question/McqType.vue"
   import StringType from "../question/StringType.vue"
   import IntegerType from "../question/IntegerType.vue"

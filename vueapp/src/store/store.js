@@ -6,9 +6,10 @@ const store = createStore({
       user_id: '',
       course_id: '',
       module: {},
-      lesson: {},
+      unit: {},
       showModule: false,
       showLesson: false,
+      showQuiz: false,
       course_modules: [],
     }
   },
@@ -25,28 +26,29 @@ const store = createStore({
     setModule(state, payload) {
       state.module = payload
     },
-    setLesson(state, payload) {
-      state.lesson = payload
+    setUnit(state, payload) {
+      state.unit = payload
     },
     toggleModule(state, payload) {
       state.showModule = payload
     },
-    toggleLesson(state, payload) {
-      state.showLesson = payload
+    toggleUnit(state, payload) {
+      state.showLesson = payload.isLesson
+      state.showQuiz = payload.isQuiz
     },
   },
   actions: {
     setModule({commit}, module) {
       commit('setModule', module)
     },
-    setLesson({commit}, module) {
-      commit('setLesson', module)
+    setUnit({commit}, module) {
+      commit('setUnit', module)
     },
     toggleModule({commit}, isModule) {
       commit('toggleModule', isModule)
     },
-    toggleLesson({commit}, isLesson) {
-      commit('toggleLesson', isLesson)
+    toggleUnit({commit}, isUnit) {
+      commit('toggleUnit', isUnit)
     },
     setUserId({commit}, id) {
       commit('setUserId', id)

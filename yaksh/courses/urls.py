@@ -12,11 +12,17 @@ urlpatterns = [
     path('unit/order/<int:module_id>', views.UnitListDetail.as_view()),
     path('lesson/<int:module_id>', views.LessonDetail.as_view()),
     path('lesson/<int:module_id>/<int:pk>', views.LessonDetail.as_view()),
+    path('quiz/<int:module_id>', views.QuizDetail.as_view()),
+    path('quiz/<int:module_id>/<int:pk>', views.QuizDetail.as_view()),
+    path('course/progress/<int:course_id>',
+         views.CourseProgressDetail.as_view()),
     path('moderator_dashboard/', views.ModeratorDashboard.as_view()),
     path('all/toc/<int:lesson_id>', views.TocListDetail.as_view()),
     path('toc/<int:lesson_id>', views.TocDetail.as_view()),
     path('toc/<int:lesson_id>/<int:pk>', views.TocDetail.as_view()),
     path('course/enrollments/<int:course_id>', views.CourseEnrollmentDetail.as_view()),
+    path('course/teachers/<int:course_id>', views.CourseTeacherDetail.as_view()),
+    path('course/send_mail/<int:course_id>', views.CourseSendMail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
