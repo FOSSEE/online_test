@@ -65,7 +65,7 @@
   </div>
 </template>
 <script>
-import axios from 'axios'
+import CourseService from '../../services/CourseService';
 
 export default {
   name: "ModeratorDasboard",
@@ -78,18 +78,21 @@ export default {
     this.getAllCourses();
   },
   methods: {
-    async getAllCourses() {
-      const response = await axios({
-        methods: 'get',
-        url: `http://127.0.0.1:8000/api/v2/moderator_dashboard/`,
-        headers: {
-          Authorization: 'Token ' + 'e5a266097aa4e56273a71eafb981003dfec1aa7a'
-        }
-      });
-      if (response.status == 200) {
-        this.courses = response.data.results
-      }
-    },
+    getAllCourses() {
+      this.$store.commit('toggleLoader', true);
+        CourseService.getall().then(response => {
+          var data = response.data;
+          this.courses = data.results;
+          this.previous_page = data.previous;
+          this.next_page = data.next;
+        })
+        .catch(e => {
+          this.$toast.error(e.message, {'position': 'top'});
+        })
+        .finally(() => {
+          this.$store.commit('toggleLoader', false);
+        });
+    }
   }
 }
 
