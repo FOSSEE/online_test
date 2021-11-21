@@ -6,7 +6,7 @@ from yaksh.courses.models import (
     Course, Module, Lesson, Topic, TableOfContent, Question,
     TestCase, StandardTestCase, StdIOBasedTestCase, McqTestCase,
     HookTestCase, IntegerTestCase, StringTestCase,
-    FloatTestCase, ArrangeTestCase, Quiz
+    FloatTestCase, ArrangeTestCase, Quiz, QuestionPaper, QuestionSet
 )
 
 
@@ -390,6 +390,19 @@ class TestCaseSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     test_cases = TestCaseSerializer(many=True)
 
+    def __init__(self, *args, **kwargs):
+        fields = kwargs.get('context', {}).get("fields", None)
+        exclude = kwargs.get('context', {}).get("exclude", None)
+        super(QuestionSerializer, self).__init__(*args, **kwargs)
+        if fields is not None:
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+        if exclude is not None:
+            for field_name in exclude:
+                self.fields.pop(field_name)
+
     class Meta:
         model = Question
         fields = "__all__"
@@ -464,9 +477,10 @@ class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = "__all__"
-    
+
     def create(self, validated_data):
         quiz = Quiz.objects.create(**validated_data)
+        QuestionPaper.objects.create(quiz_id=quiz.id)
         return quiz
 
     def update(self, instance, validated_data):
@@ -522,3 +536,23 @@ class CourseProgressSerializer(serializers.Serializer):
                 return unit.content_object.summary
         else:
             return None
+
+
+class RandomSetSerializer(serializers.Serializer):
+    marks = serializers.FloatField()
+    num_questions = serializers.IntegerField()
+    questions = QuestionSerializer(
+        many=True, context={"fields": ["id", "summary", "points"]}
+    )
+
+
+class QuestionPaperSerializer(serializers.Serializer):
+    quiz_id = serializers.IntegerField()
+    fixed_questions = QuestionSerializer(
+        many=True, context={"fields": ["id", "summary", "points"]}
+    )
+    random_questions = RandomSetSerializer(many=True)
+    shuffle_questions = serializers.BooleanField()
+    total_marks = serializers.FloatField()
+    fixed_question_order = serializers.JSONField()
+    shuffle_testcases = serializers.BooleanField()

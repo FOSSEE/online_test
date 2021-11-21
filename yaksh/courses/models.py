@@ -753,6 +753,307 @@ class Quiz(models.Model):
                                quiz_name, sub_folder_name)
 
 
+class QuestionPaperManager(models.Manager):
+
+    def _create_trial_from_questionpaper(self, original_quiz_id):
+        """Creates a copy of the original questionpaper"""
+        trial_questionpaper = self.get(quiz_id=original_quiz_id)
+        fixed_ques = trial_questionpaper.get_ordered_questions()
+        trial_questions = {"fixed_questions": fixed_ques,
+                           "random_questions": trial_questionpaper
+                           .random_questions.all()
+                           }
+        trial_questionpaper.pk = None
+        trial_questionpaper.save()
+        return trial_questionpaper, trial_questions
+
+    def create_trial_paper_to_test_questions(self, trial_quiz,
+                                             questions_list):
+        """Creates a trial question paper to test selected questions"""
+        if questions_list is not None:
+            trial_questionpaper = self.create(quiz=trial_quiz,
+                                              total_marks=10,
+                                              )
+            trial_questionpaper.fixed_question_order = ",".join(questions_list)
+            trial_questionpaper.fixed_questions.add(*questions_list)
+            return trial_questionpaper
+
+    def create_trial_paper_to_test_quiz(self, trial_quiz, original_quiz_id):
+        """Creates a trial question paper to test quiz."""
+        if self.filter(quiz=trial_quiz).exists():
+            self.get(quiz=trial_quiz).delete()
+        trial_questionpaper, trial_questions = \
+            self._create_trial_from_questionpaper(original_quiz_id)
+        trial_questionpaper.quiz = trial_quiz
+        trial_questionpaper.fixed_questions\
+            .add(*trial_questions["fixed_questions"])
+        trial_questionpaper.random_questions\
+            .add(*trial_questions["random_questions"])
+        trial_questionpaper.save()
+        return trial_questionpaper
+
+    def add_or_remove_fixed_questions(self, qp_id, data, action):
+        qp = QuestionPaper.objects.get(id=qp_id)
+        questions = data.get("fixed_questions")
+        que_ids = [que["id"] for que in questions]
+        if action == "add":
+            qp.fixed_questions.add(*que_ids)
+        else:
+            qp.fixed_questions.remove(*que_ids)
+        qp.fixed_question_order = que_ids
+        qp.update_question_paper(data)
+        qp.save()
+        return qp
+
+    def add_random_questions(self, qp_id, data):
+        qp = QuestionPaper.objects.get(id=qp_id)
+        random_question_set = data.get("random_questions")
+        que_sets = []
+        for random_question in random_question_set:
+            questions = random_question.pop("questions")
+            q_set, created = QuestionSet.objects.get_or_create(
+                **random_question)
+            q_set.questions.add(*questions)
+            que_sets.append(q_set.id)
+        qp.random_questions.add(*que_sets)
+        qp.update_question_paper(data)
+        qp.save()
+        return qp
+
+    def remove_random_questions(self, qp_id, data):
+        qp = QuestionPaper.objects.get(id=qp_id)
+        rand_que_set = data.get("random_questions")
+        rand_que_set_ids = [rand_ques["id"] for rand_ques in set]
+        qp.random_questions.remove(rand_que_set_ids)
+        QuestionSet.questions.through.objects.filter(
+            id__in=rand_que_set_ids
+        ).delete()
+        QuestionSet.objects.filter(id__in=rand_que_set_ids).delete()
+        qp.update_question_paper(data)
+        qp.save()
+        return qp
+
+
+class QuestionPaper(models.Model):
+    """Question paper stores the detail of the questions."""
+
+    # Question paper belongs to a particular quiz.
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+
+    # Questions that will be mandatory in the quiz.
+    fixed_questions = models.ManyToManyField("Question")
+
+    # Questions that will be fetched randomly from the Question Set.
+    random_questions = models.ManyToManyField("QuestionSet")
+
+    # Option to shuffle questions, each time a new question paper is created.
+    shuffle_questions = models.BooleanField(default=False, blank=False)
+
+    # Total marks for the question paper.
+    total_marks = models.FloatField(default=0.0, blank=True)
+
+    # Sequence or Order of fixed questions
+    fixed_question_order = models.JSONField(null=True, blank=True)
+
+    # Shuffle testcase order.
+    shuffle_testcases = models.BooleanField("Shuffle testcase for each user",
+                                            default=True
+                                            )
+
+    objects = QuestionPaperManager()
+
+    def get_question_bank(self):
+        ''' Gets all the questions in the question paper'''
+        questions = list(self.fixed_questions.all())
+        for random_set in self.random_questions.all():
+            questions += list(random_set.questions.all())
+        return questions
+
+    def _create_duplicate_questionpaper(self, quiz):
+        new_questionpaper = QuestionPaper.objects.create(
+            quiz=quiz, shuffle_questions=self.shuffle_questions,
+            total_marks=self.total_marks,
+            fixed_question_order=self.fixed_question_order
+        )
+        new_questionpaper.fixed_questions.add(*self.fixed_questions.all())
+        new_questionpaper.random_questions.add(*self.random_questions.all())
+
+        return new_questionpaper
+
+    def update_total_marks(self):
+        """ Updates the total marks for the Question Paper"""
+        marks = 0.0
+        questions = self.fixed_questions.all()
+        for question in questions:
+            marks += question.points
+        for question_set in self.random_questions.all():
+            question_set.marks = question_set.questions.first().points
+            question_set.save()
+            marks += question_set.marks * question_set.num_questions
+        self.total_marks = marks
+        self.save()
+
+    def _get_questions_for_answerpaper(self):
+        """ Returns fixed and random questions for the answer paper"""
+        questions = self.get_ordered_questions()
+        for question_set in self.random_questions.all():
+            questions += question_set.get_random_questions()
+        if self.shuffle_questions:
+            all_questions = self.get_shuffled_questions(questions)
+        else:
+            all_questions = questions
+        return all_questions
+
+    def make_answerpaper(self,
+                         user, ip, attempt_num, course_id, special=False):
+        """Creates an answer paper for the user to attempt the quiz"""
+        try:
+            ans_paper = AnswerPaper.objects.get(user=user,
+                                                attempt_number=attempt_num,
+                                                question_paper=self,
+                                                course_id=course_id
+                                                )
+        except AnswerPaper.DoesNotExist:
+            ans_paper = AnswerPaper(
+                user=user,
+                user_ip=ip,
+                attempt_number=attempt_num,
+                course_id=course_id
+            )
+            ans_paper.start_time = timezone.now()
+            ans_paper.end_time = ans_paper.start_time + \
+                timedelta(minutes=self.quiz.duration)
+            ans_paper.question_paper = self
+            ans_paper.is_special = special
+            ans_paper.save()
+            questions = self._get_questions_for_answerpaper()
+            ans_paper.questions.add(*questions)
+            question_ids = []
+            for question in questions:
+                question_ids.append(str(question.id))
+                if (question.type == "arrange") or (
+                        self.shuffle_testcases and
+                        question.type in ["mcq", "mcc"]):
+                    testcases = question.get_test_cases()
+                    random.shuffle(testcases)
+                    testcases_ids = ",".join([str(tc.id) for tc in testcases]
+                                             )
+                    if not TestCaseOrder.objects.filter(
+                         answer_paper=ans_paper, question=question
+                         ).exists():
+                        TestCaseOrder.objects.create(
+                            answer_paper=ans_paper, question=question,
+                            order=testcases_ids)
+
+            ans_paper.questions_order = ",".join(question_ids)
+            ans_paper.save()
+            ans_paper.questions_unanswered.add(*questions)
+        return ans_paper
+
+    def _is_attempt_allowed(self, user, course_id):
+        attempts = AnswerPaper.objects.get_total_attempt(questionpaper=self,
+                                                         user=user,
+                                                         course_id=course_id)
+        attempts_allowed = attempts < self.quiz.attempts_allowed
+        infinite_attempts = self.quiz.attempts_allowed == -1
+        return attempts_allowed or infinite_attempts
+
+    def can_attempt_now(self, user, course_id):
+        if self._is_attempt_allowed(user, course_id):
+            last_attempt = AnswerPaper.objects.get_user_last_attempt(
+                user=user, questionpaper=self, course_id=course_id
+            )
+            if last_attempt:
+                time_lag = (timezone.now() - last_attempt.start_time)
+                time_lag = time_lag.total_seconds()/3600
+                can_attempt = time_lag >= self.quiz.time_between_attempts
+                msg = "You cannot start the next attempt for this quiz before"\
+                    "{0} hour(s)".format(self.quiz.time_between_attempts) \
+                    if not can_attempt else None
+                return can_attempt, msg
+            else:
+                return True, None
+        else:
+            msg = "You cannot attempt {0} quiz more than {1} time(s)".format(
+                self.quiz.description, self.quiz.attempts_allowed
+            )
+            return False, msg
+
+    def create_demo_quiz_ppr(self, demo_quiz, user):
+        question_paper = QuestionPaper.objects.create(quiz=demo_quiz,
+                                                      shuffle_questions=False
+                                                      )
+        summaries = ['Find the value of n', 'Print Output in Python2.x',
+                     'Adding decimals', 'For Loop over String',
+                     'Hello World in File',
+                     'Arrange code to convert km to miles',
+                     'Print Hello, World!', "Square of two numbers",
+                     'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
+                     ]
+        questions = Question.objects.filter(active=True,
+                                            summary__in=summaries,
+                                            user=user)
+        q_order = [str(que.id) for que in questions]
+        question_paper.fixed_question_order = ",".join(q_order)
+        question_paper.save()
+        # add fixed set of questions to the question paper
+        question_paper.fixed_questions.add(*questions)
+        question_paper.update_total_marks()
+        question_paper.save()
+
+    def get_ordered_questions(self):
+        ques = []
+        if self.fixed_question_order:
+            que_order = self.fixed_question_order.split(',')
+            for que_id in que_order:
+                ques.append(self.fixed_questions.get(id=que_id))
+        else:
+            ques = list(self.fixed_questions.all())
+        return ques
+
+    def get_shuffled_questions(self, questions):
+        """Get shuffled questions if auto suffle is enabled"""
+        random.shuffle(questions)
+        return questions
+
+    def has_questions(self):
+        questions = self.get_ordered_questions() + \
+                    list(self.random_questions.all())
+        return len(questions) > 0
+
+    def get_questions_count(self):
+        que_count = self.fixed_questions.count()
+        for r_set in self.random_questions.all():
+            que_count += r_set.num_questions
+        return que_count
+
+    def update_question_paper(self, data):
+        self.total_marks = data.get("total_marks")
+        self.shuffle_questions = data.get("shuffle_questions")
+        self.shuffle_testcases = data.get("shuffle_testcases")
+
+    def __str__(self):
+        return "Question Paper for " + self.quiz.description
+
+
+class QuestionSet(models.Model):
+    """Question set contains a set of questions from which random questions
+       will be selected for the quiz.
+    """
+
+    # Marks of each question of a particular Question Set
+    marks = models.FloatField()
+
+    # Number of questions to be fetched for the quiz.
+    num_questions = models.IntegerField()
+
+    # Set of questions for sampling randomly.
+    questions = models.ManyToManyField("Question")
+
+    def get_random_questions(self):
+        """ Returns random questions from set of questions"""
+        return sample(list(self.questions.all()), self.num_questions)
+
 
 class Question(models.Model):
     """Question for a quiz."""

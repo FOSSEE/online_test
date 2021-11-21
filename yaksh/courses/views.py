@@ -1,4 +1,7 @@
-# Restframework Imports
+# Python Imports
+from ast import literal_eval
+
+# Django Imports
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,23 +11,22 @@ from rest_framework.exceptions import APIException
 from rest_framework import permissions
 from rest_framework import generics, status
 
-
-# Django Imports
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
-from yaksh.courses import serializers
-
+from django.utils import timezone
 
 # Local Imports
 from yaksh.courses.models import (
-    Course, Module, Lesson, Enrollment, CourseTeacher, Unit,
-    TableOfContent, Enrollment, CourseTeacher, Quiz, CourseStatus
+    Course, Module, Lesson, Enrollment, CourseTeacher, Unit, Question,
+    TableOfContent, Enrollment, CourseTeacher, Quiz, CourseStatus,
+    QuestionPaper
 )
 from yaksh.courses.serializers import (
-    CourseProgressSerializer, CourseSerializer, ModuleSerializer, LessonSerializer, TopicSerializer,
-    TOCSerializer, QuestionSerializer, EnrollmentSerializer,
-    CourseTeacherSerializer, UserSerializer, QuizSerializer
+    CourseProgressSerializer, CourseSerializer, ModuleSerializer,
+    LessonSerializer, TopicSerializer, TOCSerializer, QuestionSerializer,
+    EnrollmentSerializer, CourseTeacherSerializer, UserSerializer,
+    QuizSerializer, QuestionPaperSerializer
 )
 from yaksh.models import User
 from yaksh.send_emails import send_bulk_mail
@@ -120,18 +122,18 @@ class CourseListDetail(APIView, BasePagination):
         return courses
 
     def get(self, request, *args, **Kwargs):
-        tags = request.query_params.get("name")
+        name = request.query_params.get("name")
         status = request.query_params.get("active")
         courses = self.get_objects(request.user.id)
-        if status == 'select' and tags:
+        if status == 'select' and name:
             courses = courses.filter(
-                name__icontains=tags)
+                name__icontains=name)
         elif status == 'active':
             courses = courses.filter(
-                name__icontains=tags, active=True)
+                name__icontains=name, active=True)
         elif status == 'closed':
             courses = courses.filter(
-                name__icontains=tags, active=False)
+                name__icontains=name, active=False)
         page = self.paginate_queryset(courses, request)
         serializer = CourseSerializer(
             page, many=True, context={"user_id": request.user.id}
@@ -257,7 +259,6 @@ class LessonDetail(APIView):
             serialized_data['unit_id'] = data['unit_id']
             return Response(serialized_data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
     def delete(self, request, module_id, pk, format=None):
         lesson = self.get_object(pk)
@@ -430,7 +431,8 @@ class CourseSendMail(APIView):
         user_ids = request.data.get("students")
         subject = request.data.get("subject")
         body = request.data.get("body")
-        students = User.objects.filter(id__in=user_ids).values_list("email", flat=True)
+        students = User.objects.filter(id__in=user_ids).values_list(
+            "email", flat=True)
         message = send_bulk_mail(subject, body, students, None)
         return Response({"message": message})
 
@@ -497,4 +499,96 @@ class QuizDetail(APIView):
         quiz.active = False
         quiz.save()
         serializer = QuizSerializer(quiz)
+        return Response(serializer.data)
+
+
+class QuestionPaperDetail(APIView):
+    def get_objects(self, quiz_id):
+        qps = get_list_or_404(QuestionPaper, quiz_id=quiz_id)
+        return qps
+
+    def get_object(self, pk, quiz_id):
+        qp = get_object_or_404(QuestionPaper, pk=pk, quiz_id=quiz_id)
+        return qp
+
+    def get(self, request, module_id, quiz_id, qp_id=None):
+        user = request.user
+        module = Module.objects.get(id=module_id)
+        if qp_id:
+            qps = self.get_object(qp_id, quiz_id)
+            many = False
+        else:
+            qps = self.get_objects(quiz_id)
+            many = True
+        qp_serializer = QuestionPaperSerializer(qps, many=many)
+        return Response(qp_serializer.data)
+
+    def post(self, request, module_id, quiz_id):
+        user = request.user
+        module = Module.objects.get(id=module_id)
+        if qp_id is None:
+            qp = QuestionPaper.objects.create(quiz_id=quiz_id)
+        serializer = QuestionPaperSerializer(qp)
+        return Response(serializer.data)
+
+    def put(self, request, module_id, quiz_id, qp_id):
+        # add fixed or random questions to the qp
+        user = request.user
+        module = Module.objects.get(id=module_id)
+        question_set_type = request.data.get("question_set_type")
+        if question_set_type == "fixed":
+            qp = QuestionPaper.objects.add_or_remove_fixed_questions(
+                qp_id, data, "add")
+        else:
+            qp = QuestionPaper.objects.add_random_questions(qp_id, data)
+        serializer = QuestionPaperSerializer(qp)
+        return Response(serializer.data)
+
+    def delete(self, request, module_id, quiz_id, qp_id):
+        # remove fixed or random questions from qp
+        user = request.user
+        module = Module.objects.get(id=module_id)
+        question_set_type = request.data.get("question_set_type")
+        if question_set_type == "fixed":
+            qp = QuestionPaper.objects.add_or_remove_fixed_questions(
+                qp_id, data, "remove")
+        else:
+            qp = QuestionPaper.objects.remove_random_questions(qp_id, data)
+        serializer = QuestionPaperSerializer(qp)
+        return Response(serializer.data)
+
+
+class SearchQuestions(APIView):
+    def get_objects_by_type(self, data):
+        questions = Question.objects.filter(**data)
+        return questions
+    
+    def get_objects_by_tags(self, tags, user_id):
+        query = Q()
+        for tag in tags:
+            query = query | Q(tags__name__icontains=tag)
+        questions = Question.objects.filter(query, user_id=user_id)
+        return questions
+
+    def post(self, request):
+        user = request.user
+        que_type = request.data.get("type")
+        points = request.data.get("points")
+        tags = request.data.get("tags")
+        fields = request.data.get("fields")
+        if fields:
+            fields = [field.strip() for field in fields.split(",")]
+        if (que_type is None or points is None) and tags is None:
+            raise APIException(
+                "Please search by question type and points or by tags"
+            )
+        if que_type and points:
+            questions = self.get_objects_by_type(
+                {"type": que_type, "points": points, "user_id": user.id}
+            )
+        elif tags:
+            tags = [tag.strip() for tag in tags.split(",")]
+            questions = self.get_objects_by_tags(tags, user.id)
+        serializer = QuestionSerializer(
+            questions, many=True, context={"fields": fields})
         return Response(serializer.data)
