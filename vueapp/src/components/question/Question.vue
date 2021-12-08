@@ -15,7 +15,7 @@
         <input type="checkbox" v-model="que_data.active" id="id_active">
         <strong class="text-danger" v-show="error.active">{{error.active}}</strong>
       </p>
-      <p v-show="!isLesson">
+      <p>
         <label for="id_points">Points:</label> <input type="number" v-model="que_data.points" class="form-control" :required="!isLesson" id="id_points">
         <strong class="text-danger" v-show="error.points">{{error.points}}</strong>
       </p>
@@ -153,7 +153,7 @@
         error: {},
         que_data: {},
         que_tc: [],
-        isPoll: false
+        isPoll: false,
       }
     },
     emits: ["updateToc"],
@@ -205,7 +205,7 @@
         } else {
           this.isPoll = false
         }
-      }
+      },
     }
   }
 </script>
