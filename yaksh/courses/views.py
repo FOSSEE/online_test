@@ -4,7 +4,6 @@ from ast import literal_eval
 # Django Imports
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 
 from rest_framework.exceptions import APIException
@@ -20,7 +19,7 @@ from django.utils import timezone
 from yaksh.courses.models import (
     Course, Module, Lesson, Enrollment, CourseTeacher, Unit, Question,
     TableOfContent, Enrollment, CourseTeacher, Quiz, CourseStatus,
-    QuestionPaper
+    QuestionPaper, question_types
 )
 from yaksh.courses.serializers import (
     CourseProgressSerializer, CourseSerializer, ModuleSerializer,
@@ -526,49 +525,62 @@ class QuestionPaperDetail(APIView):
     def post(self, request, module_id, quiz_id):
         user = request.user
         module = Module.objects.get(id=module_id)
-        if qp_id is None:
-            qp = QuestionPaper.objects.create(quiz_id=quiz_id)
+        qp = QuestionPaper.objects.create(quiz_id=quiz_id)
         serializer = QuestionPaperSerializer(qp)
         return Response(serializer.data)
 
     def put(self, request, module_id, quiz_id, qp_id):
         # add fixed or random questions to the qp
         user = request.user
+        data = request.data
+        question_set_type = data.get("question_set_type")
+        if question_set_type is None:
+            context = {"message": "Missing question_set_type fixed or random"}
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
         module = Module.objects.get(id=module_id)
-        question_set_type = request.data.get("question_set_type")
+        question_paper = self.get_object(qp_id, quiz_id)
         if question_set_type == "fixed":
-            qp = QuestionPaper.objects.add_or_remove_fixed_questions(
-                qp_id, data, "add")
+            qp = question_paper.add_or_remove_fixed_questions(data, "add")
         else:
-            qp = QuestionPaper.objects.add_random_questions(qp_id, data)
+            qp = question_paper.add_random_questions(data)
         serializer = QuestionPaperSerializer(qp)
         return Response(serializer.data)
 
     def delete(self, request, module_id, quiz_id, qp_id):
         # remove fixed or random questions from qp
         user = request.user
+        data = request.data
         module = Module.objects.get(id=module_id)
-        question_set_type = request.data.get("question_set_type")
+        question_set_type = data.get("question_set_type")
+        if question_set_type is None:
+            context = {"message": "Missing question set type fixed or random"}
+            return Response(context, status=status.HTTP_400_BAD_REQUEST)
+        question_paper = self.get_object(qp_id, quiz_id)
         if question_set_type == "fixed":
-            qp = QuestionPaper.objects.add_or_remove_fixed_questions(
-                qp_id, data, "remove")
+            qp = question_paper.add_or_remove_fixed_questions(data, "remove")
         else:
-            qp = QuestionPaper.objects.remove_random_questions(qp_id, data)
+            qp = question_paper.remove_random_questions(data)
         serializer = QuestionPaperSerializer(qp)
         return Response(serializer.data)
 
 
-class SearchQuestions(APIView):
+class FilterQuestions(APIView):
     def get_objects_by_type(self, data):
         questions = Question.objects.filter(**data)
         return questions
-    
+
     def get_objects_by_tags(self, tags, user_id):
         query = Q()
         for tag in tags:
             query = query | Q(tags__name__icontains=tag)
         questions = Question.objects.filter(query, user_id=user_id)
         return questions
+
+    def get(self, request):
+        user = request.user
+        marks = Question.objects.values_list("points", flat=True).distinct()
+        data = {"marks": marks, "question_types": dict(question_types)}
+        return Response(data)
 
     def post(self, request):
         user = request.user

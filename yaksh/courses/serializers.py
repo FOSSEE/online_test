@@ -547,6 +547,7 @@ class RandomSetSerializer(serializers.Serializer):
 
 
 class QuestionPaperSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     quiz_id = serializers.IntegerField()
     fixed_questions = QuestionSerializer(
         many=True, context={"fields": ["id", "summary", "points"]}

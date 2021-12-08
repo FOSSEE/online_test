@@ -792,47 +792,6 @@ class QuestionPaperManager(models.Manager):
         trial_questionpaper.save()
         return trial_questionpaper
 
-    def add_or_remove_fixed_questions(self, qp_id, data, action):
-        qp = QuestionPaper.objects.get(id=qp_id)
-        questions = data.get("fixed_questions")
-        que_ids = [que["id"] for que in questions]
-        if action == "add":
-            qp.fixed_questions.add(*que_ids)
-        else:
-            qp.fixed_questions.remove(*que_ids)
-        qp.fixed_question_order = que_ids
-        qp.update_question_paper(data)
-        qp.save()
-        return qp
-
-    def add_random_questions(self, qp_id, data):
-        qp = QuestionPaper.objects.get(id=qp_id)
-        random_question_set = data.get("random_questions")
-        que_sets = []
-        for random_question in random_question_set:
-            questions = random_question.pop("questions")
-            q_set, created = QuestionSet.objects.get_or_create(
-                **random_question)
-            q_set.questions.add(*questions)
-            que_sets.append(q_set.id)
-        qp.random_questions.add(*que_sets)
-        qp.update_question_paper(data)
-        qp.save()
-        return qp
-
-    def remove_random_questions(self, qp_id, data):
-        qp = QuestionPaper.objects.get(id=qp_id)
-        rand_que_set = data.get("random_questions")
-        rand_que_set_ids = [rand_ques["id"] for rand_ques in set]
-        qp.random_questions.remove(rand_que_set_ids)
-        QuestionSet.questions.through.objects.filter(
-            id__in=rand_que_set_ids
-        ).delete()
-        QuestionSet.objects.filter(id__in=rand_que_set_ids).delete()
-        qp.update_question_paper(data)
-        qp.save()
-        return qp
-
 
 class QuestionPaper(models.Model):
     """Question paper stores the detail of the questions."""
@@ -1027,10 +986,58 @@ class QuestionPaper(models.Model):
             que_count += r_set.num_questions
         return que_count
 
-    def update_question_paper(self, data):
+    def update_paper(self, data):
+        self.fixed_question_order = data.get("fixed_question_order")
         self.total_marks = data.get("total_marks")
         self.shuffle_questions = data.get("shuffle_questions")
         self.shuffle_testcases = data.get("shuffle_testcases")
+
+    def update_fixed_questions_order(self, new_order, action):
+        existing = self.fixed_question_order
+        if action == "add":
+            existing.extend(new_order)
+            existing = list(set(existing))
+        else:
+            existing = list(set(existing) - set(new_order))
+        self.fixed_question_order = existing
+
+    def add_or_remove_fixed_questions(self, data, action):
+        questions = data.get("fixed_questions")
+        que_ids = [que["id"] for que in questions]
+        if action == "add":
+            self.fixed_questions.add(*que_ids)
+        else:
+            self.fixed_questions.remove(*que_ids)
+        # self.update_fixed_questions_order(que_ids, action)
+        self.update_paper(data)
+        self.save()
+        return self
+
+    def add_random_questions(self, data):
+        random_question_set = data.get("random_questions")
+        que_sets = []
+        for random_question in random_question_set:
+            questions = random_question.pop("questions")
+            q_set, created = QuestionSet.objects.get_or_create(
+                **random_question)
+            q_set.questions.add(*questions)
+            que_sets.append(q_set.id)
+        self.random_questions.add(*que_sets)
+        self.update_fixed_questions_order(data)
+        self.save()
+        return self
+
+    def remove_random_questions(self, data):
+        rand_que_set = data.get("random_questions")
+        rand_que_set_ids = [rand_ques["id"] for rand_ques in rand_que_set]
+        self.random_questions.remove(rand_que_set_ids)
+        QuestionSet.questions.through.objects.filter(
+            id__in=rand_que_set_ids
+        ).delete()
+        QuestionSet.objects.filter(id__in=rand_que_set_ids).delete()
+        self.update_question_paper(data)
+        self.save()
+        return self
 
     def __str__(self):
         return "Question Paper for " + self.quiz.description
