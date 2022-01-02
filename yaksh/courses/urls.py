@@ -23,6 +23,7 @@ urlpatterns = [
     path('course/enrollments/<int:course_id>', views.CourseEnrollmentDetail.as_view()),
     path('course/teachers/<int:course_id>', views.CourseTeacherDetail.as_view()),
     path('course/send_mail/<int:course_id>', views.CourseSendMail.as_view()),
+    path('create_demo_course/', views.CreateDemoCourse.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

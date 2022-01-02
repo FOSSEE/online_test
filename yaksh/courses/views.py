@@ -12,6 +12,7 @@ from rest_framework import generics, status
 # Django Imports
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from yaksh.courses import serializers
 
@@ -19,7 +20,8 @@ from yaksh.courses import serializers
 # Local Imports
 from yaksh.courses.models import (
     Course, Module, Lesson, Enrollment, CourseTeacher, Unit,
-    TableOfContent, Enrollment, CourseTeacher, Quiz, CourseStatus
+    TableOfContent, Enrollment, CourseTeacher, Quiz, CourseStatus,
+    MOD_GROUP_NAME,
 )
 from yaksh.courses.serializers import (
     CourseProgressSerializer, CourseSerializer, ModuleSerializer, LessonSerializer, TopicSerializer,
@@ -60,6 +62,38 @@ class ModeratorDashboard(generics.ListCreateAPIView):
             is_trial=False
         ).distinct().order_by('-active')
         return courses
+
+
+def is_moderator(user, group_name=MOD_GROUP_NAME):
+    """Check if the user is having moderator rights"""
+    try:
+        group = Group.objects.get(name=group_name)
+        return (
+                user.profile.is_moderator and
+                group.user_set.filter(id=user.id).exists()
+            )
+    except Profile.DoesNotExist:
+        return False
+    except Group.DoesNotExist:
+        return False
+
+
+class CreateDemoCourse(APIView):
+
+    def post(self, request, format=None):
+        user = request.user
+        if not is_moderator(user):
+            raise APIException(f'You are not allowed to view this page.')
+        demo_course = Course()
+        success = demo_course.create_demo(user)
+        if success:
+            message = "Created Demo course successfully"
+            response = {"message": message, "success": success}
+            return Response(response, status=status.HTTP_200_OK)
+        else:
+            message = "Demo course already exists"
+            response = {"message": message, "success": success}
+            return Response(response, status=status.HTTP_200_OK)
 
 
 class CourseDetail(APIView):

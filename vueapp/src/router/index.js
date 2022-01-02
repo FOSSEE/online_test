@@ -60,7 +60,7 @@ const routes = [
     path: '/forum/courseforum/:course_id/post/:post_id/',
     name: 'post_comments',
     component: PostComments,
-  }
+  },
 ];
 
 const router = createRouter({

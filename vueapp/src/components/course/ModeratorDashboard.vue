@@ -11,12 +11,27 @@
         <a href="#" class="btn btn-success btn-lg">
           <span class="fa fa-plus-circle"></span>&nbsp;Add Course
         </a>
-        <a href="#" class="btn btn-primary btn-lg">
+        <a href="#" @click="createDemoCourse" class="btn btn-primary btn-lg">
           Create Demo Course
         </a>
         <br><br>
-        <div>
+        <div v-if="success">
           <!-- Alert Messages -->
+          <div v-if="message" class="alert alert-success" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+        <div v-else>
+          <!-- Alert Messages -->
+          <div v-if="message" class="alert alert-danger" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
         </div>
       </center>
       <!-- {{courses}} -->
@@ -59,8 +74,13 @@
               <span v-html="course.instructions"></span>
             </div>
           </div>
-        </div>  
+        </div>
       </div>
+      <button
+        class="btn btn-primary"
+        @click="fetchMoreCourses"
+        v-show="hasCourses"
+      >Load More</button>
     </div>
   </div>
 </template>
@@ -71,11 +91,19 @@ export default {
   name: "ModeratorDasboard",
   data () {
     return {
-      courses: ''
+      courses: [],
+      nextPage: '',
+      message: '',
+      success: false,
     };
   },
   mounted () {
     this.getAllCourses();
+  },
+  computed: {
+    hasCourses() {
+      return this.courses.length > 0;
+    }
   },
   methods: {
     getAllCourses() {
@@ -83,8 +111,7 @@ export default {
         CourseService.getall().then(response => {
           var data = response.data;
           this.courses = data.results;
-          this.previous_page = data.previous;
-          this.next_page = data.next;
+          this.nextPage = data.next;
         })
         .catch(e => {
           this.$toast.error(e.message, {'position': 'top'});
@@ -92,6 +119,35 @@ export default {
         .finally(() => {
           this.$store.commit('toggleLoader', false);
         });
+    },
+
+    appendData(data) {
+      data.forEach((course) => {
+        this.courses.push(course)
+      })
+    },
+
+    fetchMoreCourses() {
+      if(this.nextPage != null) {
+        const page = this.nextPage.split("?")[1];
+        CourseService.more(page).then(response => {
+          const data = response.data;
+          this.appendData(data.results);
+          this.nextPage = data.next;
+        })
+        .catch((e) => {
+          console.log(e)
+        });
+      } else {
+        this.$toast.info("No more courses", {'position': 'top'});
+      }
+    },
+    createDemoCourse() {
+      CourseService.createDemoCourse().then((response) => {
+        const data = response.data;
+        this.message = data.message;
+        this.success = data.success;
+      });
     }
   }
 }
