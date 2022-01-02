@@ -63,7 +63,7 @@
       <hr>
       <topic v-if="enable_topic" v-bind:lesson_id="lessonId" v-bind:topic="topic" v-bind:time="time" v-on:updateToc="updateToc">
       </topic>
-      <question v-if="enable_ques" v-bind:lesson_id="lessonId" v-bind:question="question" v-bind:time="time" v-on:updateToc="updateToc" v-bind:content_type="content_type">
+      <question v-if="enable_ques" :key="componentKey" v-bind:lesson_id="lessonId" v-bind:question="question" v-bind:time="time" v-on:updateToc="updateToc" v-bind:content_type="content_type">
       </question>
     </div>
   </div>
@@ -105,7 +105,8 @@
         enable_topic: false,
         topic: {},
         question: {},
-        contents: []
+        contents: [],
+        componentKey: 0
       }
     },
     watch: {
@@ -196,6 +197,7 @@
           this.question = toc
           this.enable_topic = false
           this.enable_ques = true
+          this.componentKey += 1;
         }
       },
       updateToc(data) {

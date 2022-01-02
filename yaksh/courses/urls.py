@@ -24,6 +24,12 @@ urlpatterns = [
     path('course/teachers/<int:course_id>', views.CourseTeacherDetail.as_view()),
     path('course/send_mail/<int:course_id>', views.CourseSendMail.as_view()),
     path('create_demo_course/', views.CreateDemoCourse.as_view()),
+    path('questionpaper/<int:module_id>/<int:quiz_id>',
+         views.QuestionPaperDetail.as_view()),
+    path('questionpaper/<int:module_id>/<int:quiz_id>/<int:qp_id>',
+         views.QuestionPaperDetail.as_view()),
+    path('filter/questions',
+         views.FilterQuestions.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

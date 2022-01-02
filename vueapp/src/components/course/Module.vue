@@ -9,7 +9,7 @@
         <div class="modal-body">
           <table class="table table-responsive-sm">
             <tr>
-              <th>Name:</th>
+              <th>Name:{{edit_module.id}}</th>
               <td>
               <input type="text" class="form-control" name="name" v-model="edit_module.name" required="">
               <br>
