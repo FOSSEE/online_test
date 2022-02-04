@@ -7,6 +7,8 @@ import CourseSendMail from '../components/course/CourseSendMail.vue'
 import CourseStatistics from '../components/course/CourseStatistics.vue'
 import ModeratorDashboard from '../components/course/ModeratorDashboard.vue';
 import AddCourse from '../components/course/AddCourse'
+import CourseForum from '../components/forum/CourseForum'
+import PostComments from '../components/forum/PostComments'
 
 const routes = [
   {
@@ -48,7 +50,17 @@ const routes = [
     path: '/exam/manage/addcourse/',
     name: 'add_course',
     component: AddCourse
-  }
+  },
+  {
+    path: '/forum/courseforum/:course_id/',
+    name: 'course_forum',
+    component: CourseForum,
+  },
+  {
+    path: '/forum/courseforum/:course_id/post/:post_id/',
+    name: 'post_comments',
+    component: PostComments,
+  },
 ];
 
 const router = createRouter({

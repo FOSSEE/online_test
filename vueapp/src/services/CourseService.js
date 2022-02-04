@@ -60,6 +60,10 @@ class CourseService {
     getStatistics(id) {
         return http.get(`/course/progress/${id}`);
     }
+
+    createDemoCourse() {
+        return http.post('/create_demo_course/')
+    }
 }
 
 export default new CourseService();

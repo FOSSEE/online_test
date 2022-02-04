@@ -1,0 +1,14 @@
+{% extends base_template %}
+{% load static %}
+{% block title %} Discussion Forum {% endblock %}
+
+{% block content %}
+<input type="hidden" id="role" value="course">
+<input type="hidden" id="user_id" value="{{request.user.id}}">
+{% csrf_token %}
+<div id="app"></div>
+<link rel="stylesheet" type="text/css" href="{% static 'src/vue/dist/css/chunk-vendors.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'src/vue/dist/css/app.css' %}">
+<script type="text/javascript" src="{% static 'src/vue/dist/js/chunk-vendors.js' %}"></script>
+<script type="text/javascript" src="{% static 'src/vue/dist/js/app.js' %}"></script>
+{% endblock %}

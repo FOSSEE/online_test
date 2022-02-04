@@ -1,6 +1,6 @@
 # Python Imports
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from textwrap import dedent
 
@@ -17,7 +17,7 @@ from django.contrib.contenttypes.fields import (
 from django.db.models.fields.files import FieldFile
 from taggit.managers import TaggableManager
 from django.db.models import Q
-
+from django.template import Template, Context
 
 # Local Imports
 from grades.models import GradingSystem
@@ -67,6 +67,8 @@ string_check_type = (
 attempts = [(i, i) for i in range(1, 6)]
 attempts.append((-1, 'Infinite'))
 
+MOD_GROUP_NAME = 'moderator'
+
 
 def get_lesson_file_dir(instance, filename):
     if isinstance(instance, Lesson):
@@ -86,6 +88,15 @@ def file_cleanup(sender, instance, *args, **kwargs):
         field = getattr(instance, field_name)
         if issubclass(field.__class__, FieldFile) and field.name:
             field.delete(save=False)
+
+
+def render_template(template_path, data=None):
+    with open(template_path) as f:
+        template_data = f.read()
+        template = Template(template_data)
+        context = Context(data)
+        render = template.render(context)
+    return render
 
 
 class Course(models.Model):
@@ -140,6 +151,56 @@ class Course(models.Model):
             course_id=self.id, teacher_id=user_id
         ).exists()
         return is_creator or is_teacher
+
+    def create_demo(self, user):
+        course = Course.objects.filter(
+            owner=user, name="Yaksh Demo course"
+        ).exists()
+        if not course:
+            course = Course.objects.create(
+                name='Yaksh Demo Course',
+                enrollment="open",
+                owner=user
+            )
+            demo_module = Module.objects.create(
+                name="Demo Module for {}".format(course),
+                description="<center>Demo Module</center>", course=course,
+                order=1, html_data="<center>Demo Module</center>", owner=user, active=True
+            )
+
+            quiz = Quiz()
+            demo_quiz = quiz.create_demo_quiz(user)
+            demo_quiz_ct = ContentType.objects.get_for_model(demo_quiz)
+
+            demo_ques = Question()
+            demo_ques.create_demo_questions(user)
+
+            demo_que_ppr = QuestionPaper()
+            demo_que_ppr.create_demo_quiz_ppr(demo_quiz, user)
+
+            success = True
+            file_path = os.sep.join(
+                (os.path.dirname(__file__), "templates", "demo_video.html")
+            )
+            rendered_text = render_template(file_path)
+
+            lesson_data = "Demo Lesson\n{0}".format(rendered_text)
+            demo_lesson = Lesson.objects.create(
+                name="Demo Lesson", description=lesson_data,
+                html_data=lesson_data, creator=user,
+            )
+            demo_lesson_ct = ContentType.objects.get_for_model(demo_lesson)
+
+            quiz_unit = Unit.objects.create(
+                module_id=demo_module.id, order=1, content_type=demo_quiz_ct, object_id=demo_quiz.id
+            )
+            lesson_unit = Unit.objects.create(
+                module_id=demo_module.id, order=2, content_type=demo_lesson_ct,
+                check_prerequisite=False
+            )
+        else:
+            success = False
+        return success
 
     def __str__(self):
         return self.name
@@ -1384,6 +1445,90 @@ class Question(models.Model):
 
     def __str__(self):
         return self.summary
+
+
+class QuestionPaper(models.Model):
+    """Question paper stores the detail of the questions."""
+
+    # Question paper belongs to a particular quiz.
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+
+    # Questions that will be mandatory in the quiz.
+    fixed_questions = models.ManyToManyField(Question)
+
+    # Questions that will be fetched randomly from the Question Set.
+    random_questions = models.ManyToManyField("QuestionSet")
+
+    # Option to shuffle questions, each time a new question paper is created.
+    shuffle_questions = models.BooleanField(default=False, blank=False)
+
+    # Total marks for the question paper.
+    total_marks = models.FloatField(default=0.0, blank=True)
+
+    # Sequence or Order of fixed questions
+    fixed_question_order = models.TextField(blank=True)
+
+    # Shuffle testcase order.
+    shuffle_testcases = models.BooleanField("Shuffle testcase for each user",
+                                            default=True
+                                            )
+
+    def update_total_marks(self):
+        """ Updates the total marks for the Question Paper"""
+        marks = 0.0
+        questions = self.fixed_questions.all()
+        for question in questions:
+            marks += question.points
+        for question_set in self.random_questions.all():
+            question_set.marks = question_set.questions.first().points
+            question_set.save()
+            marks += question_set.marks * question_set.num_questions
+        self.total_marks = marks
+        self.save()
+
+    def create_demo_quiz_ppr(self, demo_quiz, user):
+        question_paper = QuestionPaper.objects.create(
+            quiz=demo_quiz,
+            shuffle_questions=False
+        )
+        summaries = ['Find the value of n', 'Print Output in Python2.x',
+                    'Adding decimals', 'For Loop over String',
+                    'Hello World in File',
+                    'Arrange code to convert km to miles',
+                    'Print Hello, World!', "Square of two numbers",
+                    'Check Palindrome', 'Add 3 numbers', 'Reverse a string'
+                    ]
+        questions = Question.objects.filter(
+            active=True,
+            summary__in=summaries,
+            user=user
+        )
+        q_order = [str(que.id) for que in questions]
+        question_paper.fixed_question_order = ",".join(q_order)
+        question_paper.save()
+        # add fixed set of questions to the question paper
+        question_paper.fixed_questions.add(*questions)
+        question_paper.update_total_marks()
+        question_paper.save()
+
+
+class QuestionSet(models.Model):
+    """Question set contains a set of questions from which random questions
+       will be selected for the quiz.
+    """
+
+    # Marks of each question of a particular Question Set
+    marks = models.FloatField()
+
+    # Number of questions to be fetched for the quiz.
+    num_questions = models.IntegerField()
+
+    # Set of questions for sampling randomly.
+    questions = models.ManyToManyField(Question)
+
+    def get_random_questions(self):
+        """ Returns random questions from set of questions"""
+        return sample(list(self.questions.all()), self.num_questions)
 
 
 class TestCase(models.Model):

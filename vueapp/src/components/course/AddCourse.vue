@@ -1,6 +1,6 @@
 <template>
   <div>
-      <h4>Add Course</h4>
+    <h4>Add Course</h4>
     <div class="row">
       <div class="col-md-8">
         <ul class="nav nav-pills" id="course_tabs">
@@ -48,9 +48,9 @@
             <input 
               type="text"
               class="form-control"
-              v-model="courseName" requireds>
+              v-model="fields.courseName" requireds>
             <br>
-            <strong class="text-danger"></strong>
+            <strong class="text-danger">{{ fieldErrors.courseName }}</strong>
             </td>
           </tr>
           <tr>
@@ -59,12 +59,12 @@
             <select
               name="enrollment"
               class="custom-select"
-              v-model="courseEnrollmentType">
+              v-model="fields.courseEnrollmentType">
               <option value="default">Request</option>
               <option value="open">Open</option>
             </select>
             <br>
-            <strong class="text-danger"></strong>
+            <strong class="text-danger">{{ fieldErrors.courseEnrollmentType }}</strong>
             </td>
           </tr>
           <tr>
@@ -73,9 +73,8 @@
               <input
                 type="checkbox"
                 name="active"
-                v-model="courseStatus">
+                v-model="fields.courseStatus">
               <br>
-              <strong class="text-danger"></strong>
             </td>
           </tr>
           <tr>
@@ -85,9 +84,8 @@
                 type="text"
                 class="form-control"
                 name="code"
-                v-model="courseCode">
+                v-model="fields.courseCode">
               <br>
-              <strong class="text-danger"></strong>
             </td>
           </tr>
           <tr>
@@ -95,9 +93,8 @@
             <td>
               <editor 
                 api-key="no-api-key"
-                v-model="courseInstructions"/>
+                v-model="fields.courseInstructions"/>
               <br>
-              <strong class="text-danger"></strong>
             </td>
           </tr>
           <tr>
@@ -107,14 +104,13 @@
                 mode="dateTime"
                 :timezone="timezone"
                 :date-formatter="'YYYY-MM-DD h:mm:ss'"
-                v-model="courseStartEnrollTime">
+                v-model="fields.courseStartEnrollTime">
                   <template #default="{ inputValue, inputEvents }">
                   <input class="px-3 py-1 border rounded"
                     :value="inputValue"
                     v-on="inputEvents" />
                   <br>
-                  <strong class="text-danger">
-                  </strong>
+                  <strong class="text-danger">{{ fieldErrors.courseStartEnrollTime }}</strong>
                 </template>
               </v-date-picker>
             </td>
@@ -126,13 +122,13 @@
                 mode="dateTime"
                 :timezone="timezone"
                 :date-formatter="'YYYY-MM-DD h:mm:ss'"
-                v-model="courseEndEnrollTime">
+                v-model="fields.courseEndEnrollTime">
                 <template #default="{ inputValue, inputEvents }">
                   <input class="px-3 py-1 border rounded"
                     :value="inputValue"
                     v-on="inputEvents" />
                   <br>
-                  <strong class="text-danger"></strong>
+                  <strong class="text-danger">{{ fieldErrors.courseEndEnrollTime }}</strong>
                 </template>
               </v-date-picker>
             </td>
@@ -145,49 +141,54 @@
   </div>
 </template>
 <script>
+
 import CourseService from "../../services/CourseService"
 import Editor from '@tinymce/tinymce-vue';
-import axios from 'axios';
-
-axios.defaults.xsrfCookieName = 'csrftoken';
-axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 
 export default {
   name: "AddCourse",
   data () {
     return {
       toggleLoader: false,
-      timezone: 'Asia/Kolkata',
-      courseName: '',
-      courseEnrollmentType: '',
-      courseStatus: '',
-      courseCode: '',
-      courseInstructions: '',
-      courseStartEnrollTime: '',
-      courseEndEnrollTime: '',
-      message: '',
       error: false,
+      message: '',
+      timezone: 'Asia/Kolkata',
+      fields: {
+        courseName: '',
+        courseEnrollmentType: '',
+        courseStatus: '',
+        courseCode: '',
+        courseInstructions: '',
+        courseStartEnrollTime: '',
+        courseEndEnrollTime: '',
+      },
+      fieldErrors: {
+        courseName: undefined,
+        courseEnrollmentType: undefined,
+        courseStartEnrollTime: undefined,
+        courseEndEnrollTime: undefined
+      }
     };
   },
   components: {
     'editor': Editor
   },
-  mounted () {
-  },
   methods: {
-    async submitCourse () {
+    submitCourse () {
       const user_id = document.getElementById("user_id").getAttribute("value");
+      // this.fieldErrors = this.validateForm(this.fields);
+      // if(Object.keys(this.fieldErrors).length) return;
       const data = {
-          'name': this.courseName,
-          'enrollment': this.courseEnrollmentType,
-          'active': this.courseStatus,
-          'code': this.courseCode,
-          'instructions': this.courseInstructions,
-          'start_enroll_time': this.courseStartEnrollTime,
-          'end_enroll_time': this.courseEndEnrollTime,
+          'name': this.fields.courseName,
+          'enrollment': this.fields.courseEnrollmentType,
+          'active': this.fields.courseStatus,
+          'code': this.fields.courseCode,
+          'instructions': this.fields.courseInstructions,
+          'start_enroll_time': this.fields.courseStartEnrollTime,
+          'end_enroll_time': this.fields.courseEndEnrollTime,
           'owner': user_id
       }
-      this.toggleLoader = true;
+      this.$store.commit('toggleLoader', true);
       CourseService.create_or_update(null, data)
         .then((response) => {
           if (response.status == 201) {
@@ -200,7 +201,19 @@ export default {
             this.message = 'Some error occured while creating course'
           }
         });
-      this.toggleLoader = false;
+        this.$store.commit('toggleLoader', false);
+    },
+    validateForm (fields) {
+      const errors = {};
+      if(!fields.name) errors.courseName = 'Course name is required';
+      if(!fields.enrollment) errors.courseEnrollmentType = 'Plase specify type of enrollment';
+      if(!fields.start_enroll_time) {
+        errors.courseStartEnrollTime = 'Please specify the start time for enrollment';
+      }
+      if(!fields.end_enroll_time) {
+        errors.courseEndEnrollTime = 'Please specify the end time for enrollment';
+      }
+      return errors
     }
   },
 }
