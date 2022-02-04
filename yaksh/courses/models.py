@@ -262,7 +262,7 @@ class Lesson(models.Model):
         null=True, blank=True
         )
     video_path = models.JSONField(
-        default={}, null=True, blank=True,
+        default=dict, null=True, blank=True,
         )
     created_on = models.DateTimeField(auto_now_add=True)
     modified_on = models.DateTimeField(auto_now=True)
@@ -988,9 +988,9 @@ class QuestionPaper(models.Model):
 
     def update_paper(self, data):
         self.fixed_question_order = data.get("fixed_question_order")
-        self.total_marks = data.get("total_marks")
-        self.shuffle_questions = data.get("shuffle_questions")
-        self.shuffle_testcases = data.get("shuffle_testcases")
+        self.total_marks = data.get("total_marks", 0)
+        self.shuffle_questions = data.get("shuffle_questions", False)
+        self.shuffle_testcases = data.get("shuffle_testcases", True)
 
     def update_fixed_questions_order(self, new_order, action):
         existing = self.fixed_question_order
@@ -1008,7 +1008,6 @@ class QuestionPaper(models.Model):
             self.fixed_questions.add(*que_ids)
         else:
             self.fixed_questions.remove(*que_ids)
-        # self.update_fixed_questions_order(que_ids, action)
         self.update_paper(data)
         self.save()
         return self
@@ -1018,12 +1017,13 @@ class QuestionPaper(models.Model):
         que_sets = []
         for random_question in random_question_set:
             questions = random_question.pop("questions")
+            que_ids = [que["id"] for que in questions]
             q_set, created = QuestionSet.objects.get_or_create(
                 **random_question)
-            q_set.questions.add(*questions)
+            q_set.questions.add(*que_ids)
             que_sets.append(q_set.id)
         self.random_questions.add(*que_sets)
-        self.update_fixed_questions_order(data)
+        self.update_paper(data)
         self.save()
         return self
 
@@ -1035,7 +1035,7 @@ class QuestionPaper(models.Model):
             id__in=rand_que_set_ids
         ).delete()
         QuestionSet.objects.filter(id__in=rand_que_set_ids).delete()
-        self.update_question_paper(data)
+        self.update_paper(data)
         self.save()
         return self
 
