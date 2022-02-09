@@ -55,11 +55,9 @@
                 </div>
               </div>
               <div class="col-md-3">
-                <a href="#" class="btn btn-primary">
-                  <i class="fa fa-tasks">
-                    Manage Course
-                  </i>
-                </a>
+                 <router-link class="btn btn-primary" :to="{name: 'course_contents', params: {course_id: course.id}}">
+                    <i class="fa fa-tasks"></i>&nbsp;Manage Course
+                  </router-link>
               </div>
               <div class="col-md">
                 <a href="#" class="card-link btn btn-outline-info" data-toggle="collapse" :data-target="'#collapse-' + index">
