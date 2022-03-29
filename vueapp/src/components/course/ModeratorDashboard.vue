@@ -8,9 +8,6 @@
       </center>
       <hr>
       <center>
-        <a href="#" class="btn btn-success btn-lg">
-          <span class="fa fa-plus-circle"></span>&nbsp;Add Course
-        </a>
         <a href="#" @click="createDemoCourse" class="btn btn-primary btn-lg">
           Create Demo Course
         </a>

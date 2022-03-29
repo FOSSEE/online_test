@@ -33,7 +33,7 @@ from yaksh.send_emails import send_bulk_mail
 
 
 class BasePagination(PageNumberPagination):
-    page_size = 2
+    page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -150,7 +150,7 @@ class CourseListDetail(APIView, BasePagination):
         )
         courses = Course.objects.filter(
             Q(owner_id=user_id)|Q(id__in=course_as_ta)
-        ).order_by("active").distinct()
+        ).distinct()
         return courses
 
     def get(self, request, *args, **Kwargs):
@@ -620,9 +620,6 @@ class FilterQuestions(APIView):
         que_type = request.data.get("type")
         points = request.data.get("points")
         tags = request.data.get("tags")
-        fields = request.data.get("fields")
-        if fields:
-            fields = [field.strip() for field in fields.split(",")]
         if (que_type is None or points is None) and tags is None:
             raise APIException(
                 "Please search by question type and points or by tags"
@@ -635,5 +632,5 @@ class FilterQuestions(APIView):
             tags = [tag.strip() for tag in tags.split(",")]
             questions = self.get_objects_by_tags(tags, user.id)
         serializer = QuestionSerializer(
-            questions, many=True, context={"fields": fields})
+            questions, many=True)
         return Response(serializer.data)

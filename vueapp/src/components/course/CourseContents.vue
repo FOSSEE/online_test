@@ -40,6 +40,7 @@
                     <th>Sr No.</th>
                     <th>Name</th>
                     <th>Type</th>
+                    <th></th>
                     <th>Order</th>
                     <th>Statistics</th>
                   </tr>
@@ -50,9 +51,11 @@
                     :key="unit.id"
                   >
                     <td>
-                    <i class="fa fa-align-justify handle"></i>
+                      <i class="fa fa-align-justify handle"></i>
                     </td>
-                    <td>{{idx+1}}</td>
+                    <td>
+                      {{idx+1}}
+                    </td>
                     <td v-if="unit.type == 'Lesson'">
                       <a href="#" @click="showUnit(module, idx, true)">{{unit.name}}
                       </a>
@@ -60,6 +63,11 @@
                     <td v-else>
                       <a href="#" @click="showUnit(module, idx, true)">{{unit.description}}
                       </a>
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newQPModal">
+                        <i class="fa fa-edit">Question Paper</i>
+                      </button>
                     </td>
                     <td>
                       {{unit.type}}
@@ -88,6 +96,50 @@
       </div>
     </div>
   </div>
+  <div id="newQPModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+      <!-- Modal Content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="card">
+            <div class="card-header">Question Paper Details</div>
+            <div class="card-body">
+              <div class="tab-">
+                <nav class="nav nav-pills nav-fill">
+                  <a data-toggle="tab" role="tab" class="nav-item nav-link active" @click="toggleNav('fixed')">
+                      STEP 1<br>
+                      Add Fixed Questions
+                  </a>
+                  <a data-toggle="tab" role="tab" class="nav-item nav-link" @click="toggleNav('random')">
+                      STEP 2<br>
+                      Add Random Questions
+                  </a>
+                  <a data-toggle="tab" role="tab" class="nav-item nav-link" @click="toggleNav('finish')">
+                      STEP 3<br>
+                      Finish
+                  </a>
+                </nav>
+              </div>
+              <br>
+              <div v-show="activeTab!='finish'">
+                <SearchQuestions>
+                </SearchQuestions>
+              </div>
+              <div id="fixed-questions" v-show="activeTab=='fixed'">
+                <FixedQuestions :key="refreshComponent" :filtered="filteredQuestions" :questionPaper="questionPaperData"></FixedQuestions>
+              </div>
+              <div id="random-questions" v-show="activeTab=='random'">
+                <RandomQuestions :key="refreshComponent" :filtered="filteredQuestions" :questionPaper="questionPaperData"></RandomQuestions>
+              </div>
+              <div id="finish" v-show="activeTab=='finish'">
+                Finished
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 </template>
 <script>
@@ -99,13 +151,22 @@
   import Lesson from './Lesson.vue'
   import Quiz from './Quiz.vue'
   import CourseOptions from './CourseOptions.vue'
+  import SearchQuestions from './SearchQuestions.vue'
+  import FixedQuestions from './FixedQuestions.vue'
+  import RandomQuestions from './RandomQuestions.vue'
 
   export default {
     name: "CourseContents",
     components: {
-      Module, Lesson, Quiz,
+      Module,
+      Lesson,
+      Quiz,
       "draggable": VueDraggableNext,
-      CourseOptions, CourseHeader
+      CourseOptions, 
+      CourseHeader,
+      SearchQuestions,
+      FixedQuestions,
+      RandomQuestions,
     },
     data() {
       return {
@@ -117,7 +178,11 @@
         course_id: '',
         last_module_order: '',
         is_ready: false,
-        active: 1
+        active: 1,
+        activeTab: 'fixed',
+        filteredQuestions: [],
+        questionPaperData: [],
+        refreshComponent: 0,
       }
     },
     computed: {
@@ -234,6 +299,9 @@
           .finally(() => {
             this.$store.commit('toggleLoader', false);
           });
+      },
+      toggleNav(current_nav) {
+        this.activeTab = current_nav;
       }
     }
   }

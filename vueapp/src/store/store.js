@@ -11,6 +11,8 @@ const store = createStore({
       showLesson: false,
       showQuiz: false,
       course_modules: [],
+      availableQuestions: [],
+
     }
   },
   mutations: {
@@ -36,6 +38,9 @@ const store = createStore({
       state.showLesson = payload.isLesson
       state.showQuiz = payload.isQuiz
     },
+    UPDATE_AVAILABLE_QUESTIONS (state, payload) {
+      state.availableQuestions = payload
+    }
   },
   actions: {
     setModule({commit}, module) {
@@ -57,6 +62,10 @@ const store = createStore({
       commit('setCourseId', id)
     },
   },
+  getters: {
+    availableQuestions: state => state.availableQuestions,
+    userId: state => state.userId,
+  }
 });
 
 export default store;

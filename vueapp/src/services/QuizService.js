@@ -7,10 +7,12 @@ class QuizService {
     }
 
     create_or_update(module_id, id, data) {
-        if (id) {
-            return http.put(`/quiz/${module_id}/${id}`, data);
-        } else {
+        console.log('HELLLLLLLLLLLLLLLLLLLLOOOOOOOOOOOOo')
+        console.log(id === undefined);
+        if (id === undefined) {
             return http.post(`/quiz/${module_id}`, data);
+        } else {
+            return http.put(`/quiz/${module_id}/${id}`, data);
         }
     }
 

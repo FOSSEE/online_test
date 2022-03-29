@@ -8,6 +8,7 @@ from yaksh.courses.models import (
     HookTestCase, IntegerTestCase, StringTestCase,
     FloatTestCase, ArrangeTestCase, Quiz, QuestionPaper, QuestionSet
 )
+from forum.api.serializers import UserProfileSerializer
 
 
 class ProfileSerializer(serializers.Serializer):
@@ -389,23 +390,14 @@ class TestCaseSerializer(serializers.ModelSerializer):
 
 class QuestionSerializer(serializers.ModelSerializer):
     test_cases = TestCaseSerializer(many=True)
-
-    def __init__(self, *args, **kwargs):
-        fields = kwargs.get('context', {}).get("fields", None)
-        exclude = kwargs.get('context', {}).get("exclude", None)
-        super(QuestionSerializer, self).__init__(*args, **kwargs)
-        if fields is not None:
-            allowed = set(fields)
-            existing = set(self.fields)
-            for field_name in existing - allowed:
-                self.fields.pop(field_name)
-        if exclude is not None:
-            for field_name in exclude:
-                self.fields.pop(field_name)
-
     class Meta:
         model = Question
         fields = "__all__"
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response['user'] = UserProfileSerializer(instance.user).data
+        return response
 
     def create(self, validated_data):
         test_cases = validated_data.pop("test_cases")
