@@ -297,7 +297,9 @@ class CourseManager(models.Manager):
         return trial_course
 
     def get_hidden_courses(self, code):
-        return self.filter(code=code, hidden=True)
+        return self.filter(
+            code=code, hidden=True, active=True
+        ).order_by('start_enroll_time')
 
 
 #############################################################################
