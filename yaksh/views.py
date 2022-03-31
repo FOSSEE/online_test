@@ -60,7 +60,9 @@ from .file_utils import extract_files, is_csv
 from .send_emails import (send_user_mail,
                           generate_activation_key, send_bulk_mail)
 from .decorators import email_verified, has_profile
-from .tasks import regrade_papers, update_user_marks
+from .tasks import (
+    regrade_papers, update_user_marks, send_files_to_code_server
+)
 from notifications_plugin.models import Notification
 import hashlib
 
@@ -656,6 +658,10 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
             raise Http404(msg)
         new_paper = quest_paper.make_answerpaper(user, ip, attempt_number,
                                                  course_id)
+        # send celery task info to download files on code server
+        data = {"answerpaper_id": new_paper.id, "action": "download",
+                "path": user.profile.get_user_dir()}
+        task = send_files_to_code_server.delay(data)
         if new_paper.status == 'inprogress':
             return show_question(
                 request, new_paper.current_question(),
@@ -808,6 +814,7 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         course_id=course_id
     )
     current_question = get_object_or_404(Question, pk=q_id)
+    uploaded_assignments = None
     def is_valid_answer(answer):
         status = True
         if ((current_question.type == "mcc" or
@@ -880,18 +887,21 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                                     assignmentFile=fname,
                                     answer_paper_id=paper.id
                                 ))
-            AssignmentUpload.objects.bulk_create(uploaded_files)
-            user_answer = 'ASSIGNMENT UPLOADED'
-            new_answer = Answer(
-                question=current_question, answer=user_answer,
-                correct=False, error=json.dumps([])
+            uploaded_assignments = AssignmentUpload.objects.bulk_create(
+                uploaded_files
             )
-            new_answer.save()
-            paper.answers.add(new_answer)
-            next_q = paper.add_completed_question(current_question.id)
-            return show_question(request, next_q, paper,
-                                 course_id=course_id, module_id=module_id,
-                                 previous_question=current_question)
+            user_answer = 'ASSIGNMENT UPLOADED'
+            if not current_question.grade_assignment_upload:
+                new_answer = Answer(
+                    question=current_question, answer=user_answer,
+                    correct=False, error=json.dumps([])
+                )
+                new_answer.save()
+                paper.answers.add(new_answer)
+                next_q = paper.add_completed_question(current_question.id)
+                return show_question(request, next_q, paper,
+                                     course_id=course_id, module_id=module_id,
+                                     previous_question=current_question)
         else:
             user_answer = request.POST.get('answer')
         if not is_valid_answer(user_answer):
@@ -917,12 +927,15 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         # If we were not skipped, we were asked to check.  For any non-mcq
         # questions, we obtain the results via XML-RPC with the code executed
         # safely in a separate process (the code_server.py) running as nobody.
-        json_data = current_question.consolidate_answer_data(
-            user_answer, user) if current_question.type == 'code' else None
+        if current_question.type in ['code', 'upload']:
+            json_data = current_question.consolidate_answer_data(
+                user_answer, user, paper.id)
+        else:
+            json_data = None
         result = paper.validate_answer(
             user_answer, current_question, json_data, uid
         )
-        if current_question.type == 'code':
+        if current_question.type in ['code', 'upload']:
             if (paper.time_left() <= 0 and not
                     paper.question_paper.quiz.is_exercise):
                 url = '{0}:{1}'.format(SERVER_HOST_NAME, SERVER_POOL_PORT)
@@ -936,6 +949,10 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
                                      module_id=module_id,
                                      previous_question=current_question)
             else:
+                template = loader.get_template("yaksh/uploaded_files.html")
+                result['uploads'] = template.render(
+                    {"files": uploaded_assignments}
+                )
                 return JsonResponse(result)
         else:
             next_question, error_message, paper = _update_paper(
@@ -1050,6 +1067,9 @@ def complete(request, reason=None, attempt_num=None, questionpaper_id=None,
             attempt_number=attempt_num,
             course_id=course_id
         )
+        data = {"answerpaper_id": paper.id, "action": "delete",
+                "path": user.profile.get_user_dir()}
+        send_files_to_code_server.delay(data)
         course = Course.objects.get(id=course_id)
         learning_module = course.learning_module.get(id=module_id)
         learning_unit = learning_module.learning_unit.get(quiz=q_paper.quiz)

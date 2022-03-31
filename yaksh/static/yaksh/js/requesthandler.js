@@ -148,6 +148,7 @@ var marker;
 Dropzone.autoDiscover = false;
 var submitfiles;
 $(document).ready(function(){
+  var submitButton = $("#check");
   var filezone = $("div#dropzone_file").dropzone({
     url: $("#code").attr("action"),
     parallelUploads: 10,
@@ -156,36 +157,35 @@ $(document).ready(function(){
     paramName: "assignment",
     autoProcessQueue: false,
     init: function() {
-      var submitButton = document.querySelector("#check");
       myDropzone = this;
-      submitButton.addEventListener("click", function(e) {
-        if (myDropzone.getQueuedFiles().length === 0) {
+      submitButton.on("click", function(e) {
+        e.preventDefault();
+        if(myDropzone.getQueuedFiles().length === 0) {
           $("#upload_alert").modal("show");
-          e.preventDefault();
-          return;
         }
-        if (myDropzone.getAcceptedFiles().length > 0) {
-          if (submitfiles === true) {
-              submitfiles = false;
-              return;
-          }
-          e.preventDefault();
-          myDropzone.processQueue();
-          myDropzone.on("complete", function () {
-              submitfiles = true;
-              $('#check').trigger('click');
+        myDropzone.processQueue();
+        return false;
+      });
+      this.on('sending', function (file, xhr, formData) {
+          // Append all form inputs to the formData Dropzone will POST
+          var data = $("#code").serializeArray();
+          $.each(data, function (key, el) {
+              formData.append(el.name, el.value);
           });
-        }
       });
     },
-    success: function (file, response) {
-      document.open();
-      document.write(response);
-      document.close();
+    successmultiple: function (file, response) {
+      if(response.uid != undefined) {
+        lock_screen();
+        myDropzone.removeAllFiles(file);
+        $("#file_uploads").html(response.uploads);
+        get_result(response.uid);
+      } else {
+        document.open();
+        document.write(response);
+        document.close();
+      }
     },
-    headers: {
-        "X-CSRFToken": document.getElementById("code").elements[0].value
-    }
   });
   if(is_exercise == "True" && can_skip == "False") {
       setTimeout(function() {show_solution();}, delay_time*1000);

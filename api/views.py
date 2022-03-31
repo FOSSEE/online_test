@@ -206,7 +206,7 @@ class AnswerValidator(APIView):
         answerpaper.save()
         json_data = None
         if question.type in ['code', 'upload']:
-            json_data = question.consolidate_answer_data(user_answer, user)
+            json_data = question.consolidate_answer_data(user_answer, user, answerpaper.id)
         result = answerpaper.validate_answer(user_answer, question, json_data,
                                              answer.id)
 

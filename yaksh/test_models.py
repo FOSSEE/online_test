@@ -1547,7 +1547,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
         # When
         json_data = self.question1.consolidate_answer_data(
-            user_answer, user, regrade=True
+            user_answer, user, self.answerpaper.id
             )
         get_result = self.answerpaper.validate_answer(user_answer,
                                                       self.question1,
@@ -2193,8 +2193,9 @@ class TestCaseTestCases(unittest.TestCase):
 
     def test_consolidate_answer_data(self):
         """ Test consolidate answer data model method """
+        user_answer = "demo_answer"
         result = self.question1.consolidate_answer_data(
-            user_answer="demo_answer"
+            user_answer, self.user, None
         )
         actual_data = json.loads(result)
         exp_data = json.loads(self.answer_data_json)

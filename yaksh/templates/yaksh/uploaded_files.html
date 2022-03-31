@@ -1,0 +1,9 @@
+{% load custom_filters %}
+<ul class="list-group">
+	{% for as_file in files %}
+	    <li class="list-group-item">
+	      <a href="{{as_file.assignmentFile.url}}" target="_blank">
+	      {{ as_file.assignmentFile.name|file_title }}</a>
+	    </li>
+	{% endfor %}
+</ul>

@@ -33,9 +33,8 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
                                 "test_case":  'assert(add(-1,-2)==-3)',
                                 'weight': 0.0, 'hidden': True},
                                ]
-        self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in"
-                            " your code.").format(SERVER_TIMEOUT)
+        self.timeout_msg = ("You probably have an infinite loop in"
+                            " your code.")
         self.file_paths = None
 
     def tearDown(self):
@@ -650,9 +649,8 @@ class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
             "expected_output": "3",
             "weight": 0.0
             }]
-        timeout_msg = ("Code took more than {0} seconds to run. "
-                       "You probably have an infinite loop in"
-                       " your code.").format(SERVER_TIMEOUT)
+        timeout_msg = ("You probably have an infinite loop in"
+                       " your code.")
         user_answer = "while True:\n\tpass"
 
         kwargs = {'metadata': {
@@ -731,9 +729,8 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
             f.write('2'.encode('ascii'))
         tmp_in_dir_path = tempfile.mkdtemp()
         self.in_dir = tmp_in_dir_path
-        self.timeout_msg = ("Code took more than {0} seconds to run. "
-                            "You probably have an infinite loop in"
-                            " your code.").format(SERVER_TIMEOUT)
+        self.timeout_msg = ("You probably have an infinite loop in"
+                            " your code.")
         self.file_paths = None
 
     def tearDown(self):
@@ -929,42 +926,6 @@ class PythonHookEvaluationTestCases(EvaluatorBaseTest):
         self.assert_correct_output(self.timeout_msg,
                                    result.get("error")[0]["message"]
                                    )
-
-    def test_assignment_upload(self):
-        # Given
-        user_answer = "Assignment Upload"
-        hook_code = dedent("""\
-                            def check_answer(user_answer):
-                                success = False
-                                err = "Incorrect Answer"
-                                mark_fraction = 0.0
-                                with open("test.txt") as f:
-                                    data = f.read()
-                                if data == '2':
-                                    success, err, mark_fraction = True, "", 1.0
-                                return success, err, mark_fraction
-                            """
-                           )
-
-        test_case_data = [{"test_case_type": "hooktestcase",
-                           "hook_code": hook_code, "weight": 1.0
-                           }]
-        kwargs = {'metadata': {
-                  'user_answer': user_answer,
-                  'file_paths': self.file_paths,
-                  'assign_files': [(self.tmp_file, False)],
-                  'partial_grading': False,
-                  'language': 'python'},
-                  'test_case_data': test_case_data,
-                  }
-
-        # When
-        grader = Grader(self.in_dir)
-        result = grader.evaluate(kwargs)
-
-        # Then
-        self.assertTrue(result.get('success'))
-
 
 if __name__ == '__main__':
     unittest.main()
