@@ -1790,6 +1790,62 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertTrue(self.answerpaper.passed)
         self.assertFalse(self.answerpaper.is_attempt_inprogress())
 
+    def test_update_marks_with_negative_marks(self):
+        # Given
+        question = self.answer_wrong.question
+        question.negative_marks = 25
+        question.save()
+
+        # When
+        self.answer_wrong.set_marks(1)
+        self.answerpaper.update_marks()
+
+        # Then
+        self.assertEqual(self.answerpaper.marks_obtained, 2)
+        self.assertEqual(self.answerpaper.percent, 66.67)
+
+        # When
+        answers = self.answerpaper.answers.filter(question=question)
+        for answer in answers:
+            answer.set_marks(0)
+        self.answerpaper.update_marks()
+
+        # Then
+        self.assertEqual(self.answerpaper.marks_obtained, 0.75)
+        self.assertEqual(self.answerpaper.percent, 25)
+
+        # When
+        for answer in answers:
+            self.answer_wrong.set_marks(-1)
+        self.answer_wrong.set_marks(0)
+        self.answerpaper.update_marks()
+
+        # Then
+        self.assertEqual(self.answerpaper.marks_obtained, 0.75)
+        self.assertEqual(self.answerpaper.percent, 25)
+
+        # When
+        for answer in answers:
+            self.answer_wrong.set_marks(0.5)
+        self.answerpaper.update_marks()
+
+        # Then
+        self.assertEqual(self.answerpaper.marks_obtained, 1.375)
+        self.assertEqual(self.answerpaper.percent, 45.83)
+
+        # Given
+        question.negative_marks = 0
+        question.save()
+
+        # When
+        for answer in answers:
+            self.answer_wrong.set_marks(0)
+        self.answerpaper.update_marks()
+
+        # Then
+        self.assertEqual(self.answerpaper.marks_obtained, 1)
+        self.assertEqual(self.answerpaper.percent, 33.33)
+
     def test_set_end_time(self):
         current_time = timezone.now()
         self.answerpaper.set_end_time(current_time)
@@ -1818,6 +1874,61 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(self.answer_wrong.marks, 0.5)
         self.answer_wrong.set_marks(10.0)
         self.assertEqual(self.answer_wrong.marks, 1.0)
+        self.answer_wrong.set_marks(0)
+        self.assertEqual(self.answer_wrong.marks, 0)
+
+    def test_set_marks_with_negative_marks(self):
+        # Given
+        question = self.answer_wrong.question
+        question.negative_marks = 25
+        question.save()
+
+        # When
+        self.answer_wrong.set_marks(1)
+        # Then
+        self.assertEqual(self.answer_wrong.marks, 1)
+
+        # When
+        self.answer_wrong.set_marks(0)
+        # Then
+        self.assertEqual(self.answer_wrong.marks, -0.25)
+
+        # When
+        self.answer_wrong.set_marks(0.5)
+        # Then
+        self.assertEqual(self.answer_wrong.marks, 0.375)
+
+        # Given
+        question.negative_marks = 0
+        # When
+        self.answer_wrong.set_marks(1)
+        # Then
+        self.assertEqual(self.answer_wrong.marks, 1.0)
+
+        # When
+        self.answer_wrong.set_marks(0)
+        # Then
+        self.assertEqual(self.answer_wrong.marks, 0)
+
+    def test_no_negative_marks_except_mcq_mcc(self):
+        # Given
+        code_question = self.answer1.question
+        marks = self.answer1.marks
+        code_question.negative_marks = 25
+        code_question.save()
+
+        # When
+        self.answer1.set_marks(1)
+        # Then
+        self.assertEqual(self.answer1.marks, 1)
+
+        # When
+        self.answer1.set_marks(0)
+        # Then
+        self.assertEqual(self.answer1.marks, 0)
+
+        self.answer1.marks = marks
+        self.answer1.save()
 
     def test_get_latest_answer(self):
         latest_answer = self.answerpaper.get_latest_answer(self.question1.id)
