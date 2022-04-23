@@ -1,4 +1,4 @@
-import unittest
+from django.test import TestCase
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -125,8 +125,9 @@ def tearDownModule():
     MicroManager.objects.all().delete()
     Group.objects.all().delete()
 
+
 ###############################################################################
-class GlobalMethodsTestCases(unittest.TestCase):
+class GlobalMethodsTestCases(TestCase):
     def test_create_group_when_group_exists(self):
         self.assertEqual(
             create_group('moderator', 'yaksh'),
@@ -135,7 +136,7 @@ class GlobalMethodsTestCases(unittest.TestCase):
 
 
 ###############################################################################
-class MicroManagerTestCase(unittest.TestCase):
+class MicroManagerTestCase(TestCase):
     def setUp(self):
         self.micromanager = MicroManager.objects.first()
         self.course = self.micromanager.course
@@ -270,7 +271,7 @@ class MicroManagerTestCase(unittest.TestCase):
         self.assertFalse(micromanager.can_student_attempt())
 
 
-class LessonTestCases(unittest.TestCase):
+class LessonTestCases(TestCase):
     def setUp(self):
         self.lesson = Lesson.objects.get(name='L1')
         self.creator = User.objects.get(username='creator')
@@ -281,7 +282,7 @@ class LessonTestCases(unittest.TestCase):
         self.assertEqual(self.lesson.creator.username, self.creator.username)
 
 
-class LearningModuleTestCases(unittest.TestCase):
+class LearningModuleTestCases(TestCase):
     def setUp(self):
         self.learning_module = LearningModule.objects.get(name='LM1')
         self.learning_module_two = LearningModule.objects.get(name='LM2')
@@ -352,12 +353,8 @@ class LearningModuleTestCases(unittest.TestCase):
         )
 
     def test_get_quiz_units(self):
-        # Given
-        quizzes = [self.quiz]
-        # When
-        module_quizzes = self.learning_module.get_quiz_units()
-        # Then
-        self.assertSequenceEqual(module_quizzes, quizzes)
+        module_quizzes = self.learning_module.get_quiz_units().first().quiz
+        self.assertEqual(module_quizzes, self.quiz)
 
     def test_get_learning_units(self):
         # Given
@@ -405,11 +402,17 @@ class LearningModuleTestCases(unittest.TestCase):
         self.assertEqual(unit, next_unit)
 
     def test_get_module_status(self):
+        course_status = CourseStatus.objects.filter(
+            course=self.course, user=self.student
+        )
+
         # Given
         module_status = 'not attempted'
         # When
         self.learning_module.learning_unit.remove(self.learning_unit_two)
-        status = self.learning_module.get_status(self.student, self.course)
+        status = self.learning_module.get_status(
+            self.student, self.course, course_status
+        )
         # Then
         self.assertEqual(status, module_status)
         self.learning_module.learning_unit.add(self.learning_unit_two)
@@ -418,7 +421,9 @@ class LearningModuleTestCases(unittest.TestCase):
         # Given
         self.course_status.completed_units.add(self.learning_unit_one)
         # When
-        status = self.learning_module.get_status(self.student, self.course)
+        status = self.learning_module.get_status(
+            self.student, self.course, course_status
+        )
         # Then
         self.assertEqual("inprogress", status)
 
@@ -427,19 +432,26 @@ class LearningModuleTestCases(unittest.TestCase):
         # Given
         self.course_status.completed_units.add(self.learning_unit_two)
         # When
-        status = self.learning_module.get_status(self.student, self.course)
+        status = self.learning_module.get_status(
+            self.student, self.course, course_status
+        )
         # Then
         self.assertEqual("completed", status)
 
         # Module with no units
         self.course.learning_module.add(self.learning_module_two)
-        status = self.learning_module_two.get_status(self.student, self.course)
+        status = self.learning_module_two.get_status(
+            self.student, self.course, course_status
+        )
         self.assertEqual("no units", status)
 
     def test_module_completion_percent(self):
         # for module without learning units
+        course_status = CourseStatus.objects.filter(
+            course=self.course, user=self.student)
+
         percent = self.learning_module_two.get_module_complete_percent(
-            self.course, self.student
+            self.course, self.student, course_status
         )
         self.assertEqual(percent, 0)
 
@@ -447,12 +459,12 @@ class LearningModuleTestCases(unittest.TestCase):
         self.course_status.completed_units.add(self.learning_unit_one)
         self.course_status.completed_units.add(self.learning_unit_two)
         percent = self.learning_module.get_module_complete_percent(
-            self.course, self.student
+            self.course, self.student, course_status
         )
         self.assertEqual(percent, 100)
 
 
-class LearningUnitTestCases(unittest.TestCase):
+class LearningUnitTestCases(TestCase):
     def setUp(self):
         learning_module = LearningModule.objects.get(name='LM1')
         self.learning_unit_one = learning_module.learning_unit.get(order=1)
@@ -475,7 +487,7 @@ class LearningUnitTestCases(unittest.TestCase):
         self.assertFalse(self.learning_unit_two.check_prerequisite)
 
 
-class ProfileTestCases(unittest.TestCase):
+class ProfileTestCases(TestCase):
     def setUp(self):
         self.creator = User.objects.get(username='creator')
         self.profile = Profile.objects.get(user=self.creator)
@@ -524,7 +536,7 @@ class ProfileTestCases(unittest.TestCase):
 
 
 ###############################################################################
-class QuestionTestCases(unittest.TestCase):
+class QuestionTestCases(TestCase):
     def setUp(self):
         # Single question details
         self.user1 = User.objects.get(username="creator")
@@ -777,7 +789,7 @@ class QuestionTestCases(unittest.TestCase):
 
 
 ###############################################################################
-class QuizTestCases(unittest.TestCase):
+class QuizTestCases(TestCase):
     def setUp(self):
         self.course = Course.objects.get(name="Python Course")
         self.creator = User.objects.get(username="creator")
@@ -834,22 +846,44 @@ class QuizTestCases(unittest.TestCase):
         self.question_paper3.delete()
 
     def test_get_total_students(self):
-        self.assertEqual(self.quiz3.get_total_students(self.course), 2)
+        total_students = self.quiz3.get_total_students(
+            self.course
+        ).distinct().count()
+        self.assertEqual(total_students, 2)
 
     def test_get_total_students_without_questionpaper(self):
-        self.assertEqual(self.quiz4.get_total_students(self.course), 0)
+        total_students = self.quiz4.get_total_students(
+            self.course
+        ).distinct().count()
+        self.assertEqual(total_students, 0)
 
     def test_get_passed_students(self):
-        self.assertEqual(self.quiz3.get_passed_students(self.course), 1)
+        total_students = self.quiz3.get_total_students(self.course)
+        passed_students = total_students.filter(
+            passed=True
+        ).distinct().count()
+        self.assertEqual(passed_students, 1)
 
     def test_get_passed_students_without_questionpaper(self):
-        self.assertEqual(self.quiz4.get_passed_students(self.course), 0)
+        total_students = self.quiz4.get_total_students(self.course)
+        passed_students = total_students.filter(
+            passed=True
+        ).distinct().count()
+        self.assertEqual(passed_students, 0)
 
     def test_get_failed_students(self):
-        self.assertEqual(self.quiz3.get_failed_students(self.course), 1)
+        total_students = self.quiz3.get_total_students(self.course)
+        failed_students = total_students.filter(
+            passed=False
+        ).distinct().count()
+        self.assertEqual(failed_students, 1)
 
     def test_get_failed_students_without_questionpaper(self):
-        self.assertEqual(self.quiz4.get_failed_students(self.course), 0)
+        total_students = self.quiz4.get_total_students(self.course)
+        failed_students = total_students.filter(
+            passed=False
+        ).distinct().count()
+        self.assertEqual(failed_students, 0)
 
     def test_quiz(self):
         """ Test Quiz"""
@@ -929,7 +963,7 @@ class QuizTestCases(unittest.TestCase):
 
 
 ###############################################################################
-class QuestionPaperTestCases(unittest.TestCase):
+class QuestionPaperTestCases(TestCase):
     @classmethod
     def setUpClass(self):
         self.course = Course.objects.get(name="Python Course")
@@ -1211,7 +1245,7 @@ class QuestionPaperTestCases(unittest.TestCase):
 
 
 ###############################################################################
-class AnswerPaperTestCases(unittest.TestCase):
+class AnswerPaperTestCases(TestCase):
     @classmethod
     def setUpClass(self):
         self.course = Course.objects.get(name="Python Course")
@@ -1865,7 +1899,7 @@ class AnswerPaperTestCases(unittest.TestCase):
 
 
 ###############################################################################
-class CourseTestCases(unittest.TestCase):
+class CourseTestCases(TestCase):
     def setUp(self):
         self.course = Course.objects.get(name="Python Course")
         self.creator = User.objects.get(username="creator")
@@ -1983,12 +2017,8 @@ class CourseTestCases(unittest.TestCase):
         self.assertSequenceEqual(list(course_modules), modules)
 
     def test_get_quizzes(self):
-        # Given
-        quizzes = [self.quiz1]
-        # When
-        course_quizzes = self.course.get_quizzes()
-        # Then
-        self.assertSequenceEqual(course_quizzes, quizzes)
+        course_quizzes = self.course.get_quizzes()[1].quiz
+        self.assertEqual(course_quizzes, self.quiz1)
 
     def test_get_learning_units(self):
         # Given
@@ -2136,7 +2166,7 @@ class CourseTestCases(unittest.TestCase):
 
 
 ###############################################################################
-class TestCaseTestCases(unittest.TestCase):
+class TestCaseTestCases(TestCase):
     def setUp(self):
         self.user = User.objects.get(username="creator")
         self.question1 = Question(
@@ -2204,7 +2234,7 @@ class TestCaseTestCases(unittest.TestCase):
                          exp_data['test_case_data'])
 
 
-class AssignmentUploadTestCases(unittest.TestCase):
+class AssignmentUploadTestCases(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user(
@@ -2302,7 +2332,7 @@ class AssignmentUploadTestCases(unittest.TestCase):
         self.user1.delete()
 
 
-class CourseStatusTestCases(unittest.TestCase):
+class CourseStatusTestCases(TestCase):
     def setUp(self):
         user = User.objects.get(username='creator')
         self.course = Course.objects.create(name="Demo Course", creator=user,
@@ -2335,6 +2365,11 @@ class CourseStatusTestCases(unittest.TestCase):
         self.course.students.add(student)
         self.course.save()
 
+        learning_modules = self.course.get_learning_modules()
+        self.module_learning_units = {}
+        for module in learning_modules:
+            self.module_learning_units[module] = module.learning_unit.all()
+
         attempt = 1
         ip = '127.0.0.1'
         self.answerpaper1 = self.qpaper1.make_answerpaper(student, ip, attempt,
@@ -2359,15 +2394,26 @@ class CourseStatusTestCases(unittest.TestCase):
         self.course.delete()
 
     def test_course_is_complete(self):
+        student = User.objects.get(username='course_user')
+        course_status = CourseStatus.objects.filter(
+            course=self.course, user=student
+        )
+
         # When
         self.course_status.completed_units.add(self.unit_1_quiz)
         # Then
-        self.assertFalse(self.course_status.is_course_complete())
+        self.assertFalse(self.course_status.is_course_complete(
+            course_status, self.module_learning_units
+            )
+        )
 
         # When
         self.course_status.completed_units.add(self.unit_2_quiz)
         # Then
-        self.assertTrue(self.course_status.is_course_complete())
+        self.assertTrue(self.course_status.is_course_complete(
+            course_status, self.module_learning_units
+            )
+        )
 
         # Given
         self.answerpaper1.marks_obtained = 1
@@ -2375,11 +2421,13 @@ class CourseStatusTestCases(unittest.TestCase):
         self.answerpaper2.marks_obtained = 0
         self.answerpaper2.save()
         # When
-        self.course_status.calculate_percentage()
+        self.course_status.calculate_percentage(
+            course_status, self.module_learning_units
+        )
         # Then
         self.assertEqual(round(self.course_status.percentage, 2), 33.33)
         # When
-        self.course_status.set_grade()
+        self.course_status.set_grade(course_status, self.module_learning_units)
         # Then
         self.assertEqual(self.course_status.get_grade(), 'F')
 
@@ -2389,19 +2437,25 @@ class CourseStatusTestCases(unittest.TestCase):
         self.answerpaper2.marks_obtained = 1
         self.answerpaper2.save()
         # When
-        self.course_status.calculate_percentage()
+        self.course_status.calculate_percentage(
+            course_status, self.module_learning_units
+        )
         # Then
         self.assertEqual(round(self.course_status.percentage, 2), 66.67)
         # When
-        self.course_status.set_grade()
+        self.course_status.set_grade(course_status, self.module_learning_units)
         # Then
         self.assertEqual(self.course_status.get_grade(), 'B')
 
         # Test get course grade after completion
-        self.assertEqual(self.course.get_grade(self.answerpaper1.user), 'B')
+        self.assertEqual(
+            self.course.get_grade(
+                self.answerpaper1.user, self.course_status
+            ), 'B'
+        )
 
 
-class FileUploadTestCases(unittest.TestCase):
+class FileUploadTestCases(TestCase):
     def setUp(self):
         self.question = Question.objects.get(summary='Q1')
         self.filename = "uploadtest.txt"
@@ -2418,7 +2472,7 @@ class FileUploadTestCases(unittest.TestCase):
         self.file_upload.delete()
 
 
-class PostModelTestCases(unittest.TestCase):
+class PostModelTestCases(TestCase):
     def setUp(self):
         self.user1 = User.objects.create(
             username='bart',
@@ -2498,7 +2552,7 @@ class PostModelTestCases(unittest.TestCase):
         self.post1.delete()
 
 
-class QRcodeTestCase(unittest.TestCase):
+class QRcodeTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         quiz = Quiz.objects.get(description='demo quiz 1')

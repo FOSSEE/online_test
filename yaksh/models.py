@@ -30,7 +30,7 @@ import qrcode
 import hashlib
 
 # Django Imports
-from django.db import models, IntegrityError
+from django.db import models, IntegrityError, transaction
 from django.contrib.auth.models import User, Group, Permission
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
@@ -44,7 +44,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.template import Context, Template
 from django.conf import settings
 from django.forms.models import model_to_dict
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from django.db.models.signals import pre_delete
 from django.db.models.fields.files import FieldFile
 from django.core.files.base import ContentFile
@@ -561,27 +561,7 @@ class Quiz(models.Model):
         return AnswerPaper.objects.filter(
                 question_paper=qp,
                 course=course
-            ).values_list("user", flat=True).distinct().count()
-
-    def get_passed_students(self, course):
-        try:
-            qp = self.questionpaper_set.get().id
-        except QuestionPaper.DoesNotExist:
-            qp = None
-        return AnswerPaper.objects.filter(
-                question_paper=qp,
-                course=course, passed=True
-            ).values_list("user", flat=True).distinct().count()
-
-    def get_failed_students(self, course):
-        try:
-            qp = self.questionpaper_set.get().id
-        except QuestionPaper.DoesNotExist:
-            qp = None
-        return AnswerPaper.objects.filter(
-                question_paper=qp,
-                course=course, passed=False
-            ).values_list("user", flat=True).distinct().count()
+            )
 
     def get_answerpaper_status(self, user, course):
         try:
@@ -667,10 +647,7 @@ class LearningUnit(models.Model):
         else:
             self.check_prerequisite = True
 
-    def get_completion_status(self, user, course):
-        course_status = CourseStatus.objects.filter(
-            user_id=user.id, course_id=course.id
-        )
+    def get_completion_status(self, user, course, course_status):
         state = "not attempted"
         if course_status.exists():
             if course_status.first().completed_units.filter(id=self.id):
@@ -737,8 +714,7 @@ class LearningModule(models.Model):
     is_trial = models.BooleanField(default=False)
 
     def get_quiz_units(self):
-        return [unit.quiz for unit in self.learning_unit.filter(
-                type="quiz")]
+        return self.learning_unit.filter(type="quiz")
 
     def get_lesson_units(self):
         return [unit.lesson for unit in self.learning_unit.filter(
@@ -773,12 +749,12 @@ class LearningModule(models.Model):
             next_index = 0
         return ordered_units.get(id=ordered_units_ids[next_index])
 
-    def get_status(self, user, course):
+    def get_status(self, user, course, course_status):
         """ Get module status if completed, inprogress or not attempted"""
         learning_module = course.learning_module.prefetch_related(
             "learning_unit").get(id=self.id)
         ordered_units = learning_module.learning_unit.order_by("order")
-        status_list = [unit.get_completion_status(user, course)
+        status_list = [unit.get_completion_status(user, course, course_status)
                        for unit in ordered_units]
 
         if not status_list:
@@ -791,7 +767,7 @@ class LearningModule(models.Model):
             default_status = "inprogress"
         return default_status
 
-    def is_prerequisite_complete(self, user, course):
+    def is_prerequisite_complete(self, user, course, course_status):
         """ Check if prerequisite module is completed """
         ordered_modules = course.learning_module.order_by("order")
         ordered_modules_ids = list(ordered_modules.values_list(
@@ -802,7 +778,7 @@ class LearningModule(models.Model):
         else:
             prev_module = ordered_modules.get(
                 id=ordered_modules_ids[current_module_index-1])
-            status = prev_module.get_status(user, course)
+            status = prev_module.get_status(user, course, course_status)
             if status == "completed":
                 success = True
             else:
@@ -847,12 +823,12 @@ class LearningModule(models.Model):
     def has_prerequisite(self):
         return self.check_prerequisite
 
-    def get_module_complete_percent(self, course, user):
+    def get_module_complete_percent(self, course, user, course_status):
         units = self.get_learning_units()
         if not units:
             percent = 0.0
         else:
-            status_list = [unit.get_completion_status(user, course)
+            status_list = [unit.get_completion_status(user, course, course_status)
                            for unit in units]
             count = status_list.count("completed")
             percent = round((count / units.count()) * 100)
@@ -979,7 +955,7 @@ class Course(models.Model):
         self.requests.add(*users)
 
     def get_requests(self):
-        return self.requests.all()
+        return self.requests.select_related('profile')
 
     def is_active_enrollment(self):
         return self.start_enroll_time <= timezone.now() < self.end_enroll_time
@@ -992,7 +968,7 @@ class Course(models.Model):
             self.rejected.remove(*users)
 
     def get_enrolled(self):
-        return self.students.all()
+        return self.students.select_related('profile')
 
     def reject(self, was_enrolled, *users):
         self.rejected.add(*users)
@@ -1002,7 +978,7 @@ class Course(models.Model):
             self.students.remove(*users)
 
     def get_rejected(self):
-        return self.rejected.all()
+        return self.rejected.select_related('profile')
 
     def is_enrolled(self, user):
         return self.students.filter(id=user.id).exists()
@@ -1081,7 +1057,9 @@ class Course(models.Model):
         return students
 
     def get_learning_modules(self):
-        return self.learning_module.filter(is_trial=False).order_by("order")
+        return self.learning_module.prefetch_related(
+                'learning_unit'
+            ).filter(is_trial=False).order_by("order")
 
     def get_learning_module(self, quiz):
         modules = self.get_learning_modules()
@@ -1091,29 +1069,33 @@ class Course(models.Model):
                     break
         return module
 
-    def get_unit_completion_status(self, module, user, unit):
-        course_module = self.learning_module.get(id=module.id)
-        learning_unit = course_module.learning_unit.get(id=unit.id)
-        return learning_unit.get_completion_status(user, self)
+    def get_unit_completion_status(self, unit, user, course_status):
+        return unit.get_completion_status(user, self, course_status)
 
     def get_quizzes(self):
         learning_modules = self.learning_module.all()
-        quiz_list = []
+        unit_list = []
         for module in learning_modules:
-            quiz_list.extend(module.get_quiz_units())
-        return quiz_list
+            unit_list.extend(module.learning_unit.all())
+        return unit_list
 
     def get_quiz_details(self):
-        return [(quiz, quiz.get_total_students(self),
-                 quiz.get_passed_students(self),
-                 quiz.get_failed_students(self))
-                for quiz in self.get_quizzes()]
+        unit_list = self.get_quizzes()
+
+        quiz_data = []
+        for unit in unit_list:
+            total_students = unit.quiz.get_total_students(self)
+            t_students = total_students.distinct().count()
+            p_students = total_students.filter(passed=True).distinct().count()
+            f_students = total_students.filter(passed=False).distinct().count()
+            quiz_data.append((unit, t_students, p_students, f_students))
+        return quiz_data
 
     def get_learning_units(self):
-        learning_modules = self.learning_module.all()
+        learning_modules = self.get_learning_modules()
         learning_units = []
         for module in learning_modules:
-            learning_units.extend(module.get_learning_units())
+            learning_units.extend(module.learning_unit.select_related('lesson'))
         return learning_units
 
     def get_lesson_posts(self):
@@ -1155,27 +1137,27 @@ class Course(models.Model):
         return modules.get(id=module_ids[next_index])
 
     def percent_completed(self, user, modules):
+        course_status = CourseStatus.objects.filter(
+            course_id=self.id, user_id=user.id)
         if not modules:
             percent = 0.0
         else:
-            status_list = [module.get_module_complete_percent(self, user)
+            status_list = [module.get_module_complete_percent(self, user, course_status)
                            for module in modules]
             count = sum(status_list)
             percent = round((count / modules.count()))
         return percent
 
-    def get_grade(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user=user)
-        if course_status.exists():
-            grade = course_status.first().get_grade()
+    def get_grade(self, user, course_status):
+        if course_status:
+            grade = course_status.get_grade()
         else:
             grade = "NA"
         return grade
 
-    def get_current_unit(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user_id=user)
-        if course_status.exists():
-            return course_status.first().current_unit
+    def get_current_unit(self, user, course_status):
+        if course_status:
+            return course_status.current_unit
 
     def days_before_start(self):
         """ Get the days remaining for the start of the course """
@@ -1185,10 +1167,9 @@ class Course(models.Model):
             remaining_days = 0
         return remaining_days
 
-    def get_completion_percent(self, user):
-        course_status = CourseStatus.objects.filter(course=self, user=user)
-        if course_status.exists():
-            percentage = course_status.first().percent_completed
+    def get_completion_percent(self, user, course_status):
+        if course_status:
+            percentage = course_status.percent_completed
         else:
             percentage = 0
         return percentage
@@ -1245,9 +1226,9 @@ class CourseStatus(models.Model):
     def get_grade(self):
         return self.grade
 
-    def set_grade(self):
-        if self.is_course_complete():
-            self.calculate_percentage()
+    def set_grade(self, course_status, module_learning_units):
+        if self.is_course_complete(course_status, module_learning_units):
+            self.calculate_percentage(course_status, module_learning_units)
             if self.course.grading_system is None:
                 grading_system = GradingSystem.objects.get(
                     name__contains='default'
@@ -1258,25 +1239,25 @@ class CourseStatus(models.Model):
             self.grade = grade
             self.save()
 
-    def calculate_percentage(self):
-        quizzes = self.course.get_quizzes()
-        if self.is_course_complete() and quizzes:
+    def calculate_percentage(self, course_status, module_learning_units):
+        units = self.course.get_quizzes()
+        if self.is_course_complete(course_status, module_learning_units) and units:
             total_weightage = 0
             sum = 0
-            for quiz in quizzes:
-                total_weightage += quiz.weightage
+            for unit in units:
+                total_weightage += unit.quiz.weightage
                 marks = AnswerPaper.objects.get_user_best_of_attempts_marks(
-                        quiz, self.user.id, self.course.id)
-                out_of = quiz.questionpaper_set.first().total_marks
-                sum += (marks/out_of)*quiz.weightage
-            self.percentage = (sum/total_weightage)*100
+                        unit.quiz, self.user.id, self.course.id)
+                out_of = unit.quiz.questionpaper_set.first().total_marks
+                sum += (marks / out_of) * unit.quiz.weightage
+            self.percentage = (sum / total_weightage) * 100
             self.save()
 
-    def is_course_complete(self):
-        modules = self.course.get_learning_modules()
+    def is_course_complete(self, course_status, module_learning_units):
+        modules = module_learning_units.keys()
         complete = False
         for module in modules:
-            complete = module.get_status(self.user, self.course) == 'completed'
+            complete = module.get_status(self.user, self.course, course_status) == 'completed'
             if not complete:
                 break
         return complete
@@ -2139,12 +2120,20 @@ class AnswerPaperManager(models.Manager):
     def get_user_data(self, user, questionpaper_id, course_id,
                       attempt_number=None):
         if attempt_number is not None:
-            papers = self.filter(user_id=user.id,
-                                 question_paper_id__in=questionpaper_id,
-                                 course_id=course_id,
-                                 attempt_number=attempt_number)
+            papers = self.select_related(
+                'course', 'question_paper__quiz'
+            ).prefetch_related(
+                'answers', 'questions'
+            ).filter(user_id=user.id,
+                     question_paper_id__in=questionpaper_id,
+                     course_id=course_id,
+                     attempt_number=attempt_number)
         else:
-            papers = self.filter(
+            papers = self.select_related(
+                'course', 'question_paper__quiz'
+            ).prefetch_related(
+                'answers', 'questions'
+            ).filter(
                 user=user, question_paper_id=questionpaper_id,
                 course_id=course_id
             ).order_by("-attempt_number")
@@ -3341,7 +3330,8 @@ class QRcode(models.Model):
             for i in range(40):
                 try:
                     self.short_key = key[0:num]
-                    self.save()
+                    with transaction.atomic():
+                        self.save()
                     break
                 except IntegrityError:
                     num = num + 1

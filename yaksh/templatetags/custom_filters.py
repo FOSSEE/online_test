@@ -54,13 +54,28 @@ def file_title(name):
 
 
 @register.simple_tag
-def get_unit_status(course, module, unit, user):
-    return course.get_unit_completion_status(module, user, unit)
+def get_unit_status(course, unit, user, course_status):
+    return course.get_unit_completion_status(unit, user, course_status)
 
 
 @register.simple_tag
-def get_module_status(user, module, course):
-    return module.get_status(user, course)
+def get_module_status(user, module, units, course, course_status):
+
+    status = {}
+    for unit in units:
+        status[unit] = unit.get_completion_status(user, course, course_status)
+
+    if not status:
+        default_status = "no units"
+    elif all([status == "completed" for unit, status in status.items()]):
+        default_status = "completed"
+    elif all([status == "not attempted" for unit, status in status.items()]):
+        default_status = "not attempted"
+    else:
+        default_status = "inprogress"
+
+    return (default_status, status)
+    
 
 
 @register.simple_tag
@@ -69,9 +84,25 @@ def get_course_details(course):
 
 
 @register.simple_tag
-def module_completion_percent(course, module, user):
-    return module.get_module_complete_percent(course, user)
+def get_course_completion_percent(courses_status, user):
+    course_status = courses_status.filter(
+        user=user
+    ).values('percent_completed')
+    if course_status.exists():
+        return course_status.first()['percent_completed']
+    else:
+        return 0
 
+
+@register.simple_tag
+def module_completion_percent(units, status_list):
+    if not units:
+        percent = 0.0
+    else:
+        count = sum(map(('completed').__eq__, status_list.values()))
+        percent = round((count / units.count()) * 100)
+
+    return percent    
 
 @register.simple_tag
 def get_ordered_testcases(question, answerpaper):
@@ -170,19 +201,17 @@ def to_str(text):
 
 
 @register.inclusion_tag('yaksh/micromanaged.html')
-def show_special_attempt(user_id, course_id):
-    user = User.objects.get(pk=user_id)
-    micromanagers = user.micromanaged.filter(course_id=course_id)
+def show_special_attempt(user, course):
+    micromanagers = user.micromanaged.filter(course_id=course.id)
     context = {'micromanagers': micromanagers}
     return context
 
 
 @register.inclusion_tag('yaksh/micromonitor.html')
-def specail_attempt_monitor(user_id, course_id, quiz_id):
-    user = User.objects.get(pk=user_id)
+def special_attempt_monitor(user, course_id, quiz_id):
     micromanagers = user.micromanaged.filter(course_id=course_id,
                                              quiz_id=quiz_id)
-    context = {'user_id': user_id, 'course_id': course_id, 'quiz_id': quiz_id}
+    context = {'user_id': user.id, 'course_id': course_id, 'quiz_id': quiz_id}
     if micromanagers.exists():
         context['micromanager'] = micromanagers.first()
     return context
@@ -209,12 +238,8 @@ def get_tc_percent(tc_id, data):
 
 
 @register.simple_tag
-def get_lesson_views(course_id, lesson_id):
-    course = Course.objects.get(id=course_id)
-    return TrackLesson.objects.filter(
-        course_id=course_id, lesson_id=lesson_id, watched=True
-    ).count(), course.students.count()
-
+def get_lesson_views(course, lesson):
+    return lesson.tracklesson_set.count(), course.students.count()
 
 @register.simple_tag
 def get_percent_value(dictionary, key, total):
