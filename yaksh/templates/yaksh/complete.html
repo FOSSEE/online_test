@@ -59,12 +59,12 @@
 <br>
 {% if module_id and not paper.course.is_trial %}
     {% if first_unit %}
-        <a href="{% url 'yaksh:next_unit' course_id module_id learning_unit.id '1' %}" class="btn btn-info btn-lg" id="Next"> Next
+        <a href="{% url 'yaksh:grade' course_id module_id learning_unit.id '1' %}" class="btn btn-info btn-lg" id="Next"> Next
             <span class="fa fa-step-forward">
             </span>
         </a>
     {% else %}
-        <a href="{% url 'yaksh:next_unit' course_id module_id learning_unit.id %}" class="btn btn-info btn-lg" id="Next"> Next
+        <a href="{% url 'yaksh:grade' module_id %}" class="btn btn-info btn-lg" id="Next"> Next
             <span class="fa fa-step-forward">
             </span>
         </a>

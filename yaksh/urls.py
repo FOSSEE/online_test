@@ -11,6 +11,9 @@ urlpatterns = [
     url(r'^new_activation/$', views.new_activation, name='new_activation'),
     url(r'^toggle_moderator/$', views.toggle_moderator_role,
         name='toggle_moderator'),
+    url(r'^score/$',views.displaygrade,name="grade"),    
+    url(r'^score/(?P<questionpaper_id>\d+)$', views.displaygrade, name="grade"),    
+
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
     url(r'^results/$', views.results_user),
     url(r'^start/(?P<questionpaper_id>\d+)/(?P<module_id>\d+)/'
@@ -184,6 +187,7 @@ urlpatterns = [
         '(?P<course_id>\d+)/$', views.test_quiz, name="test_quiz"),
     url(r'^manage/create_demo_course/$', views.create_demo_course,
         name="create_demo_course"),
+
     url(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
         views.download_course_csv, name="download_course_csv"),
     url(r'^manage/download/user_assignment/(?P<question_id>\d+)/'
