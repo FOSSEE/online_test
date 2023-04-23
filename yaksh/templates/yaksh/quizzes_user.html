@@ -85,7 +85,7 @@
                                         </a>
                                     {% endif %}
                                 {% else %}
-                                    {% if course.data.active %}
+                                    {% if course.is_active %}
                                         {% if course.data.is_active_enrollment %}
                                             {% if course.data.is_self_enroll %}
                                                 <a class="btn btn-primary" href="{% url 'yaksh:self_enroll' course.data.id %}">Enroll</a>
