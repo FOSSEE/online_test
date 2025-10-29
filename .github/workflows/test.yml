@@ -20,13 +20,10 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v3
             
-            - name: Setup Python 3.6
-              uses: actions/setup-python@v4
-              with:
-                python-version: '3.6'
-
             - name: Install Scilab, R, firefox and xvfb
               run: |
+                sudo apt-get update
+                sudo apt-get install -y python3.6 python3.6-venv python3.6-dev
                 sudo apt-get update -qq
                 sudo apt-get install -y scilab r-base xvfb firefox
                 sudo apt-get install -y r-base
@@ -35,38 +32,41 @@ jobs:
               run: |
                 Xvfb :99 -screen 0 1024x768x24 &
                 echo "DISPLAY=:99" >> $GITHUB_ENV
-
-            - name: Install dependencies
+                
+            - name: Set up Python 3.6 venv
               run: |
+                python3.6 -m venv venv
+                source venv/bin/activate
+                pip install -r requirements.txt
                 pip install -r requirements/requirements-common.txt
                 pip install codecov
                 python setup.py develop
 
             - name: Run Django migrations
               run: |
-                python manage.py makemigrations notifications_plugin
-                python manage.py makemigrations stats
-                python manage.py makemigrations
-                python manage.py migrate auth
-                python manage.py migrate
+                ./venv/bin/python manage.py makemigrations notifications_plugin
+                ./venv/bin/python manage.py makemigrations stats
+                ./venv/bin/python manage.py makemigrations
+                ./venv/bin/python manage.py migrate auth
+                ./venv/bin/python manage.py migrate
 
             - name: Run tests with coverage and Celery
               run: |
-                coverage erase
+                ./venv/bin/coverage erase
                 celery multi start 1 -A online_test worker -B
-                coverage run -p manage.py test -v 2 yaksh
-                coverage run -p manage.py test -v 2 stats
-                coverage run -p manage.py test -v 2 grades
-                coverage run -p manage.py test -v 2 yaksh.live_server_tests.load_test
-                coverage run -p manage.py test -v 2 api
+                ./venv/bin/coverage run -p manage.py test -v 2 yaksh
+                ./venv/bin/coverage run -p manage.py test -v 2 stats
+                ./venv/bin/coverage run -p manage.py test -v 2 grades
+                ./venv/bin/coverage run -p manage.py test -v 2 yaksh.live_server_tests.load_test
+                ./venv/bin/coverage run -p manage.py test -v 2 api
                 celery multi stop 1
                 find . -type f -name "*.pid" -exec rm -f {} \;
 
 
             - name: Upload coverage to Codecov
               run: |
-                coverage combine
-                coverage report
+                ./venv/bin/coverage combine
+                ./venv/bin/coverage report
                 codecov
 
             - name: Generate HTML coverage report
