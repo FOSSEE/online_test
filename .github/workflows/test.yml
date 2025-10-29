@@ -1,0 +1,79 @@
+name: Run Tests CI
+
+on:
+    push:
+        branches: [ master ]
+    pull_request:
+        branches: [ master ]
+
+jobs:
+    test:
+        runs-on: ubuntu-20.04
+
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379: 6379
+
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v3
+        
+        - name: Setup Python 3.6
+          uses: actions/setup-python@v4
+          with:
+              python-version: '3.6'
+
+        - name: Install Scilab, R, firefox and xvfb
+          run: |
+            sudo apt-get update -qq
+            sudo apt-get install -y scilab r-base xvfb firefox
+            sudo apt-get install -y r-base
+
+        - name: Start xvfb
+          run: |
+            Xvfb :99 -screen 0 1024x768x24 &
+            echo "DISPLAY=:99" >> $GITHUB_ENV
+
+        - name: Install dependencies
+          run: |
+            pip install -r requirements/requirements-common.txt
+            pip install codecov
+            python setup.py develop
+
+        - name: Run Django migrations
+          run: |
+            python manage.py makemigrations notifications_plugin
+            python manage.py makemigrations stats
+            python manage.py makemigrations
+            python manage.py migrate auth
+            python manage.py migrate
+
+        - name: Run tests with coverage and Celery
+          run: |
+            coverage erase
+            celery multi start 1 -A online_test worker -B
+            coverage run -p manage.py test -v 2 yaksh
+            coverage run -p manage.py test -v 2 stats
+            coverage run -p manage.py test -v 2 grades
+            coverage run -p manage.py test -v 2 yaksh.live_server_tests.load_test
+            coverage run -p manage.py test -v 2 api
+            celery multi stop 1
+            find . -type f -name "*.pid" -exec rm -f {} \;
+
+
+        - name: Upload coverage to Codecov
+          run: |
+            coverage combine
+            coverage report
+            codecov
+
+        - name: Generate HTML coverage report
+          run: coverage html
+
+        - name: Upload HTML coverage report
+          uses: actions/upload-artifact@v4
+          with:
+            name: htmlcov
+            path: htmlcov/
