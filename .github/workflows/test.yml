@@ -36,7 +36,7 @@ jobs:
               run: |
                 pip install -r requirements/requirements-common.txt
                 pip install codecov
-                python setup.py develop
+                pip install -e .
 
             - name: Run Django migrations
               run: |
