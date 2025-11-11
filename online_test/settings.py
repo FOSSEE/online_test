@@ -56,7 +56,8 @@ INSTALLED_APPS = (
     'api',
     'corsheaders',
     'rest_framework.authtoken',
-    'storages'
+    'storages',
+    'mozilla-django-oidc',
 )
 
 MIDDLEWARE = (
@@ -195,9 +196,21 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'GOOGLE_SECRET_PROVIDED'
 SOCIAL_AUTH_FACEBOOK_KEY = 'FACEBOOK_KEY_PROVIDED'
 SOCIAL_AUTH_FACEBOOK_SECRET = 'FACEBOOK_SECRET_PROVIDED'
 
+OIDC_RP_CLIENT_ID = 'your_client_id'
+OIDC_RP_CLIENT_SECRET = 'your_client_secret'
+
+OIDC_OP_AUTHORIZATION_ENDPOINT = 'http://your_keycloak_url/realms/your_keycloak_realm/protocol/openid-connect/auth'
+OIDC_OP_TOKEN_ENDPOINT = 'http://your_keycloak_url/realms/your_keycloak_realm/protocol/openid-connect/token'
+OIDC_OP_USER_ENDPOINT = 'http://your_keycloak_url/realms/your_keycloak_realm/protocol/openid-connect/userinfo'
+OIDC_RP_SIGN_ALGO = 'RS256'
+OIDC_OP_JWKS_ENDPOINT = 'http://your_keycloak_url/realms/your_keycloak_realm/protocol/openid-connect/certs'
+OIDC_OP_LOGOUT_ENDPOINT = 'http://your_keycloak_url/realms/your_keycloak_realm/protocol/openid-connect/logout'
+OIDC_STORE_ID_TOKEN = True
+
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
     'social_core.backends.facebook.FacebookOAuth2',
+    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
