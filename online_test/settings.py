@@ -57,7 +57,7 @@ INSTALLED_APPS = (
     'corsheaders',
     'rest_framework.authtoken',
     'storages',
-    'mozilla-django-oidc',
+    'mozilla_django_oidc',
 )
 
 MIDDLEWARE = (
