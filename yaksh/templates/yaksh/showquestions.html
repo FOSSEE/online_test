@@ -133,16 +133,16 @@
         <form name=frm action="{% url 'yaksh:show_questions' %}" method="post">
           {% csrf_token %}
           <div id="filtered-questions">
+                <div class="col">
+                  <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
+                    <i class="fa fa-plus-circle"></i>&nbsp;Add Question
+                  </a>
+                </div>
             <br>
             {% if objects %}
               <div class="row">
                 <div class="col">
                 {% include "yaksh/paginator.html" %}
-                </div>
-                <div class="col">
-                  <a class="btn btn-lg btn-success" href="{% url 'yaksh:add_question' %}">
-                    <i class="fa fa-plus-circle"></i>&nbsp;Add Question
-                  </a>
                 </div>
               </div>
               <br>
