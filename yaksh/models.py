@@ -1457,7 +1457,7 @@ class Question(models.Model):
                 ]
             else:
                 metadata['file_paths'] = [
-                    (self.get_file_url(file.file.url), file.extract)
+                    (file.file.path, file.extract)
                      for file in files
                 ]
         if self.type == "upload" and regrade:

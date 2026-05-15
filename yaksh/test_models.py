@@ -1353,6 +1353,13 @@ class AnswerPaperTestCases(unittest.TestCase):
         )
         self.mcc_based_testcase.save()
 
+        self.filename = "test.txt"
+        self.uploaded_file = SimpleUploadedFile(self.filename, b'Test File')
+        self.file_upload = FileUpload.objects.create(
+            file=self.uploaded_file,
+            question=self.question1
+        )
+
         # Setup quiz where questions are shuffled
         # Create Quiz and Question Paper
         self.quiz2 = Quiz.objects.get(description="demo quiz 2")
@@ -1412,6 +1419,7 @@ class AnswerPaperTestCases(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         self.quiz.questionpaper_set.all().delete()
+        self.file_upload.delete()
         self.server_pool.stop()
         self.server_thread.join()
         settings.code_evaluators['python']['standardtestcase'] = \
