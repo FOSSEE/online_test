@@ -1,6 +1,11 @@
 {% load static %}
 {% block css%}
   <link rel="stylesheet" href="{% static 'yaksh/css/dashboard.css' %}" type="text/css" />
+  <style>
+  #my-text {
+    white-space: pre-line; /* Tells HTML to render \n as line breaks */
+  }
+</style>
 {% endblock %}
 {% block script %}
   <script src="{% static 'yaksh/js/jquery-ui.js' %}"></script>
@@ -23,10 +28,11 @@
 
         {% if error.test_case %}
           <strong> We tried your code with the following test case:</strong>
-          <br/></br>
-          <pre><code><strong class="text-danger">
+          <div id="my-text">
+          <code><strong class="text-danger">
           {{error.test_case}}
-          </strong></code></pre>
+          </strong></code>
+          </div>
         {% endif %}
         <p> <b>The following error took place: </b></p>
         <table class="table  table-borderless border border-danger table-responsive-sm" width="100%" id='assertion'>

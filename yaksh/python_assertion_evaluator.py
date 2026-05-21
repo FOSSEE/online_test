@@ -7,6 +7,7 @@ from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
 from .error_messages import prettify_exceptions
+from .custom_assertion_message import CustomAssertionError, check_equal
 
 
 class PythonAssertionEvaluator(BaseEvaluator):
@@ -68,10 +69,14 @@ class PythonAssertionEvaluator(BaseEvaluator):
         mark_fraction = 0.0
         try:
             exec("from nose.tools import *", self.exec_scope)
+            self.exec_scope["CustomAssertionError"] = CustomAssertionError
+            self.exec_scope["check_equal"] = check_equal
             _tests = compile(self.test_case, '<string>', mode='exec')
             exec(_tests, self.exec_scope)
         except TimeoutException:
             raise
+        except CustomAssertionError as e:
+            err = prettify_exceptions("AssertionError", message=None, testcase=str(e))
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)
