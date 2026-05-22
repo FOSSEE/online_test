@@ -17,16 +17,15 @@ def prettify_exceptions(exception, message, traceback=None,
     if exception in ignore_traceback:
         err["traceback"] = None
 
-    if exception == 'AssertionError':
-        value = ("Expected answer from the" +
-                 " test case did not match the output")
-        if message:
-            err["message"] = message
-        else:
-            err["message"] = value
-        err["traceback"] = None
     err["test_case"] = testcase
     err["line_no"] = line_no
+    if exception == 'AssertionError' or exception == 'Errors':
+        value = ("Expected answer from the" +
+                 " test case did not match the output")
+        err['message'] = value
+        if message:
+            err["test_case"] = message
+        err["traceback"] = None
     return err
 
 

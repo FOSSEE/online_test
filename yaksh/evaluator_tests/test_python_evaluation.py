@@ -473,7 +473,7 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.assertFalse(result.get("success"))
         error = result.get("error")[0]
         self.assertEqual(error['exception'], 'AssertionError')
-        self.assertEqual(error['message'], '-1 != 3')
+        self.assertIn('did not match the output', error['message'])
 
 
 class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
