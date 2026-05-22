@@ -7,7 +7,9 @@ from .file_utils import copy_files, delete_files
 from .base_evaluator import BaseEvaluator
 from .grader import TimeoutException
 from .error_messages import prettify_exceptions
-from .custom_assertion_message import CustomAssertionError, check_equal
+from .custom_assertion_message import (
+        CustomAssertionError, check_equal, check_almost_equal
+)
 
 
 class PythonAssertionEvaluator(BaseEvaluator):
@@ -67,16 +69,32 @@ class PythonAssertionEvaluator(BaseEvaluator):
         """
         success = False
         mark_fraction = 0.0
+        self.exec_scope["CustomAssertionError"] = CustomAssertionError
+
+
+        def _check_equal(expression, expected, reveal_expected=True, hint=None):
+            return check_equal(expression, expected,
+                reveal_expected=reveal_expected, hint=hint,
+                globals_=self.exec_scope, locals_=self.exec_scope,
+            )
+
+        def _check_almost_equal(expression, expected, tolerance,
+            reveal_expected=True, hint=None):
+            return check_almost_equal(expression, expected, tolerance,
+                reveal_expected=reveal_expected, hint=hint,
+                globals_=self.exec_scope, locals_=self.exec_scope,
+            )
+
+        self.exec_scope["check_equal"] = _check_equal
+        self.exec_scope["check_almost_equal"] = _check_almost_equal
         try:
             exec("from nose.tools import *", self.exec_scope)
-            self.exec_scope["CustomAssertionError"] = CustomAssertionError
-            self.exec_scope["check_equal"] = check_equal
             _tests = compile(self.test_case, '<string>', mode='exec')
             exec(_tests, self.exec_scope)
         except TimeoutException:
             raise
         except CustomAssertionError as e:
-            err = prettify_exceptions("AssertionError", message=None, testcase=str(e))
+            err = prettify_exceptions("Errors", message=None, testcase=str(e))
         except Exception:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb_list = traceback.format_exception(exc_type, exc_value, exc_tb)

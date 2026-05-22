@@ -1,5 +1,16 @@
+from nose.tools import assert_almost_equal
+
+try:
+    import numpy as np
+    from numpy.testing import assert_allclose
+except:
+    np = None
+    assert_allclose = None
+
+
 class CustomAssertionError(AssertionError):
     pass
+
 
 def safe_repr(value):
     try:
@@ -7,41 +18,79 @@ def safe_repr(value):
     except Exception:
         return "<unrepresentable value>"
 
-def check_equal(target_name, input_description, actual_callable, expected,
-                reveal_expected=False, hint=None):
+
+def is_numpy_value(value):
+    return np is not None and isinstance(value, np.ndarray)
+
+
+def _raise_eval_error(expression, exc):
+    message = (
+        "We called `%s`.\n"
+        "The code raised an error instead of returning the expected result.\n"
+        "Error: %s: %s\n"
+        "Kindly debug your code."
+        % (expression, type(exc).__name__, str(exc))
+    )
+
+    raise CustomAssertionError(message)
+
+
+def _raise_comparison_error(expression, actual, exc):
+    message = (
+        "We called `%s`.\n"
+        "Your code returned: %s\n"
+        "Comparing your output with the expected output raised an error.\n"
+        "Comparison error: %s: %s"
+        % (expression, safe_repr(actual), type(exc).__name__, str(exc))
+    )
+
+    raise CustomAssertionError(message)
+
+
+def _raise_failure_message(expression, actual, expected, reveal_expected=True,
+                           hint=None, tolerance=None, details=None):
+    lines = [
+        "We called `%s`." % expression,
+    ]
+
+    if reveal_expected:
+        if tolerance is None:
+            lines.append("Expected output: %s" % safe_repr(expected))
+        else:
+            lines.append(
+                "Expected output: %s with tolerance ±%s"
+                % (safe_repr(expected), safe_repr(tolerance))
+            )
+    else:
+        lines.append("The result did not match the expected behavior.")
+
+    lines.append("Your code returned: %s" % safe_repr(actual))
+
+    if details:
+        lines.append("Details: %s" % details)
+
+    if hint is not None:
+        lines.append("Hint: %s" % hint)
+
+    raise CustomAssertionError("\n".join(lines))
+
+
+def _set_scope(g, l):
+    if g is None:
+        globals_ = {}
+    if l is None:
+        locals_ = {}
+
+
+def check_equal(expression, expected, reveal_expected=True, hint=None,
+        globals_=None, locals_=None):
     """
-    Compare a student's actual result with an expected result and raise a
-    readable assertion error if they do not match.
+    Simple usage:
 
-    Parameters:
-        target_name (str):
-            The name of the function or method being tested.
-            Examples: "is_palindrome", "add", "MyClass.method".
+        check_equal("add(1, 2)", 3)
 
-        input_description (str):
-            A human-readable description of the input or object state used in
-            the test.
-            Examples: '"hello"', "2, 3".
-
-        actual_callable:
-            A callable, usually a lambda, that runs the student's code and
-            returns the actual result.
-            Example: lambda: is_palindrome("hello")
-
-            A direct value may also be passed, but a callable is preferred
-            because it allows this helper to catch runtime errors and convert
-            them into readable feedback.
-
-        expected:
-            The expected result to compare against the student's actual result.
-
-        hint (str, optional):
-            Optional guidance shown to the student when the test fails.
-
-        reveal_expected (bool, optional):
-            If True, include the expected output in the feedback message.
-            If False, hide the expected output and only say that the result did
-            not match the expected behavior.
+    It evaluates the expression string, compares result with expected,
+    and raises readable feedback if it fails.
 
     Raises:
         CustomAssertionError:
@@ -53,45 +102,41 @@ def check_equal(target_name, input_description, actual_callable, expected,
             Returns silently when the actual result equals the expected result.
     """
 
-    if '.' in target_name:
-        target_type = "method"
-    else:
-        target_type = "function"
+    _set_scope(globals_, locals_)
 
-    first_line = "Your %s `%s` was tested using %s." % (
-            target_type, target_name, input_description,
-        )
     try:
-        if callable(actual_callable):
-            actual = actual_callable()
-        else:
-            actual = actual_callable
+        actual = eval(expression, globals_, locals_)
     except Exception as e:
-        message = (
-            "%s\n"
-            "The code raised an error instead of returning "
-            "the expected result.\n"
-            "Error observed: %s: %s\n"
-            "Kindly debug your code."%(first_line, type(e).__name__, str(e),)
-        )
+        raise _raise_eval_error(expression, e)
 
-        raise CustomAssertionError(message)
+    try:
+        matched = actual == expected
+        if matched:
+            return
+    except Exception as e:
+        raise _raise_comparison_error(expression, actual, e)
 
-    if actual == expected:
-        return
+    raise _raise_failure_message(expression, actual, expected,
+        reveal_expected, hint)
 
-    lines = [first_line]
 
-    if reveal_expected:
-        lines.append("Expected output: %s" % safe_repr(expected))
-    else:
-        lines.append("The result did not match the expected behaviour")
+def check_almost_equal(expression, expected, tolerance=0.001, rtol=0,
+    reveal_expected=True, hint=None, globals_=None, locals_=None):
 
-    lines.append("Your code returned: %s" % safe_repr(actual))
+    _set_scope(globals_, locals_)
 
-    if hint is not None:
-        lines.append("Hint: %s" % hint)
+    try:
+        actual = eval(expression, globals_, locals_)
+    except Exception as e:
+        raise _raise_eval_error(expression, e)
 
-    message = "\n".join(lines)
-
-    raise CustomAssertionError(message)
+    try:
+        if is_numpy_value(actual) or is_numpy_value(expected):
+            assert_allclose(actual, expected, atol=tolerance, rtol=rtol)
+        else:
+            assert_almost_equal(actual, expected, delta=tolerance)
+    except AssertionError as e:
+        raise _raise_failure_message(expression, actual, expected,
+            reveal_expected, hint, tolerance, details=str(e))
+    except Exception as e:
+        raise _raise_comparison_error(expression, safe_repr(actual), e)
