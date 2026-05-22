@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^api/', include('api.urls', namespace='api')),
     url(r'^stats/', include('stats.urls', namespace='stats')),
     url(r'^flatfiles/', include(('upload.urls', 'upload'))),
+    url(r"^oidc/", include("mozilla_django_oidc.urls")),
 
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
