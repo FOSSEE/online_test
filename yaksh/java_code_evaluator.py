@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 from os.path import isfile
 import subprocess
+from textwrap import dedent
 
 # Local imports
 from .base_evaluator import BaseEvaluator
@@ -55,17 +56,28 @@ class JavaCodeEvaluator(BaseEvaluator):
         output_path = "{0}{1}.class".format(directory, file_name)
         return output_path
 
+    def create_main_file_content(self):
+        content = dedent('''
+        class main {{
+            public static void main( String args[] ) {{
+               {0};
+            }}
+        }}
+        '''.format(self.test_case))
+        return content
+
     def compile_code(self):
         if self.compiled_user_answer and self.compiled_test_code:
             return None
         else:
             # create student code and moderator code file
-            self.submit_code_path = self.create_submit_code_file('Test.java')
+            self.submit_code_path = self.create_submit_code_file('code.java')
             self.test_code_path = self.create_submit_code_file('main.java')
             self.write_to_submit_code_file(
                 self.submit_code_path, self.user_answer
                 )
-            self.write_to_submit_code_file(self.test_code_path, self.test_case)
+            main_content = self.create_main_file_content()
+            self.write_to_submit_code_file(self.test_code_path, main_content)
             clean_ref_code_path = self.test_code_path
             if self.file_paths:
                 self.files = copy_files(self.file_paths)
@@ -88,7 +100,7 @@ class JavaCodeEvaluator(BaseEvaluator):
                 clean_ref_code_path,
                 user_code_directory
             )
-            self.run_command_args = "java -cp {0} {1}".format(
+            self.run_command_args = "java -ea -cp {0} {1}".format(
                 user_code_directory,
                 ref_file_name
             )
