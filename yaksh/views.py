@@ -207,6 +207,7 @@ def quizlist_user(request, enrolled=None, msg=None):
         courses_data.append(
             {
                 'data': course,
+                'is_active': course.is_active(),
                 'completion_percentage': _percent,
             }
         )
@@ -585,7 +586,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
         return quizlist_user(request, msg=msg)
 
     # if course is active and is not expired
-    if not course.active or not course.is_active_enrollment():
+    if not course.active or not course.is_active():
         msg = "{0} is either expired or not active".format(course.name)
         if is_moderator(user) and course.is_trial:
             return prof_manage(request, msg=msg)
@@ -1104,7 +1105,7 @@ def add_course(request, course_id=None):
 def enroll_request(request, course_id):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
-    if not course.is_active_enrollment() and course.hidden:
+    if not (course.is_active_enrollment() or not course.is_active()) and course.hidden:
         msg = (
             'Unable to add enrollments for this course, please contact your '
             'instructor/administrator.'
@@ -1213,7 +1214,7 @@ def enroll_user(request, course_id, user_id=None, was_rejected=False):
         raise Http404('You are not allowed to view this page')
 
     course = get_object_or_404(Course, id=course_id)
-    if not course.is_active_enrollment():
+    if not course.is_active_enrollment() or not course.is_active():
         msg = (
             'Enrollment for this course has been closed,'
             ' please contact your '
@@ -1255,7 +1256,7 @@ def enroll_reject_user(request,
         raise Http404('You are not allowed to view this page')
     course = get_object_or_404(Course, id=course_id)
 
-    if not course.is_active_enrollment():
+    if not course.is_active_enrollment() or not course.is_active():
         msg = (
             'Enrollment for this course has been closed,'
             ' please contact your '
@@ -2777,7 +2778,7 @@ def show_lesson(request, lesson_id, module_id, course_id):
     course = Course.objects.get(id=course_id)
     if user not in course.students.all():
         raise Http404('This course does not belong to you')
-    if not course.active or not course.is_active_enrollment():
+    if not course.is_active() or not course.is_active_enrollment():
         msg = "{0} is either expired or not active".format(course.name)
         return quizlist_user(request, msg=msg)
     learn_module = course.learning_module.get(id=module_id)
@@ -3155,7 +3156,7 @@ def view_module(request, module_id, course_id, msg=None):
     if user not in course.students.all():
         raise Http404('You are not enrolled for this course!')
     context = {}
-    if not course.active or not course.is_active_enrollment():
+    if not course.is_active() or not course.is_active_enrollment():
         msg = "{0} is either expired or not active".format(course.name)
         return course_modules(request, course_id, msg)
     learning_module = course.learning_module.get(id=module_id)
@@ -3199,7 +3200,7 @@ def course_modules(request, course_id, msg=None):
         msg = 'You are not enrolled for this course!'
         return quizlist_user(request, msg=msg)
 
-    if not course.active or not course.is_active_enrollment():
+    if not course.is_active() or not course.is_active_enrollment():
         msg = "{0} is either expired or not active".format(course.name)
         return quizlist_user(request, msg=msg)
     learning_modules = course.get_learning_modules()
