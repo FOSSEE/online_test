@@ -1,0 +1,64 @@
+services:
+  # Django Web Service
+  - type: web
+    name: yaksh-backend
+    env: python
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r requirements/requirements-production.txt && python manage.py collectstatic --no-input && python manage.py migrate"
+    startCommand: gunicorn online_test.wsgi:application --bind 0.0.0.0:$PORT --workers 4
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: DEBUG
+        value: "False"
+      - key: IS_DEVELOPMENT
+        value: "False"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: DOMAIN_HOST
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+        sync: false
+      - key: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+        sync: false
+      - key: SOCIAL_AUTH_GITHUB_KEY
+        sync: false
+      - key: SOCIAL_AUTH_GITHUB_SECRET
+        sync: false
+
+  # Celery Worker (for background tasks like answer checking)
+  - type: worker
+    name: yaksh-celery-worker
+    env: python
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r requirements/requirements-production.txt"
+    startCommand: celery -A online_test worker --loglevel=info --concurrency=2
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false

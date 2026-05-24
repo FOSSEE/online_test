@@ -467,24 +467,41 @@ def check_data(toc):
         lesson_id_list = []
         quiz_id_list = []
         for unit in _data.get('learning_units'):
-            unit_id = unit.get('id', None)
             unit_type = unit.get('type', None)
-            if unit_id:
-                if unit_type == 'lesson':
+            # Fix: IDs are nested inside 'lesson' or 'quiz' dict, not at top level
+            if unit_type == 'lesson':
+                unit_id = unit.get('lesson', {}).get('id', None)
+                if unit_id:
                     lesson_id_list.append(unit_id)
-                else:
+                    # Verify lesson exists in database
+                    try:
+                        Lesson.objects.get(id=unit_id)
+                    except ObjectDoesNotExist:
+                        msg = f"Lesson with ID {unit_id} does not exist in the database. Remove the 'id' field from the lesson metadata to create a new lesson."
+                        return False, msg
+            else:
+                unit_id = unit.get('quiz', {}).get('id', None)
+                if unit_id:
                     quiz_id_list.append(unit_id)
+                    # Verify quiz exists in database
+                    try:
+                        Quiz.objects.get(id=unit_id)
+                    except ObjectDoesNotExist:
+                        msg = f"Quiz with ID {unit_id} does not exist in the database. Remove the 'id' field from the quiz metadata to create a new quiz."
+                        return False, msg
 
-            try:
-                if not has_relationship(module_id, 'learning_module', lesson_id_list, unit_type):
-                    msg = "Lesson IDs used in metadata do not belong to current course, Kindly inspect and reupload"
+        try:
+            if module_id and lesson_id_list:
+                if not has_relationship(module_id, 'learning_module', lesson_id_list, 'lesson'):
+                    msg = "Lesson IDs used in metadata do not belong to current module, Kindly inspect and reupload"
                     return False, msg
-                if not has_relationship(module_id, 'learning_module', quiz_id_list, unit_type):
-                    msg = "Quiz IDs used in metadata do not belong to current course, Kindly inspect and reupload"
+            if module_id and quiz_id_list:
+                if not has_relationship(module_id, 'learning_module', quiz_id_list, 'quiz'):
+                    msg = "Quiz IDs used in metadata do not belong to current module, Kindly inspect and reupload"
                     return False, msg
-            except ObjectDoesNotExist:
-                msg = "Object does not exist in DB"
-                return False, msg
+        except ObjectDoesNotExist:
+            msg = "Module does not exist in DB"
+            return False, msg
 
         try:
             if not has_relationship(course_id, 'course', module_id_list):
@@ -520,13 +537,10 @@ def get_parent_child_data_from_db(parent_id, parent_type, child_id_list, child_t
         return relationship_id_list
 
 def has_duplicate_id(parent_id, parent_type, child_id_list, child_type=None):
-    relationship_id_list = get_parent_child_data_from_db(
-        parent_id, parent_type, child_id_list, child_type
-    )
-    if len(child_id_list) != len(set(relationship_id_list)):
-        return True # duplicates exist
-    else: 
-        return False # duplicates do not exist
+    # Check if there are duplicate IDs in the uploaded file
+    if len(child_id_list) != len(set(child_id_list)):
+        return True  # duplicates exist in the uploaded data
+    return False
 
 def has_relationship(parent_id, parent_type, child_id_list, child_type=None):
     relationship_id_list = get_parent_child_data_from_db(
@@ -546,6 +560,9 @@ def read_toc(file):
 def upload_course(user):
     toc = read_toc('toc.yml')
     status, msg = check_data(toc)
+    # Only proceed with upload if validation passes
+    if not status:
+        return status, msg
     course_data = convert_md_to_dict(toc, user)
     return status, msg
     

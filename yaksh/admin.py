@@ -46,6 +46,10 @@ class QuizAdmin(admin.ModelAdmin):
     list_filter = ['active', 'is_trial']
 
 
+class QuestionPaperAdmin(admin.ModelAdmin):
+    filter_horizontal = ('fixed_questions', 'random_questions')
+
+
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Question)
 admin.site.register(TestCase)
@@ -55,7 +59,7 @@ admin.site.register(StandardTestCase)
 admin.site.register(StdIOBasedTestCase)
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Quiz, QuizAdmin)
-admin.site.register(QuestionPaper)
+admin.site.register(QuestionPaper, QuestionPaperAdmin)
 admin.site.register(AnswerPaper, AnswerPaperAdmin)
 admin.site.register(CourseStatus, CourseStatusAdmin)
 admin.site.register(Lesson, LessonAdmin)

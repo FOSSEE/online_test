@@ -125,51 +125,48 @@ MEDIA_URL = "/data/"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "yaksh_data", "data")
 
-STATIC_ROOT = 'yaksh/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Set this varable to <True> if smtp-server is not allowing to send email.
-EMAIL_USE_TLS = False
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 
-EMAIL_HOST = 'your_email_host'
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 
-EMAIL_PORT = 'your_email_port'
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
-EMAIL_HOST_USER = 'email_host_user'
-
-EMAIL_HOST_PASSWORD = 'email_host_password'
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='')
 
 # Set EMAIL_BACKEND to 'django.core.mail.backends.smtp.EmailBackend'
 # in production
-EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # SENDER_EMAIL, REPLY_EMAIL, PRODUCTION_URL, IS_DEVELOPMENT are used in email
 # verification. Set the variables accordingly to avoid errors in production
 
 # This email id will be used as <from address> for sending emails.
-# For example no_reply@<your_organization>.in can be used.
-SENDER_EMAIL = 'your_email'
+SENDER_EMAIL = config('EMAIL_HOST_USER', default='')
 
-# Organisation/Indivudual Name.
-SENDER_NAME = 'your_name'
+# Organisation/Individual Name.
+SENDER_NAME = config('SENDER_NAME', default='Yaksh Online Test')
 
-# This email id will be used by users to send their queries
-# For example queries@<your_organization>.in can be used.
-REPLY_EMAIL = 'your_reply_email'
+# This email id will be used by users to send their queries.
+REPLY_EMAIL = config('REPLY_EMAIL', default=config('EMAIL_HOST_USER', default=''))
 
 # This url will be used in email verification to create activation link.
-# Add your hosted url to this variable.
-# For example https://127.0.0.1:8000 or 127.0.0.1:8000
-PRODUCTION_URL = 'your_project_url'
+PRODUCTION_URL = config('DOMAIN_HOST', default='http://127.0.0.1:8000')
 
-# Set this variable to <False> once the project is in production.
-# If this variable is kept <True> in production, email will not be verified.
-IS_DEVELOPMENT = True
+# Set to False in production to enforce email verification.
+IS_DEVELOPMENT = config('IS_DEVELOPMENT', default=True, cast=bool)
 
 # Video File upload size
 MAX_UPLOAD_SIZE = 524288000
 
 
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# Use EMAIL_HOST_USER as DEFAULT_FROM_EMAIL if DEFAULT_FROM_EMAIL is not set
+if not DEFAULT_FROM_EMAIL:
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 TEMPLATES = [
     {
@@ -189,15 +186,20 @@ TEMPLATES = [
     },
 ]
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'GOOGLE_KEY_PROVIDED'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'GOOGLE_SECRET_PROVIDED'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', default='')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET', default='')
 
-SOCIAL_AUTH_FACEBOOK_KEY = 'FACEBOOK_KEY_PROVIDED'
-SOCIAL_AUTH_FACEBOOK_SECRET = 'FACEBOOK_SECRET_PROVIDED'
+SOCIAL_AUTH_FACEBOOK_KEY = config('SOCIAL_AUTH_FACEBOOK_KEY', default='')
+SOCIAL_AUTH_FACEBOOK_SECRET = config('SOCIAL_AUTH_FACEBOOK_SECRET', default='')
+
+SOCIAL_AUTH_GITHUB_KEY = config('SOCIAL_AUTH_GITHUB_KEY', default='')
+SOCIAL_AUTH_GITHUB_SECRET = config('SOCIAL_AUTH_GITHUB_SECRET', default='')
+
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
     'social_core.backends.facebook.FacebookOAuth2',
+    'social_core.backends.github.GithubOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -227,6 +229,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 TAGGIT_CASE_INSENSITIVE = True
+
+# Override migration module location for third-party apps that store
+# migrations inside site-packages (not version-controlled).
+# This ensures consistent migrations across all environments.
+MIGRATION_MODULES = {
+    'notifications_plugin': 'notifications_plugin_migrations',
+}
 
 
 # Celery parameters
@@ -275,4 +284,112 @@ if USE_AWS:
     # Media Public
     AWS_PUBLIC_MEDIA_LOCATION = 'media/public'
     DEFAULT_FILE_STORAGE = 'yaksh.storage_backends.PublicMediaStorage'
+
+
+# Cache Configuration (required for OTP storage in password change)
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+
+# ============================================================================
+# PRODUCTION CONFIGURATION FOR RENDER
+# ============================================================================
+import dj_database_url
+
+# Convert DEBUG from string to boolean
+DEBUG = config('DEBUG', default=True, cast=bool)
+
+if not DEBUG:
+    print("Running in PRODUCTION mode")
+    
+    # Remove Celery-related apps from INSTALLED_APPS (not using Celery worker)
+    INSTALLED_APPS = tuple(
+        app for app in INSTALLED_APPS 
+        if app not in ('django_celery_beat', 'django_celery_results')
+    )
+    
+    # Security Settings
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Static Files with WhiteNoise
+    # Convert MIDDLEWARE tuple to list, insert WhiteNoise, convert back to tuple
+    MIDDLEWARE = list(MIDDLEWARE)
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    MIDDLEWARE = tuple(MIDDLEWARE)
+    # Use basic WhiteNoise storage (not compressed) to avoid CSS parsing issues
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+    
+    # Database Configuration from Render
+    DATABASES['default'] = dj_database_url.config(
+        default=config('DATABASE_URL'),
+        conn_max_age=600,
+    )
+    
+    # CORS Configuration - Temporarily allow all origins for debugging
+    CORS_ORIGIN_ALLOW_ALL = True
+    CORS_ALLOW_CREDENTIALS = True
+    
+    # Trust X-Forwarded-Proto headers from Render's load balancer
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # Allowed Hosts
+    ALLOWED_HOSTS = []
+    
+    # Add RENDER_EXTERNAL_HOSTNAME if present
+    if 'RENDER_EXTERNAL_HOSTNAME' in os.environ:
+        ALLOWED_HOSTS.append(os.environ['RENDER_EXTERNAL_HOSTNAME'])
+        
+    # Add manually configured hosts
+    config_hosts = config('ALLOWED_HOSTS', default='')
+    if config_hosts:
+        ALLOWED_HOSTS.extend([
+            host.strip() 
+            for host in config_hosts.split(',')
+            if host.strip()
+        ])
+    
+    # Domain Host for Emails and Links
+    DOMAIN_HOST = config('DOMAIN_HOST', default='https://your-app.onrender.com')
+    
+    # Celery Configuration with Redis
+    CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
+    CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_SERIALIZER = 'json'
+    CELERY_TIMEZONE = TIME_ZONE
+    
+    # Cache Configuration with Redis for OTP storage
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": config('REDIS_URL', default='redis://localhost:6379/1'),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
+        }
+    }
+    
+    # Email is configured at the top of settings.py via .env variables.
+    # EMAIL_HOST, EMAIL_PORT, EMAIL_USE_TLS, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
+    # and EMAIL_BACKEND are already active from the settings above.
+    
+    print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+    print(f"DATABASE: {DATABASES['default']['NAME']}")
+    print(f"CORS_ORIGIN_ALLOW_ALL: {CORS_ORIGIN_ALLOW_ALL}")
 

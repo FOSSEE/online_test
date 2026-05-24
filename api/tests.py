@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from rest_framework.test import APIClient
 from rest_framework import status
 from yaksh.models import (
@@ -460,6 +460,8 @@ class QuizListTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Quiz.objects.filter(description='Added quiz').exists())
 
+
+
     def tearDown(self):
         self.client.logout()
         User.objects.all().delete()
@@ -903,3 +905,106 @@ class AnswerValidatorTestCase(TestCase):
             self.assertTrue(result.get('success'))
         else:
             self.assertEqual(response.data.get('status'), 'running')
+
+class TeacherQuizTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.username = 'teacher'
+        self.password = 'password'
+        self.user = User.objects.create_user(username=self.username, password=self.password)
+        Profile.objects.create(user=self.user, is_moderator=True)
+        group, _ = Group.objects.get_or_create(name='moderator')
+        group.user_set.add(self.user)
+        
+        # Create a module
+        self.module = LearningModule.objects.create(name="Test Module", creator=self.user)
+        
+        # Create questions that might be auto-picked if bug existed
+        Question.objects.create(summary="Q1", user=self.user, type="mcq", points=1)
+        Question.objects.create(summary="Q2", user=self.user, type="mcq", points=1)
+
+    def test_teacher_create_quiz_creates_empty_paper(self):
+        # Given
+        data = {
+            'description': 'Teacher Created Quiz',
+            'duration': 30,
+            'pass_criteria': 50
+        }
+        url = reverse('api:teacher_create_quiz', kwargs={'module_id': self.module.id})
+        
+        # When
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.post(url, data)
+        
+        # Then
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        quiz_id = response.data['id']
+        question_paper_id = response.data['question_paper_id']
+        
+        self.assertIsNotNone(question_paper_id)
+        
+        question_paper = QuestionPaper.objects.get(id=question_paper_id)
+        self.assertEqual(question_paper.fixed_questions.count(), 0)
+        self.assertEqual(question_paper.random_questions.count(), 0)
+
+    def test_quiz_question_lifecycle(self):
+        """
+        Verify the full lifecycle: Create Quiz -> Empty -> Add Question -> Verify Count
+        """
+        # 1. Create Quiz
+        data = {
+            'description': 'Lifecycle Quiz',
+            'duration': 10,
+            'pass_criteria': 50,
+            'active': True,
+        }
+        self.client.login(username=self.username, password=self.password)
+        response = self.client.post(reverse('api:teacher_create_quiz', args=[self.module.id]), data)
+        self.assertEqual(response.status_code, 201)
+        quiz_id = response.data['id']
+        
+        # 2. Verify Initial State (Empty)
+        response = self.client.get(reverse('api:teacher_get_quiz_questions', args=[quiz_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['fixed_questions']), 0)
+        
+        # 3. Create a Question to Add
+        question = Question.objects.create(
+            user=self.user,
+            summary="Lifecycle Question 1",
+            type="code",
+            points=5,
+            active=True
+        )
+        
+        # 4. Add Question to Quiz
+        data = {
+            'question_id': question.id,
+            'fixed': True
+        }
+        response = self.client.post(reverse('api:teacher_add_question_to_quiz', args=[quiz_id]), data)
+        self.assertEqual(response.status_code, 200)
+        
+        # 5. Verify State (1 Question)
+        response = self.client.get(reverse('api:teacher_get_quiz_questions', args=[quiz_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['fixed_questions']), 1)
+        self.assertEqual(response.data['fixed_questions'][0]['id'], question.id)
+        
+        # 6. Verify with a second question (ensure it doesn't add all active questions)
+        question2 = Question.objects.create(
+            user=self.user,
+            summary="Lifecycle Question 2 (Unused)",
+            type="code",
+            points=5,
+            active=True
+        )
+        # We DO NOT add question2
+        
+        # 7. Verify State again (Should still be 1 Question)
+        response = self.client.get(reverse('api:teacher_get_quiz_questions', args=[quiz_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['fixed_questions']), 1)
+        # Ensure question 2 is NOT present
+        ids = [q['id'] for q in response.data['fixed_questions']]
+        self.assertNotIn(question2.id, ids)

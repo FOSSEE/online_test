@@ -42,3 +42,13 @@ wsgi.log
 *.sqlite3
 data/
 _build/
+
+yaksh_data/yaksh
+yaksh_data/output/
+venv/
+.venv/
+.env
+
+staticfiles/
+
+course_*/

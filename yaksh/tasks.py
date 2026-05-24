@@ -5,7 +5,14 @@ import csv
 import json
 
 # Django and celery imports
-from celery import shared_task
+try:
+    from celery import shared_task
+except (ImportError, ModuleNotFoundError):
+    # Celery not available, create a dummy decorator
+    def shared_task(func):
+        """Dummy decorator when Celery is not available"""
+        return func
+
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 

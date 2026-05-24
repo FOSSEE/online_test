@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Logo Component > matches the snapshot 1`] = `
+<div>
+  <a
+    class="flex items-center gap-3"
+    data-discover="true"
+    href="/"
+  >
+    <div
+      class="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden"
+    >
+      <img
+        alt="Yaksh Logo"
+        class="w-full h-full object-contain"
+        src="/yaksh_circular_logo.png"
+      />
+    </div>
+    <span
+      class="text-xl font-bold"
+    >
+      Yaksh
+    </span>
+  </a>
+</div>
+`;

@@ -329,14 +329,16 @@ class QuestionForm(forms.ModelForm):
         exclude = ['user', 'active']
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    """Custom widget to support multiple file uploads in Django 3.2+."""
+    allow_multiple_selected = True
+
+
 class FileForm(forms.Form):
-    file_field = forms.FileField(widget=forms.ClearableFileInput(
-                                attrs={
-                                    'multiple': True,
-                                    'class': 'custom-file-input'
-                                    }
-                                ),
-                                required=False)
+    file_field = forms.FileField(
+        widget=MultipleFileInput(attrs={'multiple': True, 'class': 'custom-file-input'}),
+        required=False
+    )
 
 
 class RandomQuestionForm(forms.Form):
@@ -594,7 +596,7 @@ class LessonForm(forms.ModelForm):
 
 class LessonFileForm(forms.Form):
     Lesson_files = forms.FileField(
-        widget=forms.ClearableFileInput(
+        widget=MultipleFileInput(
             attrs={'multiple': True, 'class': "custom-file-input"}),
         required=False)
 

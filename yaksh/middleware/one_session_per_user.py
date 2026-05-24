@@ -27,8 +27,15 @@ class OneSessionPerUserMiddleware(object):
     def __call__(self, request):
         # Code to be executed for each request before
         # the view (and later middleware) are called.
+        current_key = None  # Ensure current_key is always defined
+
         if isinstance(request.user, User):
             current_key = request.session.session_key
+            if not current_key:
+                # Save session if not already saved
+                request.session.save()
+                current_key = request.session.session_key
+
             if hasattr(request.user, 'concurrentuser'):
                 active_key = request.user.concurrentuser.session_key
                 if active_key != current_key:
