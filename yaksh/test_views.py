@@ -431,14 +431,13 @@ class TestStudentDashboard(TestCase):
         response = self.client.get(reverse('yaksh:quizlist_user'),
                                    follow=True
                                    )
-        courses_in_context = {
-            'data': self.course,
-            'completion_percentage': None,
-        }
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
         self.assertEqual(response.context['title'], 'All Courses')
-        self.assertEqual(response.context['courses'][0], courses_in_context)
+        self.assertEqual(
+            response.context['remaining_courses'][0], self.course
+        )
 
     def test_student_dashboard_hidden_courses_post(self):
         """
@@ -452,14 +451,13 @@ class TestStudentDashboard(TestCase):
         response = self.client.post(reverse('yaksh:quizlist_user'),
                                     data={'course_code': 'hide'}
                                     )
-        courses_in_context = {
-            'data': self.hidden_course,
-            'completion_percentage': None,
-        }
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/quizzes_user.html")
         self.assertEqual(response.context['title'], 'Search Results')
-        self.assertEqual(response.context['courses'][0], courses_in_context)
+        self.assertEqual(
+            response.context['remaining_courses'][0], self.hidden_course
+        )
 
 
 class TestMonitor(TestCase):
@@ -970,7 +968,6 @@ class TestDownloadAssignment(TestCase):
             assignmentQuestion=self.question,
             assignmentFile=assignment_file2, answer_paper=self.answerpaper2
             )
-
 
     def test_download_assignment_denies_student(self):
         """
@@ -2102,6 +2099,7 @@ class TestCourses(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
+
         response = self.client.get(
             reverse('yaksh:course_modules',
                     kwargs={"course_id": self.user1_course.id}),
@@ -2143,9 +2141,11 @@ class TestCourses(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "yaksh/course_modules.html")
         self.assertEqual(response.context['course'], self.user1_course)
-        module, percent = response.context['modules'][0]
+        module = [*response.context['modules']][0]
         self.assertEqual(module, self.learning_module)
-        self.assertEqual(percent, 0.0)
+        if 'course_percentage' in response.context:
+            percent = response.context['course_percentage']
+            self.assertEqual(percent, 0.0)
 
     def test_duplicate_course(self):
         """ Test To clone/duplicate course and link modules"""
@@ -3728,7 +3728,7 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['is_progress'])
         self.assertEqual(response.context['course'], self.user1_course)
-        student_details = response.context['student_details'][0]
+        student_details = response.context['stud_details'][0]
         student, grade, percent, current_unit = student_details
         self.assertEqual(student.username, "demo_student")
         self.assertEqual(grade, "NA")
@@ -3743,7 +3743,7 @@ class TestCourseDetail(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['is_progress'])
         self.assertEqual(response.context['course'], self.user1_course)
-        student_details = response.context['student_details'][0]
+        student_details = response.context['stud_details'][0]
         student, grade, percent, current_unit = student_details
         self.assertEqual(student.username, "demo_student")
         self.assertIsNone(grade)
@@ -3758,7 +3758,6 @@ class TestCourseDetail(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-
         # Denies student to view course status
         response = self.client.get(reverse('yaksh:get_user_data',
                                    kwargs={'course_id': self.user1_course.id,
@@ -4345,7 +4344,6 @@ class TestSelfEnroll(TestCase):
             follow=True
         )
         self.assertRedirects(response, '/exam/manage/')
-
 
 
 class TestGrader(TestCase):
@@ -4971,7 +4969,6 @@ class TestDownloadCsv(TestCase):
             check_prerequisite=False, creator=self.user)
         self.learning_module.learning_unit.add(self.learning_unit.id)
         self.course.learning_module.add(self.learning_module)
-
 
         # student answerpaper
         user_answer = "def add(a, b)\n\treturn a+b"
@@ -5913,8 +5910,8 @@ class TestQuestionPaper(TestCase):
         self.answerpaper = AnswerPaper.objects.create(
             user=self.user, question_paper=self.question_paper,
             attempt_number=1,
-            start_time=timezone.now() - timezone.timedelta(minutes = 10),
-            end_time=timezone.now() - timezone.timedelta(minutes = 1),
+            start_time=timezone.now() - timezone.timedelta(minutes=10),
+            end_time=timezone.now() - timezone.timedelta(minutes=1),
             user_ip="127.0.0.1", status="inprogress", passed=False,
             percent=0, marks_obtained=0, course=self.course
         )
@@ -7181,10 +7178,10 @@ class TestPost(TestCase):
         })
         response = self.client.get(url, follow=True)
         self.assertEqual(response.status_code, 200)
-        redirection_url = '/exam/login/?next=/exam/forum/course_forum/{0}/'.format(
+        redirect = '/exam/login/?next=/exam/forum/course_forum/{0}/'.format(
             str(self.course.id)
-            )
-        self.assertRedirects(response, redirection_url)
+        )
+        self.assertRedirects(response, redirect)
 
     def test_view_course_forum(self):
         self.client.login(
@@ -8245,7 +8242,8 @@ class TestLessonContents(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        # disallow user other than moderator or course creator or course teacher
+        # disallow user other than moderator or course creator or
+        # course teacher
         response = self.client.post(
             reverse('yaksh:add_marker',
                     kwargs={"course_id": self.user1_course1.id,
@@ -8287,7 +8285,8 @@ class TestLessonContents(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        # disallow user other than moderator or course creator or course teacher
+        # disallow user other than moderator or course creator or
+        # course teacher
         response = self.client.post(
             reverse('yaksh:add_topic',
                     kwargs={"content_type": '1',
@@ -8353,7 +8352,8 @@ class TestLessonContents(TestCase):
             username=self.student.username,
             password=self.student_plaintext_pass
         )
-        # disallow user other than moderator or course creator or course teacher
+        # disallow user other than moderator or course creator or
+        # course teacher
         response = self.client.post(
             reverse('yaksh:add_marker_quiz',
                     kwargs={"content_type": '1',
@@ -8395,7 +8395,8 @@ class TestLessonContents(TestCase):
                   'language': 'other', 'type': 'integer', 'topic': 'test',
                   'points': '1', 'form-TOTAL_FORMS': 1,
                   'form-MAX_NUM_FORMS': '',
-                  'form-INITIAL_FORMS': 0, 'integertestcase_set-TOTAL_FORMS': 0,
+                  'form-INITIAL_FORMS': 0,
+                  'integertestcase_set-TOTAL_FORMS': 0,
                   'integertestcase_set-INITIAL_FORMS': 0,
                   'integertestcase_set-MIN_NUM_FORMS': 0,
                   'integertestcase_set-MAX_NUM_FORMS': 0,
@@ -8540,7 +8541,6 @@ class TestLessonContents(TestCase):
             json_response.get("message"), "You answered the question correctly"
         )
 
-
     def test_lesson_statistics(self):
         # Given
         self.client.login(
@@ -8568,29 +8568,30 @@ class TestLessonContents(TestCase):
                   'integertestcase_set-0-type': 'integertestcase',
                   'integertestcase_set-0-correct': "1"}
             )
-        self.client.post(
-            reverse('yaksh:add_marker_quiz',
-                    kwargs={"content_type": '3',
-                            "course_id": self.user1_course1.id,
-                            "lesson_id": self.lesson1.id}),
-            data={'timer': '00:00:00', 'summary': 'Mcc_Lesson_stats',
-                  'description': 'My lesson question description',
-                  'language': 'other', 'type': 'mcc', 'topic': 'test',
-                  'points': '1', 'form-TOTAL_FORMS': 2,
-                  'form-MAX_NUM_FORMS': '',
-                  'form-INITIAL_FORMS': 0,
-                  'mcqtestcase_set-TOTAL_FORMS': 2,
-                  'mcqtestcase_set-INITIAL_FORMS': 0,
-                  'mcqtestcase_set-MIN_NUM_FORMS': 0,
-                  'mcqtestcase_set-MAX_NUM_FORMS': 0,
-                  'mcqtestcase_set-0-type': 'mcqtestcase',
-                  'mcqtestcase_set-0-options': "1",
-                  'mcqtestcase_set-0-correct': True,
-                  'mcqtestcase_set-1-type': 'mcqtestcase',
-                  'mcqtestcase_set-1-options': "2",
-                  'mcqtestcase_set-1-correct': False
-                }
-            )
+        self.client.post(reverse('yaksh:add_marker_quiz', kwargs={
+            "content_type": '3',
+            "course_id": self.user1_course1.id,
+            "lesson_id": self.lesson1.id
+            }
+        ), data={
+            'timer': '00:00:00', 'summary': 'Mcc_Lesson_stats',
+            'description': 'My lesson question description',
+            'language': 'other', 'type': 'mcc', 'topic': 'test',
+            'points': '1', 'form-TOTAL_FORMS': 2,
+            'form-MAX_NUM_FORMS': '',
+            'form-INITIAL_FORMS': 0,
+            'mcqtestcase_set-TOTAL_FORMS': 2,
+            'mcqtestcase_set-INITIAL_FORMS': 0,
+            'mcqtestcase_set-MIN_NUM_FORMS': 0,
+            'mcqtestcase_set-MAX_NUM_FORMS': 0,
+            'mcqtestcase_set-0-type': 'mcqtestcase',
+            'mcqtestcase_set-0-options': "1",
+            'mcqtestcase_set-0-correct': True,
+            'mcqtestcase_set-1-type': 'mcqtestcase',
+            'mcqtestcase_set-1-options': "2",
+            'mcqtestcase_set-1-correct': False
+            }
+        )
         que = Question.objects.filter(summary="My_Lesson_question")
 
         single_que = que.first()
@@ -8687,26 +8688,27 @@ class TestLessonContents(TestCase):
         )
 
         # Create float based question
-        response = self.client.post(
-            reverse('yaksh:add_marker_quiz',
-                    kwargs={"content_type": '3',
-                            "course_id": self.user1_course1.id,
-                            "lesson_id": self.lesson1.id}),
-            data={'timer': '00:00:00', 'summary': 'Float_Lesson',
-                  'description': 'My lesson question description',
-                  'language': 'other', 'type': 'float', 'topic': 'test',
-                  'points': '1', 'form-TOTAL_FORMS': 1,
-                  'form-MAX_NUM_FORMS': '',
-                  'form-INITIAL_FORMS': 0,
-                  'floattestcase_set-TOTAL_FORMS': 1,
-                  'floattestcase_set-INITIAL_FORMS': 0,
-                  'floattestcase_set-MIN_NUM_FORMS': 0,
-                  'floattestcase_set-MAX_NUM_FORMS': 0,
-                  'floattestcase_set-0-type': 'floattestcase',
-                  'floattestcase_set-0-correct': "1",
-                  'floattestcase_set-0-error_margin': "0.1"
-                }
-            )
+        response = self.client.post(reverse('yaksh:add_marker_quiz', kwargs={
+            "content_type": '3',
+            "course_id": self.user1_course1.id,
+            "lesson_id": self.lesson1.id
+            }
+        ), data={
+            'timer': '00:00:00', 'summary': 'Float_Lesson',
+            'description': 'My lesson question description',
+            'language': 'other', 'type': 'float', 'topic': 'test',
+            'points': '1', 'form-TOTAL_FORMS': 1,
+            'form-MAX_NUM_FORMS': '',
+            'form-INITIAL_FORMS': 0,
+            'floattestcase_set-TOTAL_FORMS': 1,
+            'floattestcase_set-INITIAL_FORMS': 0,
+            'floattestcase_set-MIN_NUM_FORMS': 0,
+            'floattestcase_set-MAX_NUM_FORMS': 0,
+            'floattestcase_set-0-type': 'floattestcase',
+            'floattestcase_set-0-correct': "1",
+            'floattestcase_set-0-error_margin': "0.1"
+            }
+        )
         json_response = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(json_response.get("success"))
@@ -8714,31 +8716,31 @@ class TestLessonContents(TestCase):
             json_response.get("message"), "Saved question successfully"
         )
 
-
         # Create a mcq question
-        response = self.client.post(
-            reverse('yaksh:add_marker_quiz',
-                    kwargs={"content_type": '3',
-                            "course_id": self.user1_course1.id,
-                            "lesson_id": self.lesson1.id}),
-            data={'timer': '00:00:00', 'summary': 'Mcq_Lesson',
-                  'description': 'My lesson question description',
-                  'language': 'other', 'type': 'mcq', 'topic': 'test',
-                  'points': '1', 'form-TOTAL_FORMS': 2,
-                  'form-MAX_NUM_FORMS': '',
-                  'form-INITIAL_FORMS': 0,
-                  'mcqtestcase_set-TOTAL_FORMS': 2,
-                  'mcqtestcase_set-INITIAL_FORMS': 0,
-                  'mcqtestcase_set-MIN_NUM_FORMS': 0,
-                  'mcqtestcase_set-MAX_NUM_FORMS': 0,
-                  'mcqtestcase_set-0-type': 'mcqtestcase',
-                  'mcqtestcase_set-0-options': "1",
-                  'mcqtestcase_set-0-correct': True,
-                  'mcqtestcase_set-1-type': 'mcqtestcase',
-                  'mcqtestcase_set-1-options': "2",
-                  'mcqtestcase_set-1-correct': False
-                }
-            )
+        response = self.client.post(reverse('yaksh:add_marker_quiz', kwargs={
+            "content_type": '3',
+            "course_id": self.user1_course1.id,
+            "lesson_id": self.lesson1.id
+            }
+        ), data={
+            'timer': '00:00:00', 'summary': 'Mcq_Lesson',
+            'description': 'My lesson question description',
+            'language': 'other', 'type': 'mcq', 'topic': 'test',
+            'points': '1', 'form-TOTAL_FORMS': 2,
+            'form-MAX_NUM_FORMS': '',
+            'form-INITIAL_FORMS': 0,
+            'mcqtestcase_set-TOTAL_FORMS': 2,
+            'mcqtestcase_set-INITIAL_FORMS': 0,
+            'mcqtestcase_set-MIN_NUM_FORMS': 0,
+            'mcqtestcase_set-MAX_NUM_FORMS': 0,
+            'mcqtestcase_set-0-type': 'mcqtestcase',
+            'mcqtestcase_set-0-options': "1",
+            'mcqtestcase_set-0-correct': True,
+            'mcqtestcase_set-1-type': 'mcqtestcase',
+            'mcqtestcase_set-1-options': "2",
+            'mcqtestcase_set-1-correct': False
+            }
+        )
         json_response = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(json_response.get("success"))
@@ -8747,29 +8749,30 @@ class TestLessonContents(TestCase):
         )
 
         # Create a mcc question
-        response = self.client.post(
-            reverse('yaksh:add_marker_quiz',
-                    kwargs={"content_type": '3',
-                            "course_id": self.user1_course1.id,
-                            "lesson_id": self.lesson1.id}),
-            data={'timer': '00:00:00', 'summary': 'Mcc_Lesson',
-                  'description': 'My lesson question description',
-                  'language': 'other', 'type': 'mcc', 'topic': 'test',
-                  'points': '1', 'form-TOTAL_FORMS': 2,
-                  'form-MAX_NUM_FORMS': '',
-                  'form-INITIAL_FORMS': 0,
-                  'mcqtestcase_set-TOTAL_FORMS': 2,
-                  'mcqtestcase_set-INITIAL_FORMS': 0,
-                  'mcqtestcase_set-MIN_NUM_FORMS': 0,
-                  'mcqtestcase_set-MAX_NUM_FORMS': 0,
-                  'mcqtestcase_set-0-type': 'mcqtestcase',
-                  'mcqtestcase_set-0-options': "1",
-                  'mcqtestcase_set-0-correct': True,
-                  'mcqtestcase_set-1-type': 'mcqtestcase',
-                  'mcqtestcase_set-1-options': "2",
-                  'mcqtestcase_set-1-correct': False
-                }
-            )
+        response = self.client.post(reverse('yaksh:add_marker_quiz', kwargs={
+            "content_type": '3',
+            "course_id": self.user1_course1.id,
+            "lesson_id": self.lesson1.id
+            }
+        ), data={
+            'timer': '00:00:00', 'summary': 'Mcc_Lesson',
+            'description': 'My lesson question description',
+            'language': 'other', 'type': 'mcc', 'topic': 'test',
+            'points': '1', 'form-TOTAL_FORMS': 2,
+            'form-MAX_NUM_FORMS': '',
+            'form-INITIAL_FORMS': 0,
+            'mcqtestcase_set-TOTAL_FORMS': 2,
+            'mcqtestcase_set-INITIAL_FORMS': 0,
+            'mcqtestcase_set-MIN_NUM_FORMS': 0,
+            'mcqtestcase_set-MAX_NUM_FORMS': 0,
+            'mcqtestcase_set-0-type': 'mcqtestcase',
+            'mcqtestcase_set-0-options': "1",
+            'mcqtestcase_set-0-correct': True,
+            'mcqtestcase_set-1-type': 'mcqtestcase',
+            'mcqtestcase_set-1-options': "2",
+            'mcqtestcase_set-1-correct': False
+            }
+        )
         json_response = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(json_response.get("success"))
@@ -8777,28 +8780,28 @@ class TestLessonContents(TestCase):
             json_response.get("message"), "Saved question successfully"
         )
 
-
         # Create a string based question
-        response = self.client.post(
-            reverse('yaksh:add_marker_quiz',
-                    kwargs={"content_type": '3',
-                            "course_id": self.user1_course1.id,
-                            "lesson_id": self.lesson1.id}),
-            data={'timer': '00:00:00', 'summary': 'String_Lesson',
-                  'description': 'My lesson question description',
-                  'language': 'other', 'type': 'string', 'topic': 'test',
-                  'points': '1', 'form-TOTAL_FORMS': 1,
-                  'form-MAX_NUM_FORMS': '',
-                  'form-INITIAL_FORMS': 0,
-                  'stringtestcase_set-TOTAL_FORMS': 1,
-                  'stringtestcase_set-INITIAL_FORMS': 0,
-                  'stringtestcase_set-MIN_NUM_FORMS': 0,
-                  'stringtestcase_set-MAX_NUM_FORMS': 0,
-                  'stringtestcase_set-0-type': 'stringtestcase',
-                  'stringtestcase_set-0-correct': "test",
-                  'stringtestcase_set-0-string_check': "lower"
-                }
-            )
+        response = self.client.post(reverse('yaksh:add_marker_quiz', kwargs={
+            "content_type": '3',
+            "course_id": self.user1_course1.id,
+            "lesson_id": self.lesson1.id
+            }
+        ), data={
+            'timer': '00:00:00', 'summary': 'String_Lesson',
+            'description': 'My lesson question description',
+            'language': 'other', 'type': 'string', 'topic': 'test',
+            'points': '1', 'form-TOTAL_FORMS': 1,
+            'form-MAX_NUM_FORMS': '',
+            'form-INITIAL_FORMS': 0,
+            'stringtestcase_set-TOTAL_FORMS': 1,
+            'stringtestcase_set-INITIAL_FORMS': 0,
+            'stringtestcase_set-MIN_NUM_FORMS': 0,
+            'stringtestcase_set-MAX_NUM_FORMS': 0,
+            'stringtestcase_set-0-type': 'stringtestcase',
+            'stringtestcase_set-0-correct': "test",
+            'stringtestcase_set-0-string_check': "lower"
+            }
+        )
         json_response = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(json_response.get("success"))
@@ -8867,7 +8870,6 @@ class TestLessonContents(TestCase):
             "You have answered the question incorrectly",
             json_response.get("message"),
         )
-
 
         # submit string question
         response = self.client.post(

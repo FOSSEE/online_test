@@ -1,0 +1,114 @@
+{% load custom_filters %}
+<div class="card">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-7">
+                {{course.name}}
+            </div>
+            <div class="col-md-2">
+                <a
+                    class="card-link btn btn-outline-info"
+                    data-toggle="collapse"
+                    href="#collapse{{course.id}}">
+                        Details&nbsp; <i class="fa fa-toggle-down" id="toggle_course_{{course.id}}"></i>
+                </a>
+            </div>
+      <div class="col-md-2">
+        {% if user in course.requests.all %}
+            <span class="badge badge-primary badge-pill">
+                Request Pending
+            </span>
+        {% elif user in course.rejected.all %}
+          <span class="badge badge-danger badge-pill">
+            Request Rejected
+          </span>
+        {% elif user in course.students.all %}
+          {% if course.completion_percentage > 0 %}
+            <a class="btn btn-primary" href="{% url 'yaksh:course_modules' course.id %}" >
+              Continue
+            </a>
+          {% else %}
+            <a class="btn btn-success" href="{% url 'yaksh:course_modules' course.id %}">
+              Start
+            </a>
+          {% endif %}
+        {% else %}
+          {% if course.active %}
+            {% if course.is_active_enrollment %}
+              {% if course.is_self_enroll %}
+                <a class="btn btn-primary" href="{% url 'yaksh:self_enroll' course.id %}">Enroll</a>
+              {% else %}
+                <a class="btn btn-primary" href="{% url 'yaksh:enroll_request' course.id %}">Enroll</a>
+              {% endif %}
+            {% else %}
+              <span class="badge badge-danger badge-pill">
+                No Enrollments allowed
+              </span>
+            {% endif %}
+          {% else %}
+            <span class="badge badge-danger">
+              Inactive Course
+            </span>
+          {% endif %}
+        {% endif %}
+      </div>
+        </div>
+        {% show_special_attempt user course %}
+        </div>
+        <div id="collapse{{course.id}}" class="collapse hide" data-parent="#accordion">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <p><b>Instructor:</b> {{course.creator.get_full_name|title}}</p>
+            {% with course.learning_module.all as modules %}
+              {% if modules %}
+                <p> <span class="badge badge-pill badge-primary">Course Content</span>
+                  <ul>
+                    {% for module in modules %}
+                      <li>{{module.name|title}}</li>
+                    {% endfor %}
+                  </ul>
+                </p>
+              {% endif %}
+            {% endwith %}
+            {% if course.instructions %}
+              <p> <span class="badge badge-pill badge-primary">Instructions</span><br>
+                {{ course.instructions|safe }}
+              </p>
+            {% endif %}
+          </div>
+          <div class="col-md-4">
+            <p><b>Starts On:</b> {{course.start_enroll_time}}</p>
+            <p><b>Ends On:</b> {{course.end_enroll_time}}</p>
+                        {% get_course_completion_percent course.coursestatus_set.all user as percent %}
+            <div class="progress-wrapper">
+              <div class="progress-info">
+                <div class="progress-label">
+                  <span>Course completed</span>
+                </div>
+                <div class="progress-percentage">
+                  <span>
+                    {% if percent > 0 %} {{percent}}% {%else%} {{percent}}% {% endif %}
+                  </span>
+                </div>
+              </div>
+              <div class="progress">
+                {% if percent %}
+                  {% if percent <= 50 %}
+                    <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="{{percent}}" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                    </div>
+                  {% elif percent <= 75 %}
+                      <div  class="progress-bar bg-warning" role="progressbar" aria-valuenow="{{percent}}" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                      </div>
+                  {% else %}
+                      <div  class="progress-bar bg-success" role="progressbar" aria-valuenow="{{percent}}" aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
+                      </div>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>

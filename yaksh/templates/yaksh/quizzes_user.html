@@ -1,181 +1,68 @@
 {% extends "user.html" %}
-{% load custom_filters %}
 {% block title %} Student Dashboard {% endblock %}
 
-{% block script %}
-
-{% endblock %}
-
 {% block main %}
-<div class="container">
-    <center>
-        <h2>{{title}}</h2>
-    </center>
-    <hr>
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <form action="{% url 'yaksh:quizlist_user' %}" method="post" id="custom-search-form" >
-                {% csrf_token %}
-                <div class="col-md-12">
-                    <div class="input-group">
-                        <input type="text" name="course_code" class="form-control" type="search"  placeholder="Enter course code to search" required="">
-                        <span class="input-group-append">
-                            <button class="btn btn-outline-info" type="submit"><i class="fa fa-search"></i>&nbsp;Search</button>
-                        </span>
+    <div class="container">
+        <center>
+            <h2>{{title}}</h2>
+        </center>
+        <hr>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form action="{% url 'yaksh:quizlist_user' %}" method="post" id="custom-search-form">
+                    {% csrf_token %}
+                    <div class="col-md-12">
+                        <div class="input-group">
+                            <input type="text" name="course_code" class="form-control" type="search"  placeholder="Enter course code to search" required="">
+                            <span class="input-group-append">
+                                <button class="btn btn-outline-info" type="submit"><i class="fa fa-search"></i>&nbsp;Search</button>
+                            </span>
+                        </div>
                     </div>
+                </form>
+            </div>
+            {% if "Search" in title %}
+                <div class="col-md-4">
+                    <a href="{% url 'yaksh:quizlist_user' %}" class="btn btn-outline-danger">
+                        <i class="fa fa-times"></i>&nbsp;Clear search
+                    </a>
                 </div>
-            </form>
-        </div>
-        {% if "Search" in title %}
-        <div class="col-md-4">
-            <a href="{% url 'yaksh:quizlist_user' %}" class="btn btn-outline-danger">
-                <i class="fa fa-times"></i>&nbsp;Clear search
-            </a>
-        </div>
-        {% endif %}
-    </div>
-    <br>
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-dismissible alert-{{ message.tags }}">
-            <button type="button" class="close" data-dismiss="alert">
-                <i class="fa fa-close"></i>
-            </button>
-            <strong>{{ message }}</strong>
+            {% endif %}
         </div>
         <br>
-        {% endfor %}
-    {% endif %}
-
-    {% if not courses %}
-        <center><div class="col-md-8 alert alert-warning" role="alert">
-            No Courses to display
-        </div></center>
-    {% endif %}
-    <div class="row justify-content-md-center align-items-center" >
-        <div class="col-md-12">
-            <div id="accordian">
-            {% for course in courses %}
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col-md-7">{{course.data.name}}</div>
-                            <div class="col-md-2">
-                                <a class="card-link btn btn-outline-info" data-toggle="collapse" href="#collapse{{course.data.id}}">
-                                    Details&nbsp;<i class="fa fa-toggle-down" id="toggle_course_{{course.id}}"></i>
-                                </a>
-                            </div>
-                            <div class="col-md-2">
-                                {% if user in course.data.requests.all %}
-                                    <span class="badge badge-primary badge-pill">
-                                        Request Pending
-                                    </span>
-                                {% elif user in course.data.rejected.all %}
-                                    <span class="badge badge-danger badge-pill">
-                                        Request Rejected
-                                    </span>
-                                {% elif user in course.data.students.all %}
-                                    {% if course.completion_percentage > 0 %}
-                                        <a class="btn btn-primary" href="{% url 'yaksh:course_modules' course.data.id %}" >
-                                            Continue
-                                        </a>
-                                    {% else %}
-                                        <a class="btn btn-success" href="{% url 'yaksh:course_modules' course.data.id %}">
-                                            Start
-                                        </a>
-                                    {% endif %}
-                                {% else %}
-                                    {% if course.data.active %}
-                                        {% if course.data.is_active_enrollment %}
-                                            {% if course.data.is_self_enroll %}
-                                                <a class="btn btn-primary" href="{% url 'yaksh:self_enroll' course.data.id %}">Enroll</a>
-                                            {% else %}
-                                                <a class="btn btn-primary" href="{% url 'yaksh:enroll_request' course.data.id %}">Enroll</a>
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="badge badge-danger badge-pill">
-                                                No Enrollments allowed
-                                            </span>
-                                        {% endif %}
-                                    {% else %}
-                                        <span class="badge badge-danger">
-                                            Inactive Course
-                                        </span>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% show_special_attempt user.id course.data.id %}
-                    </div>
-                    <div id="collapse{{course.data.id}}" class="collapse hide" data-parent="#accordion">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <p><b>Instructor:</b> {{course.data.creator.get_full_name|title}}</p>
-                                    {% with course.data.get_learning_modules as modules %}
-                                        {% if modules %}
-                                            <p> <span class="badge badge-pill badge-primary">
-                                                Course Content</span>
-                                                <ul>
-                                                    {% for module in modules %}
-                                                        <li>{{module.name|title}}</li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </p>
-                                        {% endif %}
-                                    {% endwith %}
-                                    {% if course.data.instructions %}
-                                        <p> <span class="badge badge-pill badge-primary">
-                                            Instructions</span><br>
-                                            {{ course.data.instructions|safe }}
-                                        </p>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-4">
-                                    <p><b>Starts On:</b> {{course.data.start_enroll_time}}</p>
-                                    <p><b>Ends On:</b> {{course.data.end_enroll_time}}</p>
-                                    {% with course.completion_percentage as percent %}
-                                    <div class="progress-wrapper">
-                                        <div class="progress-info">
-                                            <div class="progress-label">
-                                              <span>Course completed</span>
-                                            </div>
-                                            <div class="progress-percentage">
-                                              <span>
-                                                {% if percent %} {{percent}} {% else %} 0 {% endif %}%
-                                              </span>
-                                            </div>
-                                        </div>
-                                        <div class="progress">
-                                            {% if percent %}
-                                                {% if percent <= 50 %}
-                                                    <div class="progress-bar bg-danger" role="progressbar" aria-valuenow="{{percent}}"
-                                                    aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                                    </div>
-                                                {% elif percent <= 75 %}
-                                                    <div class="progress-bar bg-warning" role="progressbar" aria-valuenow="{{percent}}"
-                                                    aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                                    </div>
-                                                {% else %}
-                                                    <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{percent}}"
-                                                    aria-valuemin="0" aria-valuemax="100" style="width:{{percent}}%">
-                                                    </div>
-                                                {% endif %}
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    {% endwith %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <br>
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-dismissible alert-{{ message.tags }}">
+                <button type="button" class="close" data-dismiss="alert">
+                    <i class="fa fa-close"></i>
+                </button>
+                <strong>{{ message }}</strong>
+            </div>
+            <br>
             {% endfor %}
+        {% endif %}
+        {% if not enrolled_courses or not remaining_courses %}
+            <center>
+                <div class="col-md-8 alert alert-warning" role="alert">
+                    No Courses to display
+                </div>
+            </center>
+        {% endif %}
+        <div class="row justify-content-md-center align-items-center">
+            <div class="col-md-12">
+                <div id="accordian">
+                    <!--Enrolled Courses-->
+                    <center><h3><u>Enrolled Courses</u></h3></center>
+                    {% for course in enrolled_courses %}
+                        {% include 'yaksh/all_courses.html' %}
+                    {% endfor %}
+                    <!--Remaining Courses-->
+                    <center><h3><u>Other Courses</u></h3></center>
+                    {% for course in remaining_courses %}
+                        {% include 'yaksh/all_courses.html' %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
-</div>
-
 {% endblock %}
-

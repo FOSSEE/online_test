@@ -4,7 +4,7 @@
 {% block title %} Monitor {% endblock %}
 {% block pagetitle %} Monitor {% endblock pagetitle %}
 
-{% block meta %} <meta http-equiv="refresh" content="300"/> {% endblock meta %}
+{# {% block meta %} <meta http-equiv="refresh" content="300"/> {% endblock meta %} #}
 
 {% block script %}
 {% if papers %}
@@ -206,7 +206,7 @@ $(document).ready(function()
                       </div>
                   </form>
                 </td>
-                <td>{% specail_attempt_monitor paper.user.id course.id quiz.id %}</td>
+                <td>{% special_attempt_monitor paper.user course.id quiz.id %}</td>
             </tr>
             {% endfor %}
             </tbody>

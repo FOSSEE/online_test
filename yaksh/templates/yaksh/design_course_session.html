@@ -1,137 +1,215 @@
 {% load static %}
-
-{% block title %} <center> <h3> Design Course Session </h3> </center>{% endblock %}
-
+{% block title %}
+  <center>
+    <h3>Design Course Session</h3>
+  </center>
+{% endblock %}
 {% block script %}
-<script language="JavaScript" type="text/javascript" src="{% static 'yaksh/js/design_course.js' %}"></script>
+  <script
+    language="JavaScript"
+    type="text/javascript"
+    src="{% static 'yaksh/js/design_course.js' %}">
+  </script>
 {% endblock %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'yaksh/css/design_course.css' %}">
+  <link 
+    rel="stylesheet"
+    href="{% static 'yaksh/css/design_course.css' %}">
 {% endblock %}
 
-<form action="{% url 'yaksh:design_course' course.id %}" method="POST" id="design_course_form">
-{% csrf_token %}
+<form
+  action="{% url 'yaksh:design_course' course.id %}"
+  method="POST"
+  id="design_course_form">
+    {% csrf_token %}
     <div id="available-lesson-quiz">
-        <div class="row">
-            <div class="col-md-12 available-list">
-                <div id="fixed-available-wrapper">
-                    <p><u><b>Available Modules:</b></u></p>
-                    <div id="fixed-available">
-                        <table id="course-details" class="table table-responsive-sm">
-                        <tr class="bg-light">
-                        <th width="2%">Select</th>
-                        <th>Modules</th>
-                        <th>Lessons/Quizzes</th>
-                        </tr>
-                        {% for module in learning_modules %}
-                        <ul class="inputs-list">
-                            <tr>
-                                <td><input type="checkbox" name="module_list" value="{{module.id}}"></td>
-                                <td><span>{{ module.name }}</span></td>
-                                <td>
-                                    {% for unit in module.get_learning_units %}
-                                        <ul class="inputs-list">
-                                        <li>
-                                        {% if unit.type == "quiz" %}
-                                            {{unit.quiz.description}}
-                                        {% else %}
-                                            {{unit.lesson.name}}
-                                        {% endif %}
-                                        </li>
-                                        </ul>
-                                    {% endfor %}
-                                </td>
-                            </li>
-                            </tr>
-                        </ul>
-                        {% endfor %}
-                        </table>
-                    </div>
-                </div>
-                <br>
-                <center>
-                <button id="Add" name="Add" class="btn btn-success" type="submit">
-                    <i class="fa fa-plus-square"></i>&nbsp;Add to course</button>
-                </center>
-                <br><br>
-            </div>
-            <div class="col-md-12">
-                <div id="fixed-added-wrapper">
-                    <p><u><b>Chosen Modules:</b></u></p>
-                    <div id="fixed-added">
-                        <table id="course-details" class="table table-responsive-sm">
-                        <tr class="bg-light">
-                        <th width="5%">Select</th>
-                        <th>Module</th>
-                        <th width="20%">Order</th>
-                        <th width="25%" colspan="2">Check Prerequisite Completion
-                            <br>
-                            <a href="#" data-toggle="tooltip" id="prereq_msg">
-                                What's This&nbsp;<i class="fa fa-question-circle"></i>
-                            </a>
-                        </th>
-                        <th width="25%" colspan="2">Check Prerequisite Passing
-                            <br>
-                            <a href="#" data-toggle="tooltip" id="prereq_passing_msg">
-                                What's This&nbsp;<i class="fa fa-question-circle"></i>
-                            </a>
-                        </th>
-                        </tr>
-                        <tr>
-                            <th scope="row">&nbsp;</th>
-                            <td>&nbsp;</td>
-                            <td>&nbsp;</td>
-                            <th>Currently</th>
-                            <th>Change</th>
-                            <th>Currently</th>
-                            <th>Change</th>
-                        </tr>
-                        {% for module in added_learning_modules %}
-                            <tr>
+      <div class="row">
+        <div class="col-md-12 available-list">
+          <div id="fixed-available-wrapper">
+            <p><u><b>Available Modules:</b></u></p>
+            <div id="fixed-available">
+              <table
+                id="course-details"
+                class="table table-responsive-sm">
+                  <tr class="bg-light">
+                    <th width="2%">Select</th>
+                    <th>Modules</th>
+                    <th>Lessons/Quizzes</th>
+                  </tr>
+                  {% for module, units in module_units.items %}
+                    <ul class="inputs-list">
+                      <tr>
+                        <td>
+                          <input
+                            type="checkbox"
+                            name="module_list"
+                            value="{{module.id}}">
+                        </td>
+                        <td>
+                          <span>{{ module.name }}</span>
+                        </td>
+                        <td>
+                          {% for unit in units %}
                             <ul class="inputs-list">
-                            <td>
-                                <input type="checkbox" name="delete_list" value="{{module.id}}">
-                            </td>
-                            <td><span>{{ module.name }}</span></td>
-                            <td>
-                                <input type="number" name="order" data-item-id="{{module.id}}" value="{{module.order}}" step="1">
-                            </td>
-                            <td>
-                                {% if module.check_prerequisite %}
-                                    Yes
+                              <li>
+                                {% if unit.type == "quiz" %}
+                                  {{unit.quiz.description}}
                                 {% else %}
-                                    No
+                                  {{unit.lesson.name}}
                                 {% endif %}
-                            </td>
-                            <td>
-                                <input type="checkbox" name="check_prereq" value="{{module.id}}">
-                            </td>
-                            <td>
-                                {% if module.check_prerequisite_passes %}
-                                    Yes
-                                {% else %}
-                                    No
-                                {% endif %}
-                            </td>
-                            <td>
-                                <input type="checkbox" name="check_prereq_passes" value="{{module.id}}">
-                            </td>
+                              </li>
                             </ul>
-                            </tr>
-                        {% endfor %}
-                        </table>
-                    </div>
-                </div>
-                <br>
-                <center>
-                <button id="Remove" name="Remove" class="btn btn-danger" type="submit"><i class="fa fa-minus-square"></i>&nbsp;Remove from course</button>
-                <button id="Change" name="Change" class="btn btn-info" type="submit"><i class="fa fa-reorder"></i>&nbsp;Change Order</button>
-                <button id="Change" name="change_prerequisite_completion" class="btn btn-primary" type="submit"> Change Prerequisite Completion</button>
-                <button id="Change_prereq_passing" name="change_prerequisite_passing" class="btn btn-primary" type="submit"> Change Prerequisite Passing</button>
-
-                </center>
+                          {% endfor %}
+                        </td>
+                      </li>
+                      </tr>
+                    </ul>
+                  {% endfor %}
+              </table>
             </div>
-        </div> <!-- /.row -->
+          </div>
+          <br>
+          <center>
+          <button
+            id="Add"
+            name="Add"
+            class="btn btn-success"
+            type="submit">
+              <i
+                class="fa fa-plus-square">
+              </i>&nbsp;Add to course</button>
+          </center>
+          <br><br>
+        </div>
+        <div class="col-md-12">
+            <div id="fixed-added-wrapper">
+              <p><u><b>Chosen Modules:</b></u></p>
+              <div id="fixed-added">
+                <table
+                  id="course-details"
+                  class="table table-responsive-sm">
+                  <tr class="bg-light">
+                    <th width="5%">Select</th>
+                    <th>Module</th>
+                    <th width="20%">Order</th>
+                    <th
+                      width="25%"
+                      colspan="2">
+                      Check Prerequisite Completion
+                        <br>
+                        <a
+                          href="#"
+                          data-toggle="tooltip"
+                          id="prereq_msg">
+                            What's This&nbsp;<i class="fa fa-question-circle"></i>
+                        </a>
+                    </th>
+                    <th width="25%" colspan="2">Check Prerequisite Passing
+                      <br>
+                      <a
+                        href="#"
+                        data-toggle="tooltip"
+                        id="prereq_passing_msg">
+                        What's This&nbsp;<i class="fa fa-question-circle"></i>
+                      </a>
+                    </th>
+                  </tr>
+                  <tr>
+                    <th scope="row">&nbsp;</th>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <th>Currently</th>
+                    <th>Change</th>
+                    <th>Currently</th>
+                    <th>Change</th>
+                  </tr>
+                  {% for module in added_module_units %}
+                    <tr>
+                      <ul class="inputs-list">
+                        <td>
+                          <input
+                            type="checkbox"
+                            name="delete_list"
+                            value="{{module.id}}">
+                        </td>
+                        <td>
+                          <span>{{ module.name }}</span>
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            name="order"
+                            data-item-id="{{module.id}}"
+                            value="{{module.order}}"
+                            step="1">
+                        </td>
+                        <td>
+                          {% if module.check_prerequisite %}
+                            Yes
+                          {% else %}
+                            No
+                          {% endif %}
+                        </td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            name="check_prereq"
+                            value="{{module.id}}">
+                        </td>
+                        <td>
+                          {% if module.check_prerequisite_passes %}
+                            Yes
+                          {% else %}
+                            No
+                          {% endif %}
+                        </td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            name="check_prereq_passes"
+                            value="{{module.id}}">
+                        </td>
+                      </ul>
+                    </tr>
+                  {% endfor %}
+                </table>
+              </div>
+            </div>
+            <br>
+            <center>
+              <button
+                id="Remove"
+                name="Remove"
+                class="btn btn-danger"
+                type="submit">
+                <i
+                  class="fa fa-minus-square">
+                </i>&nbsp;Remove from course</button>
+              <button
+                id="Change"
+                name="Change"
+                class="btn btn-info"
+                type="submit">
+                <i
+                  class="fa fa-reorder">
+                </i>&nbsp;Change Order</button>
+              <button
+                id="Change"
+                name="change_prerequisite_completion"
+                class="btn btn-primary"
+                type="submit">
+                  Change Prerequisite Completion
+              </button>
+              <button
+                id="Change_prereq_passing"
+                name="change_prerequisite_passing"
+                class="btn btn-primary"
+                type="submit">
+                  Change Prerequisite Passing
+              </button>
+            </center>
+        </div>
+      </div> <!-- /.row -->
     </div>
 </form>
