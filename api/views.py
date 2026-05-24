@@ -19,22 +19,27 @@ from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 import json
 
+from rest_framework import viewsets
 
-class QuestionList(APIView):
-    """ List all questions or create a new question. """
 
-    def get(self, request, format=None):
-        questions = Question.objects.filter(user=request.user)
-        serializer = QuestionSerializer(questions, many=True)
+class QuestionViewSet(viewsets.ModelViewSet):
+    serializer_class = QuestionSerializer
+
+    def get_queryset(self):
+        return Question.objects.filter(user=self.request.user)
+
+
+class QuizViewSet(viewsets.ModelViewSet):
+    serializer_class = QuizSerializer
+
+    def get_queryset(self):
+        return Quiz.objects.filter(creator=self.request.user)
+
+class GetCourse(APIView):
+    def get(self, request, pk, format=None):
+        course = Course.objects.get(id=pk)
+        serializer = CourseSerializer(course)
         return Response(serializer.data)
-
-    def post(self, request, format=None):
-        serializer = QuestionSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class CourseList(APIView):
     """ List all courses """
@@ -82,34 +87,6 @@ class StartQuiz(APIView):
         context["time_left"] = answerpaper.time_left()
         context["answerpaper"] = serializer.data
         return Response(context, status=status.HTTP_201_CREATED)
-
-
-class QuestionDetail(APIView):
-    """ Retrieve, update or delete a question """
-
-    def get_question(self, pk, user):
-        try:
-            return Question.objects.get(pk=pk, user=user)
-        except Question.DoesNotExist:
-            raise Http404
-
-    def get(self, request, pk, format=None):
-        question = self.get_question(pk, request.user)
-        serializer = QuestionSerializer(question)
-        return Response(serializer.data)
-
-    def put(self, request, pk, format=None):
-        question = self.get_question(pk, request.user)
-        serializer = QuestionSerializer(question, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk, format=None):
-        question = self.get_question(pk, request.user)
-        question.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AnswerPaperList(APIView):
@@ -236,57 +213,12 @@ class AnswerValidator(APIView):
             answerpaper.update_marks(state='inprogress')
         return Response(result)
 
-
-class QuizList(APIView):
-    """ List all quizzes or create a new quiz """
-
-    def get(self, request, format=None):
-        quizzes = Quiz.objects.filter(creator=request.user)
-        serializer = QuizSerializer(quizzes, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, format=None):
-        serializer = QuizSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class QuizDetail(APIView):
-    """ Retrieve, update or delete a quiz """
-
-    def get_quiz(self, pk, user):
-        try:
-            return Quiz.objects.get(pk=pk, creator=user)
-        except Quiz.DoesNotExist:
-            raise Http404
-
-    def get(self, request, pk, format=None):
-        quiz = self.get_quiz(pk, request.user)
-        serializer = QuizSerializer(quiz)
-        return Response(serializer.data)
-
-    def put(self, request, pk, format=None):
-        quiz = self.get_quiz(pk, request.user)
-        serializer = QuizSerializer(quiz, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk, format=None):
-        quiz = self.get_quiz(pk, request.user)
-        quiz.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
 class QuestionPaperList(APIView):
     """ List all question papers or create a new question paper """
 
     def get_questionpapers(self, user):
         return QuestionPaper.objects.filter(quiz__creator=user)
-
+ 
     def questionpaper_exists(self, quiz_id):
         return QuestionPaper.objects.filter(quiz=quiz_id).exists()
 
@@ -311,7 +243,7 @@ class QuestionPaperList(APIView):
                     Question.objects.get(pk=question.id, user=user)
             except (QuestionSet.DoesNotExist, Question.DoesNotExist):
                 raise Http404
-
+ 
     def get(self, request, format=None):
         questionpapers = self.get_questionpapers(request.user)
         serializer = QuestionPaperSerializer(questionpapers, many=True)
@@ -391,13 +323,6 @@ class QuestionPaperDetail(APIView):
         questionpaper = self.get_questionpaper(pk, request.user)
         questionpaper.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class GetCourse(APIView):
-    def get(self, request, pk, format=None):
-        course = Course.objects.get(id=pk)
-        serializer = CourseSerializer(course)
-        return Response(serializer.data)
 
 
 @api_view(['POST'])
