@@ -2476,6 +2476,9 @@ def upload_users(request, course_id):
 def _read_user_csv(request, reader, course):
     fields = reader.fieldnames
     counter = 0
+    user_objs = []
+    profile_objs = []
+    profiles_defaults = []
     for row in reader:
         counter += 1
         (username, email, first_name, last_name, password, roll_no, institute,
@@ -2501,21 +2504,20 @@ def _read_user_csv(request, reader, course):
             continue
         user_defaults = {'email': email, 'first_name': first_name,
                          'last_name': last_name}
-        user, created = _create_or_update_user(username, password,
-                                               user_defaults)
+        user_objs.append(_create_or_update_user(username, password,
+            user_defaults))
         profile_defaults = {'institute': institute, 'roll_number': roll_no,
                             'department': department,
                             'is_email_verified': True}
-        _create_or_update_profile(user, profile_defaults)
-        if created:
-            state = "Added"
-            course.students.add(user)
-        else:
-            state = "Updated"
-        messages.info(request, "{0} -- {1} -- User {2} Successfully".format(
-                      counter, user.username, state))
+        profiles_defaults.append(profile_defaults)
     if counter == 0:
         messages.warning(request, "No rows in the CSV file")
+    else:
+        course.students.add(*user_objs)
+        for (user, profile_values) in zip(user_objs, profiles_defaults):
+            profile_objs.append(_create_or_update_profile(user, profile_values))
+        Profile.objects.bulk_create(profile_objs)
+        messages.info(request, " {0}-- Users Added Successfully".format(user_objs))
 
 
 def _get_csv_values(row, fields):
@@ -2563,11 +2565,13 @@ def _create_or_update_user(username, password, defaults):
                                                   defaults=defaults)
     user.set_password(password)
     user.save()
-    return user, created
+    return user
 
 
 def _create_or_update_profile(user, defaults):
-    Profile.objects.update_or_create(user=user, defaults=defaults)
+    defaults['user'] = user
+    profile = Profile(**defaults)
+    return profile
 
 
 @login_required

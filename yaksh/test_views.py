@@ -3069,12 +3069,16 @@ class TestCourseDetail(TestCase):
         csv_file.close()
 
         # Then
-        uploaded_user = User.objects.filter(email="abc@xyz.com")
-        self.assertEqual(uploaded_user.count(), 1)
+        up_user = User.objects.filter(email="abc0@xyz.com")
+        up_user9 = User.objects.filter(email="abc9@xyz.com")
         self.assertEqual(response.status_code, 302)
         messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertIn("abc@xyz.com", messages[0])
-        self.assertIn(uploaded_user.first(), self.user1_course.students.all())
+        self.assertIn("abc0@xyz.com", messages[0])
+        self.assertIn("abc9@xyz.com", messages[0])
+        self.assertIn(up_user.first(), self.user1_course.students.all())
+        self.assertIn(up_user9.first(), self.user1_course.students.all())
+        self.assertTrue(Profile.objects.filter(user=up_user.first()).exists())
+        self.assertTrue(Profile.objects.filter(user=up_user9.first()).exists())
 
     def test_upload_existing_user(self):
         # Given
@@ -3120,14 +3124,14 @@ class TestCourseDetail(TestCase):
             data={'csv_file': upload_file2})
 
         # Then
-        uploaded_users = User.objects.filter(email='abc@xyz.com')
+        uploaded_users = User.objects.filter(email='abc0@xyz.com')
         self.assertEqual(response1.status_code, 302)
         messages1 = [m.message for m in get_messages(response1.wsgi_request)]
-        self.assertIn('abc@xyz.com', messages1[0])
+        self.assertIn('abc0@xyz.com', messages1[0])
         self.assertEqual(response2.status_code, 302)
         messages2 = [m.message for m in get_messages(response2.wsgi_request)]
-        self.assertIn('abc@xyz.com', messages2[0])
-        self.assertIn('abc@xyz.com', messages2[1])
+        self.assertIn('abc0@xyz.com', messages2[0])
+        self.assertIn('abc0@xyz.com', messages2[1])
         self.assertTrue(
             self.user1_course.students.filter(
                 id=uploaded_users.first().id).exists()
@@ -3190,8 +3194,8 @@ class TestCourseDetail(TestCase):
         self.assertIn(user, self.user1_course.get_rejected())
         self.assertEqual(response.status_code, 302)
         messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertIn('test2', messages[2])
-        self.assertIn('User rejected', messages[2])
+        self.assertIn('test2', messages[0])
+        self.assertIn('User rejected', messages[0])
 
     def test_upload_users_with_wrong_csv(self):
         # Given
