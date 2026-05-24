@@ -3195,7 +3195,9 @@ def view_module(request, module_id, course_id, msg=None):
 def course_modules(request, course_id, msg=None):
     user = request.user
     course = Course.objects.get(id=course_id)
-    if user not in course.students.all():
+    user_is_student = course.is_student(user)
+    user_is_staff = course.is_teacher(user) or course.is_creator(user)
+    if not user_is_student and not user_is_staff:
         msg = 'You are not enrolled for this course!'
         return quizlist_user(request, msg=msg)
 
