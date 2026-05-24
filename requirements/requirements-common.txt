@@ -10,7 +10,7 @@ coverage
 ruamel.yaml==0.16.10
 pyyaml==5.3.1
 markdown==2.6.9
-pygments==2.2.0
+pygments==2.7.4
 celery==4.4.2
 redis==3.4.1
 notifications-plugin==0.1.2
