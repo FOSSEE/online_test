@@ -1369,6 +1369,14 @@ class Question(models.Model):
     # The type of question.
     type = models.CharField(max_length=24, choices=question_types)
 
+    # Negative marks for the question
+    negative_marks = models.FloatField(
+        default=0.0,
+        help_text='In Percentage eg: 25, '
+        'means 0.25 will be negative marks if question is for 1 mark'
+    )
+
+
     # Is this question active or not. If it is inactive it will not be used
     # when creating a QuestionPaper.
     active = models.BooleanField(default=True)
@@ -1734,10 +1742,16 @@ class Answer(models.Model):
     comment = models.TextField(null=True, blank=True)
 
     def set_marks(self, marks):
-        if marks > self.question.points:
-            self.marks = self.question.points
-        else:
-            self.marks = marks
+        points = self.question.points
+        qtype = self.question.type
+        if marks > points:
+            marks = points
+        if qtype == 'mcq' or qtype == 'mcc':
+            wrong_fraction = points - marks
+            negative_marks = wrong_fraction * (self.question.negative_marks/100)
+            marks = marks - negative_marks
+        self.marks = marks
+        self.save()
 
     def set_comment(self, comments):
         self.comment = comments
@@ -2631,16 +2645,16 @@ class AnswerPaper(models.Model):
             if question.partial_grading and question.type == 'code':
                 max_weight = question.get_maximum_test_case_weight()
                 factor = result['weight']/max_weight
-                user_answer.marks = question.points * factor
+                user_answer.set_marks(question.points * factor)
             else:
-                user_answer.marks = question.points
+                user_answer.set_marks(question.points)
         else:
             if question.partial_grading and question.type == 'code':
                 max_weight = question.get_maximum_test_case_weight()
                 factor = result['weight']/max_weight
-                user_answer.marks = question.points * factor
+                user_answer.set_marks(question.points * factor)
             else:
-                user_answer.marks = 0
+                user_answer.set_marks(0)
         user_answer.save()
         self.update_marks('completed')
         return True, msg
