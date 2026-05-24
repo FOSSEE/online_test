@@ -61,7 +61,7 @@
                         {% for post in posts %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'yaksh:post_comments' course.id post.uid %}">{{post.title}}</a>
+                                    <a href="{% url 'forum:post_comments' course.id post.uid %}">{{post.title}}</a>
                                     <small class="text-muted d-block">{{ post.description|safe|truncatewords:10 }}</small>
                                     <small class="text-muted"><strong>Last updated: {{post.modified_at}}</strong></small>
                                 </td>
@@ -84,7 +84,7 @@
                                 </td>
                                 <td>
                                     {% if user == course.creator or user in course.get_teachers %}
-                                        <small><a href="{% url 'yaksh:hide_post' course.id post.uid %}" class="pull-right fa fa-trash"></i></a></small>
+                                        <small><a href="{% url 'forum:hide_post' course.id post.uid %}" class="pull-right fa fa-trash"></i></a></small>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -101,4 +101,3 @@
         </div>
     </div>
 {% endblock content %}
-
