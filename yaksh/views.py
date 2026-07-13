@@ -48,7 +48,7 @@ from yaksh.models import (
 )
 from stats.models import TrackLesson
 from yaksh.forms import (
-    UserRegisterForm, UserLoginForm, QuizForm, QuestionForm,
+    UserRegisterForm, UserLoginForm, QuizForm,SafeBrowserForm,QuestionForm,
     QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm,
@@ -354,30 +354,56 @@ def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
 
     context = {}
     if request.method == "POST":
-        form = QuizForm(request.POST, instance=quiz)
-        if form.is_valid():
-            if quiz is None:
-                last_unit = module.get_learning_units().last()
-                order = last_unit.order + 1 if last_unit else 1
-                form.instance.creator = user
-            else:
-                order = module.get_unit_order("quiz", quiz)
-            added_quiz = form.save()
+            form = QuizForm(request.POST, instance=quiz)
+            if form.is_valid():
+        
+                if quiz is None:
+                    last_unit = module.get_learning_units().last()
+                    order = last_unit.order + 1 if last_unit else 1
+                    form.instance.creator = user
+                else:
+                    order = module.get_unit_order("quiz", quiz)
+
+            added_quiz = form.save(commit=False)
+            # Save Exam Mode selected by teacher
+            added_quiz.safe_browser = request.POST.get("exam_mode") == "safe"
+           
+            added_quiz.save()
+            # Save Safe Browser settings only for Safe Browser Quiz
+            if added_quiz.safe_browser:
+                safe_form = SafeBrowserForm(
+                    request.POST,
+                    instance=added_quiz
+                    )
+
+                if safe_form.is_valid():
+                    safe_form.save()
+           
+            form.save_m2m()
             unit, created = LearningUnit.objects.get_or_create(
-                    type="quiz", quiz=added_quiz, order=order
+                type="quiz",
+                quiz=added_quiz,
+                order=order
                 )
             if created:
                 module.learning_unit.add(unit.id)
+
             messages.success(request, "Quiz saved successfully")
+
             return redirect(
-                reverse("yaksh:edit_quiz",
-                        args=[course_id, module_id, added_quiz.id])
-            )
+                reverse(
+                    "yaksh:edit_quiz",
+                    args=[course_id, module_id, added_quiz.id]
+        )
+    )
+
     else:
         form = QuizForm(instance=quiz)
+        safe_form = SafeBrowserForm(instance=quiz)
     context["course_id"] = course_id
     context["quiz"] = quiz
     context["form"] = form
+    context["safe_form"] = safe_form
     return my_render_to_response(request, 'yaksh/add_quiz.html', context)
 
 
@@ -532,6 +558,7 @@ def special_start(request, micromanager_id=None):
 
 @login_required
 @email_verified
+
 def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
           module_id=None):
     """Check the user cedentials and if any quiz is available,
@@ -617,13 +644,25 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
         quest_paper, user, course_id)
 
+    
+
     if last_attempt:
-        if last_attempt.is_attempt_inprogress():
+
+        # Resume only if previous attempt is still running
+        if (
+            last_attempt.is_attempt_inprogress()
+            and not last_attempt.terminated_by_safe_browser
+            ):
             return show_question(
-                request, last_attempt.current_question(), last_attempt,
-                course_id=course_id, module_id=module_id,
+                request,
+                last_attempt.current_question(),
+                last_attempt,
+                course_id=course_id,
+                module_id=module_id,
                 previous_question=last_attempt.current_question()
             )
+
+         # Otherwise create a new attempt
         attempt_number = last_attempt.attempt_number + 1
     else:
         attempt_number = 1
@@ -645,6 +684,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
             'attempt_num': attempt_number,
             'course': course,
             'module': learning_module,
+            'is_retry': attempt_number > 1,
         }
         if is_moderator(user):
             context["status"] = "moderator"
@@ -701,6 +741,16 @@ def show_question(request, question, paper, error_message=None,
             request, reason, paper.attempt_number, paper.question_paper.id,
             course_id=course_id, module_id=module_id
         )
+    if paper.terminated_by_safe_browser:
+        reason = "Quiz terminated due to Safe Browser violations."
+        return complete(
+            request,
+            reason,
+            paper.attempt_number,
+            paper.question_paper.id,
+            course_id=course_id,
+            module_id=module_id
+    )
     if not quiz.is_exercise:
         if paper.time_left() <= 0:
             reason = 'Your time is up!'
@@ -1203,6 +1253,48 @@ def course_detail(request, course_id):
     }
 
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
+
+import json
+from django.views.decorators.http import require_POST
+
+
+@require_POST
+@login_required
+def report_violation(request):
+    data = json.loads(request.body)
+
+    attempt_number = data.get("attempt_number")
+    questionpaper_id = data.get("questionpaper_id")
+    reason = data.get("reason")
+
+    paper = AnswerPaper.objects.get(
+        user=request.user,
+        attempt_number=attempt_number,
+        question_paper_id=questionpaper_id
+    )
+
+    paper.violation_count += 1
+    paper.violation_reason = reason
+
+    if paper.violation_count >= paper.question_paper.quiz.max_violations:
+        paper.terminated_by_safe_browser = True
+        paper.status = "completed"
+        paper.end_time = timezone.now()
+
+        print("SAFE BROWSER TERMINATED =", paper.terminated_by_safe_browser)
+
+    paper.save()
+
+    print(
+        "Saved:",
+        paper.violation_count,
+        paper.terminated_by_safe_browser
+        )
+
+    return JsonResponse({
+        "count": paper.violation_count,
+        "terminated": paper.terminated_by_safe_browser
+    })
 
 
 @login_required

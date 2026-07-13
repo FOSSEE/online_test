@@ -531,11 +531,58 @@ class Quiz(models.Model):
                                   default=100)
 
     is_exercise = models.BooleanField(default=False)
-
     creator = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
 
-    objects = QuizManager()
+    # ---------------- Safe Browser Settings ---------------- #
 
+    safe_browser = models.BooleanField(
+        "Enable Safe Browser",
+        default=False
+    )
+
+    enable_fullscreen = models.BooleanField(
+        "Enable Fullscreen",
+        default=True
+    )
+
+    enable_camera = models.BooleanField(
+        "Enable Camera",
+        default=True
+    )
+
+    enable_microphone = models.BooleanField(
+        "Enable Microphone",
+        default=True
+    )
+
+    enable_right_click = models.BooleanField(
+        "Disable Right Click",
+        default=True
+    )
+
+    enable_tab_switch = models.BooleanField(
+        "Detect Tab Switching",
+        default=True
+    )
+
+    enable_screenshot_detection = models.BooleanField(
+        "Detect Print Screen",
+        default=False
+    )
+
+    enable_multiple_face_detection = models.BooleanField(
+        "Detect Multiple Faces",
+        default=False
+    )
+
+    max_violations = models.PositiveIntegerField(
+        default=3
+    )
+
+    objects = QuizManager()
+ 
+
+   
     class Meta:
         verbose_name_plural = "Quizzes"
 
@@ -1556,7 +1603,6 @@ class Question(models.Model):
             for tc in test_case:
                 tc_list.append(model_to_dict(tc))
             return tc_list
-
     def get_test_case(self, **kwargs):
         for tc in self.testcase_set.all():
             test_case_type = tc.type
@@ -1568,18 +1614,27 @@ class Question(models.Model):
                 question=self,
                 **kwargs
             )
-
         return test_case
 
     def get_ordered_test_cases(self, answerpaper):
         try:
-            order = TestCaseOrder.objects.get(answer_paper=answerpaper,
-                                              question=self
-                                              ).order.split(",")
-            return [self.get_test_case(id=int(tc_id))
-                    for tc_id in order
-                    ]
-        except TestCaseOrder.DoesNotExist:
+            testcase_order = TestCaseOrder.objects.get(
+                answer_paper=answerpaper,
+                question=self
+            )
+
+            ids = [
+                int(x)
+                for x in testcase_order.order.split(",")
+                if x.strip()
+            ]
+
+            return [
+                self.get_test_case(id=i)
+                for i in ids
+            ]
+
+        except Exception:
             return self.get_test_cases()
 
     def get_maximum_test_case_weight(self, **kwargs):
@@ -1594,20 +1649,24 @@ class Question(models.Model):
         files_list = []
         for f in files:
             zip_file.writestr(
-                os.path.join("additional_files", os.path.basename(f.file.name)),
+                os.path.join(
+                    "additional_files",
+                    os.path.basename(f.file.name)
+                ),
                 f.file.read()
             )
-            files_list.append(((os.path.basename(f.file.name)), f.extract))
+            files_list.append(
+                (os.path.basename(f.file.name), f.extract)
+            )
         return files_list
 
     def _add_files_to_db(self, file_names, path):
         for file_name, extract in file_names:
             q_file = glob.glob(os.path.join(path, "**", file_name))[0]
             if os.path.exists(q_file):
-                que_file = open(q_file, 'rb')
-                # Converting to Python file object with
-                # some Django-specific additions
+                que_file = open(q_file, "rb")
                 django_file = File(que_file)
+
                 file_upload = FileUpload()
                 file_upload.question = self
                 file_upload.extract = extract
@@ -2271,6 +2330,10 @@ class AnswerPaper(models.Model):
     extra_time = models.FloatField('Additional time in mins', default=0.0)
 
     is_special = models.BooleanField(default=False)
+    # Safe Browser violations
+    violation_count = models.IntegerField(default=0)
+    terminated_by_safe_browser = models.BooleanField(default=False)
+    violation_reason = models.TextField(blank=True, default="")
 
     objects = AnswerPaperManager()
 
