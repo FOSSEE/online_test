@@ -7,6 +7,8 @@ from api.serializers import (
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
 from rest_framework import status
 from rest_framework import permissions
 from rest_framework.authtoken.models import Token
@@ -59,6 +61,36 @@ class StartQuiz(APIView):
         user = request.user
         quiz = self.get_quiz(quiz_id, user)
         questionpaper = quiz.questionpaper_set.first()
+
+        # Safe Exam Browser Check
+        if quiz.is_seb_required:
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
+            if 'SEB' not in user_agent:
+                return Response({
+                    'message': 'This quiz requires Safe Exam Browser. Please launch the quiz using the provided .seb configuration file.',
+                    'requires_seb': True,
+                    'seb_file_url': request.build_absolute_uri(reverse('yaksh:download_seb_config', args=[quiz.id, 0, course_id])) if quiz.seb_settings else (request.build_absolute_uri(quiz.seb_config_file.url) if quiz.seb_config_file else None)
+                }, status=status.HTTP_403_FORBIDDEN)
+
+            if quiz.seb_config_key:
+                seb_hash_header = request.META.get('HTTP_X_SAFEEXAMBROWSER_CONFIGKEYHASH')
+                if not seb_hash_header:
+                    return Response({
+                        'message': 'This quiz requires Safe Exam Browser. Please launch the quiz using the provided .seb configuration file.',
+                        'requires_seb': True,
+                        'seb_file_url': request.build_absolute_uri(quiz.seb_config_file.url) if quiz.seb_config_file else None
+                    }, status=status.HTTP_403_FORBIDDEN)
+                
+                import hashlib
+                requested_url = request.build_absolute_uri()
+                expected_hash = hashlib.sha256((requested_url + quiz.seb_config_key).encode('utf-8')).hexdigest()
+                
+                if seb_hash_header.lower() != expected_hash.lower():
+                    return Response({
+                        'message': 'Safe Exam Browser configuration mismatch. Please use the exact .seb file provided by your instructor.',
+                        'requires_seb': True,
+                        'seb_file_url': request.build_absolute_uri(quiz.seb_config_file.url) if quiz.seb_config_file else None
+                    }, status=status.HTTP_403_FORBIDDEN)
 
         last_attempt = AnswerPaper.objects.get_user_last_attempt(
             questionpaper, user, course_id)

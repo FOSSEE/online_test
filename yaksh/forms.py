@@ -257,6 +257,12 @@ class QuizForm(forms.ModelForm):
         self.fields['pass_criteria'].widget.attrs.update(
             {'class': form_input_class}
         )
+        self.fields['seb_config_key'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['seb_config_file'].widget.attrs.update(
+            {'class': "custom-file-input"}
+        )
 
         self.fields["instructions"].initial = dedent("""\
             <p>
@@ -284,6 +290,9 @@ class QuizForm(forms.ModelForm):
             </li></ul>
             <p>We hope you enjoy taking this exam !!!</p>
         """)
+
+        self.fields['seb_settings'].widget = forms.HiddenInput()
+        self.fields['seb_settings'].required = False
 
     class Meta:
         model = Quiz

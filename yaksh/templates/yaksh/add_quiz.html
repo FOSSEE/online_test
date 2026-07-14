@@ -19,8 +19,69 @@
   $(document).ready(function() {
     $("#id_start_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
     $("#id_end_date_time").datetimepicker({format: 'Y-m-d H:i:s'});
+
+    ///////////////
+
+    function toggleSebFields() {
+      if ($("#id_is_seb_required").is(":checked")) {
+        $("#seb-mode-row").show();
+        if ($("#seb_mode").val() === "dynamic") {
+            $("#id_seb_config_key").closest("tr").hide();
+            $("#id_seb_config_file").closest("tr").hide();
+            $("#custom-seb-settings").show();
+        } else {
+            $("#id_seb_config_key").closest("tr").show();
+            $("#id_seb_config_file").closest("tr").show();
+            $("#custom-seb-settings").hide();
+        }
+      } else {
+        $("#seb-mode-row").hide();
+        $("#id_seb_config_key").closest("tr").hide();
+        $("#id_seb_config_file").closest("tr").hide();
+        $("#custom-seb-settings").hide();
+      }
+    }
+    toggleSebFields();
+    $("#id_is_seb_required").change(toggleSebFields);
+    
+    $(document).on('change', '#seb_mode', toggleSebFields);
+
+    try {
+        var settingsVal = $("#id_seb_settings").val();
+        if (settingsVal && settingsVal !== "{}" && settingsVal !== '""' && settingsVal !== "None") {
+            var settings = JSON.parse(settingsVal);
+            if (settings.seb_enable_zoom) $("#seb_enable_zoom").prop("checked", true);
+            if (settings.seb_show_reload) $("#seb_show_reload").prop("checked", true);
+            if (settings.seb_show_time) $("#seb_show_time").prop("checked", true);
+            if (settings.seb_show_keyboard) $("#seb_show_keyboard").prop("checked", true);
+            if (settings.seb_use_fullscreen) $("#seb_use_fullscreen").prop("checked", true);
+            $("#seb_mode").val("dynamic");
+        } else if ($("#id_seb_config_key").val() || $("#id_seb_config_file").val()) {
+            $("#seb_mode").val("manual");
+        }
+    } catch (e) {
+        console.error("Failed to parse seb_settings", e);
+    }
+    $("#submit").click(function() {
+        if ($("#seb_mode").val() === "dynamic" && $("#id_is_seb_required").is(":checked")) {
+            var settings = {
+                "seb_enable_zoom": $("#seb_enable_zoom").is(":checked"),
+                "seb_show_reload": $("#seb_show_reload").is(":checked"),
+                "seb_show_time": $("#seb_show_time").is(":checked"),
+                "seb_show_keyboard": $("#seb_show_keyboard").is(":checked"),
+                "seb_use_fullscreen": $("#seb_use_fullscreen").is(":checked")
+            };
+            $("#id_seb_settings").val(JSON.stringify(settings));
+        } else {
+            $("#id_seb_settings").val("{}");
+        }
+        return true;
+    });
   });
+  
+  /////////////
 </script>
+
 
 {% endblock %}
 {% block onload %} onload="javascript:test();"  {% endblock %}
@@ -45,6 +106,40 @@
     <center>
       <table class="table table-responsive-sm">
       {{ form.as_table }}
+      <tbody id="seb-mode-row" style="display: none;">
+        <tr>
+          <th><label>SEB Configuration Method:</label></th>
+          <td style="text-align: left;">
+            <select id="seb_mode" class="form-control">
+              <option value="dynamic" selected>Generate Dynamically (Recommended)</option>
+              <option value="manual">Upload Manual Key & File</option>
+            </select>
+            <p class="text-muted"><small>Choose whether to automatically build the SEB file or manually upload one.</small></p>
+          </td>
+        </tr>
+      </tbody>
+      <tbody id="custom-seb-settings" style="display: none;">
+        <tr>
+          <th><label>Dynamic SEB Settings:</label></th>
+          <td style="text-align: left;">
+            <p class="text-muted"><small>Checking any of these options will auto-generate the SEB file on the backend.</small></p>
+            <input type="checkbox" id="seb_enable_zoom" class="seb-dyn-setting"> 
+            <label for="seb_enable_zoom" title="Allows the student to zoom the web page content in and out.">Enable Page Zoom ℹ️</label><br>
+            
+            <input type="checkbox" id="seb_show_reload" class="seb-dyn-setting"> 
+            <label for="seb_show_reload" title="Displays a reload button in the SEB taskbar so students can refresh the page if it hangs.">Show Reload Button ℹ️</label><br>
+            
+            <input type="checkbox" id="seb_show_time" class="seb-dyn-setting"> 
+            <label for="seb_show_time" title="Displays the current computer time in the SEB taskbar.">Show Time ℹ️</label><br>
+            
+            <input type="checkbox" id="seb_show_keyboard" class="seb-dyn-setting"> 
+            <label for="seb_show_keyboard" title="Allows the student to switch their keyboard layout from the taskbar.">Show Keyboard Layout ℹ️</label><br>
+            
+            <input type="checkbox" id="seb_use_fullscreen" class="seb-dyn-setting"> 
+            <label for="seb_use_fullscreen" title="Forces SEB to fill the entire screen, preventing access to the computer desktop.">Use Full Screen Mode ℹ️</label>
+          </td>
+        </tr>
+      </tbody>
       </table>
       <br/>
       <button class="btn btn-success btn-lg" id="submit" name="questionpaper">

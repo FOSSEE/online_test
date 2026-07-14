@@ -558,6 +558,27 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     learning_module = course.learning_module.get(id=module_id)
     learning_unit = learning_module.learning_unit.get(quiz=quest_paper.quiz.id)
 
+    # Safe Exam Browser Check
+    if quest_paper.quiz.is_seb_required:
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        if 'SEB' not in user_agent:
+            msg = 'This quiz requires Safe Exam Browser. Please launch the quiz using the provided .seb configuration file.'
+            return view_module(request, module_id=module_id, course_id=course_id, msg=msg)
+
+        if quest_paper.quiz.seb_config_key:
+            seb_hash_header = request.META.get('HTTP_X_SAFEEXAMBROWSER_CONFIGKEYHASH')
+            if not seb_hash_header:
+                msg = 'This quiz requires Safe Exam Browser. Please launch the quiz using the provided .seb configuration file.'
+                return view_module(request, module_id=module_id, course_id=course_id, msg=msg)
+            
+            import hashlib
+            requested_url = request.build_absolute_uri()
+            expected_hash = hashlib.sha256((requested_url + quest_paper.quiz.seb_config_key).encode('utf-8')).hexdigest()
+            
+            if seb_hash_header.lower() != expected_hash.lower():
+                msg = 'Safe Exam Browser configuration mismatch. Please use the exact .seb file provided by your instructor.'
+                return view_module(request, module_id=module_id, course_id=course_id, msg=msg)
+
     # unit module active status
     if not learning_module.active:
         return view_module(request, module_id, course_id)
@@ -3045,8 +3066,13 @@ def get_next_unit(request, course_id, module_id, current_unit_id=None,
                 next_module.id, course.id))
 
     if next_unit.type == "quiz":
-        return my_redirect("/exam/start/{0}/{1}/{2}".format(
-            next_unit.quiz.questionpaper_set.get().id, module_id, course_id))
+        questionpaper = next_unit.quiz.questionpaper_set.first()
+        if questionpaper:
+            return my_redirect("/exam/start/{0}/{1}/{2}".format(
+                questionpaper.id, module_id, course_id))
+        else:
+            msg = "Quiz does not have a Question Paper. Please contact your instructor."
+            return view_module(request, module_id=module_id, course_id=course_id, msg=msg)
     else:
         return my_redirect("/exam/show_lesson/{0}/{1}/{2}".format(
             next_unit.lesson.id, module_id, course_id))
@@ -4233,3 +4259,35 @@ def upload_download_course_md(request, course_id):
             'is_upload_download_md': True,
         }
         return my_render_to_response(request, 'yaksh/course_detail.html', context)
+
+import plistlib
+
+def download_seb_config(request, quiz_id, module_id, course_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    
+    questionpaper = quiz.questionpaper_set.first()
+    if not questionpaper:
+        return HttpResponse('Quiz does not have a Question Paper.', status=400)
+    
+    start_url = request.build_absolute_uri(
+        reverse('yaksh:start_quiz', args=[questionpaper.id, module_id, course_id])
+    )
+    
+    settings = quiz.seb_settings or {}
+    
+    config = {
+        'startURL': start_url,
+        'sebMode': 0, 
+        'browserViewMode': 1 if settings.get('seb_use_fullscreen') else 0,
+        'enableZoomPage': bool(settings.get('seb_enable_zoom')),
+        'enableZoomText': bool(settings.get('seb_enable_zoom')),
+        'showReloadButton': bool(settings.get('seb_show_reload')),
+        'showTime': bool(settings.get('seb_show_time')),
+        'showKeyboardLayout': bool(settings.get('seb_show_keyboard')),
+    }
+    
+    plist_bytes = plistlib.dumps(config, fmt=plistlib.FMT_XML)
+    
+    response = HttpResponse(plist_bytes, content_type='application/seb')
+    response['Content-Disposition'] = 'attachment; filename="quiz_{0}.seb"'.format(quiz_id)
+    return response
