@@ -8157,12 +8157,168 @@ class TestStartExam(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
+    def test_start_seb_required_no_user_agent(self):
+        self.client.login(username=self.student.username, password=self.student_plaintext_pass)
+        self.question_paper2.fixed_questions.add(self.question1)
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.save()
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.save()
+        
+        self.quiz2.is_seb_required = True
+        self.quiz2.save()
+        
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'This quiz requires Safe Exam Browser')
+
+    def test_start_seb_required_valid_user_agent(self):
+        self.client.login(username=self.student.username, password=self.student_plaintext_pass)
+        self.question_paper2.fixed_questions.add(self.question1)
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.save()
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.save()
+        
+        self.quiz2.is_seb_required = True
+        self.quiz2.save()
+        
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url, HTTP_USER_AGENT='Mozilla/5.0 SEB')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'This quiz requires Safe Exam Browser')
+
+    def test_start_seb_config_key_missing_header(self):
+        self.client.login(username=self.student.username, password=self.student_plaintext_pass)
+        self.question_paper2.fixed_questions.add(self.question1)
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.save()
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.save()
+        
+        self.quiz2.is_seb_required = True
+        self.quiz2.seb_config_key = 'testkey'
+        self.quiz2.save()
+        
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url, HTTP_USER_AGENT='Mozilla/5.0 SEB')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'This quiz requires Safe Exam Browser. Please launch')
+
+    def test_start_seb_config_key_invalid_hash(self):
+        self.client.login(username=self.student.username, password=self.student_plaintext_pass)
+        self.question_paper2.fixed_questions.add(self.question1)
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.save()
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.save()
+        
+        self.quiz2.is_seb_required = True
+        self.quiz2.seb_config_key = 'testkey'
+        self.quiz2.save()
+        
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        response = self.client.get(url, HTTP_USER_AGENT='Mozilla/5.0 SEB', HTTP_X_SAFEEXAMBROWSER_CONFIGKEYHASH='invalidhash')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Safe Exam Browser configuration mismatch')
+
+    def test_start_seb_config_key_valid_hash(self):
+        self.client.login(username=self.student.username, password=self.student_plaintext_pass)
+        self.question_paper2.fixed_questions.add(self.question1)
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.save()
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.save()
+        
+        self.quiz2.is_seb_required = True
+        self.quiz2.seb_config_key = 'testkey'
+        self.quiz2.save()
+        
+        url = reverse('yaksh:start_quiz', kwargs={
+            'questionpaper_id': self.question_paper2.id,
+            'module_id': self.learning_module2.id,
+            'course_id': self.user1_course1.id
+        })
+        
+        import hashlib
+        requested_url = 'http://testserver' + url
+        expected_hash = hashlib.sha256((requested_url + self.quiz2.seb_config_key).encode('utf-8')).hexdigest()
+        
+        response = self.client.get(url, HTTP_USER_AGENT='Mozilla/5.0 SEB', HTTP_X_SAFEEXAMBROWSER_CONFIGKEYHASH=expected_hash)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Safe Exam Browser configuration mismatch')
+
     def tearDown(self):
         self.client.logout()
         self.user1.delete()
         self.student.delete()
         self.quiz1.delete()
         self.user1_course1.delete()
+
+
+class TestDownloadSebConfig(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+        self.user = User.objects.create_user(
+            username='demo',
+            password='password'
+        )
+        self.quiz = Quiz.objects.create(
+            time_between_attempts=0, description='Demo Quiz',
+            creator=self.user,
+            seb_settings={'seb_use_fullscreen': True, 'seb_enable_zoom': False}
+        )
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz, total_marks=1.0
+        )
+
+    def test_download_seb_config_valid(self):
+        url = reverse('yaksh:download_seb_config', kwargs={
+            'quiz_id': self.quiz.id,
+            'module_id': 1,
+            'course_id': 1
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/seb')
+        self.assertIn(b'browserViewMode', response.content)
+
+    def test_download_seb_config_no_questionpaper(self):
+        quiz2 = Quiz.objects.create(
+            time_between_attempts=0, description='Demo Quiz 2',
+            creator=self.user
+        )
+        url = reverse('yaksh:download_seb_config', kwargs={
+            'quiz_id': quiz2.id,
+            'module_id': 1,
+            'course_id': 1
+        })
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.content, b'Quiz does not have a Question Paper.')
 
 
 class TestLessonContents(TestCase):
