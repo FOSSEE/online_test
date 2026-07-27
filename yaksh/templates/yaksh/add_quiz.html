@@ -44,8 +44,54 @@
     {% csrf_token %}
     <center>
       <table class="table table-responsive-sm">
-      {{ form.as_table }}
-      </table>
+
+    {{ form.as_table }}
+   <!-- Exam Mode -->
+<tr>
+    <th>Exam Mode</th>
+    <td>
+        <label>
+            <input type="radio"
+       name="exam_mode"
+       value="regular"
+       {% if not quiz.safe_browser %}checked{% endif %}>
+            Regular Quiz
+        </label>
+
+        <br>
+
+        <label>
+            <input type="radio"
+       name="exam_mode"
+       value="safe"
+       {% if quiz.safe_browser %}checked{% endif %}>
+            Safe Browser Quiz
+        </label>
+    </td>
+</tr>
+
+<tr id="safeBrowserOptions" style="display:none;">
+    <td colspan="2">
+
+        <div class="card shadow-sm">
+
+            <div class="card-header bg-primary text-white">
+                <strong>Safe Browser Settings</strong>
+            </div>
+
+            <div class="card-body">
+
+                <table class="table table-bordered mb-0">
+                    {{ safe_form.as_table }}
+                </table>
+
+            </div>
+
+        </div>
+
+    </td>
+</tr>
+</table>
       <br/>
       <button class="btn btn-success btn-lg" id="submit" name="questionpaper">
         <i class="fa fa-save">&nbsp;Save</i>
@@ -99,4 +145,25 @@
     </div>
   </div>
 </div>
+<script>
+
+const regular = document.querySelector('input[value="regular"]');
+const safe = document.querySelector('input[value="safe"]');
+const options = document.getElementById("safeBrowserOptions");
+function toggleSafeBrowser() {
+
+    if (safe.checked) {
+        options.style.display = "";
+    } else {
+        options.style.display = "none";
+    }
+
+}
+
+regular.addEventListener("change", toggleSafeBrowser);
+safe.addEventListener("change", toggleSafeBrowser);
+
+toggleSafeBrowser();
+
+</script>
 {% endblock %}

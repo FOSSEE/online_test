@@ -32,6 +32,7 @@
 <script src="{% static 'yaksh/js/codemirror/mode/r/r.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
 <script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
+<script src="{% static 'yaksh/js/safe_browser.js' %}"></script>
 
 <script>
 init_val = '{{ last_attempt|escape_quotes|safe }}';
@@ -117,13 +118,43 @@ module_id = "{{module.id}}";
 question_type = "{{ question.type }}";
 
 </script>
+
+<script>
+// Safe-browser / proctoring config, built from Django context.
+// All the actual logic lives in yaksh/js/safe_browser.js
+var safeBrowserConfig = {
+    safe_browser: {{ quiz.safe_browser|yesno:"true,false" }},
+    enable_right_click: {{ quiz.enable_right_click|yesno:"true,false" }},
+    enable_fullscreen: {{ quiz.enable_fullscreen|yesno:"true,false" }},
+    enable_camera: {{ quiz.enable_camera|yesno:"true,false" }},
+    enable_microphone: {{ quiz.enable_microphone|yesno:"true,false" }},
+    enable_tab_switch: {{ quiz.enable_tab_switch|yesno:"true,false" }},
+    enable_screenshot_detection: {{ quiz.enable_screenshot_detection|yesno:"true,false" }},
+    paper_id: "{{ paper.id }}",
+    attempt_number: {{ paper.attempt_number }},
+    questionpaper_id: {{ paper.question_paper.id }},
+    csrf_token: "{{ csrf_token }}",
+    report_violation_url: "{% url 'yaksh:report_violation' %}",
+    save_student_photo_url: "{% url 'yaksh:save_student_photo' %}",
+    quit_quiz_url: "{% url 'yaksh:quit_quiz' paper.attempt_number module.id paper.question_paper.id course.id %}"
+};
+
+window.addEventListener("load", function () {
+    updateTime();
+    initSafeBrowser(safeBrowserConfig);
+});
+</script>
+
 {% endblock script %}
 
-{% block onload %} onload="updateTime();" {% endblock %}
 
 
 {% block main %}
-  <div>
+
+
+
+
+<div>
     <center>
       {% if notification %}
         {% if question.type == "code" %}
@@ -149,6 +180,17 @@ question_type = "{{ question.type }}";
   <form id="code" action="{% url 'yaksh:check' question.id paper.attempt_number module.id paper.question_paper.id course.id %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <input type=hidden name="question_id" id="question_id" value="{{ question.id }}"></input>
+    <div id="examNotification"
+     class="alert alert-warning shadow"
+     style="
+        display:none;
+        position:fixed;
+        top:20px;
+        right:20px;
+        min-width:320px;
+        z-index:99999;
+        border-radius:10px;">
+</div>
     <div class="card" id="question_card">
       <div class="card-header">
         <div>
@@ -374,6 +416,28 @@ question_type = "{{ question.type }}";
         </div>
       </div>
     </div>
+    <!-- Camera Preview -->
+{% if quiz.safe_browser and quiz.enable_camera %}
+
+<!-- Camera Preview -->
+<video id="cameraPreview"
+       autoplay
+       muted
+       playsinline
+       style="
+       position:fixed;
+       bottom:20px;
+       right:20px;
+       width:230px;
+       height:170px;
+       border-radius:12px;
+       border:3px solid #0d6efd;
+       background:#000;
+       box-shadow:0 6px 16px rgba(0,0,0,.35);
+       z-index:9999;">
+</video>
+
+{% endif %}
   </form>
 
   <!-- Errors for code questions -->
@@ -417,4 +481,3 @@ question_type = "{{ question.type }}";
   </div>
 
 {% endblock main %}
-

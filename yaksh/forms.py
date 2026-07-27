@@ -287,7 +287,37 @@ class QuizForm(forms.ModelForm):
 
     class Meta:
         model = Quiz
-        exclude = ["is_trial", "creator", "is_exercise"]
+        exclude = [
+    "is_trial",
+    "creator",
+    "is_exercise",
+
+    "safe_browser",
+    "enable_fullscreen",
+    "enable_camera",
+    "enable_microphone",
+    "enable_right_click",
+    "enable_tab_switch",
+    "enable_screenshot_detection",
+    "enable_multiple_face_detection",
+    "max_violations",
+]
+class SafeBrowserForm(forms.ModelForm):
+    """Form for Safe Browser settings."""
+
+    class Meta:
+        model = Quiz
+        fields = [
+           
+            "enable_fullscreen",
+            "enable_camera",
+            "enable_microphone",
+            "enable_right_click",
+            "enable_tab_switch",
+            "enable_screenshot_detection",
+            "enable_multiple_face_detection",
+            "max_violations",
+        ]
 
 
 class QuestionForm(forms.ModelForm):

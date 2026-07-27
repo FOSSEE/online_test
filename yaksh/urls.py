@@ -13,6 +13,7 @@ urlpatterns = [
         name='toggle_moderator'),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
     url(r'^results/$', views.results_user),
+   
     url(r'^start/(?P<questionpaper_id>\d+)/(?P<module_id>\d+)/'
         '(?P<course_id>\d+)/$', views.start, name="start_quiz"),
     url(r'^start/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
@@ -276,4 +277,14 @@ urlpatterns = [
          views.upload_marks, name='upload_marks'),
     path(r'manage/upload_download_course_md/<int:course_id>',
         views.upload_download_course_md, name="upload_download_course_md"),
+        path(
+        'report_violation/',
+        views.report_violation,
+        name='report_violation'
+    ),
+        path(
+        'save_student_photo/',
+        views.save_student_photo,
+        name='save_student_photo'
+    ),
 ]

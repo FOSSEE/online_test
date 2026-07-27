@@ -9,45 +9,78 @@
     <div class="card-header">
       {{questionpaper.quiz.description}}
     </div>
+
     <div class="card-body">
+
       {% if questionpaper.quiz.is_expired %}
-          <div class="alert alert-error">
-              This Quiz has expired. You can no longer attempt this Quiz.
-          </div>
-      {% else %}
-          <div class="alert alert-info">
-              You can attempt this Quiz at any time between <b>{{ questionpaper.quiz.start_date_time }}</b> and <b>{{ questionpaper.quiz.end_date_time }}</b>
-          </div>
-      {% endif %}
-      <p> Welcome <strong>{{user.get_full_name|title}}</strong>, to the programming quiz! </p>
-      {{ questionpaper.quiz.instructions|safe }}
-      <div class="row">
-        <div class="col-md-6">
-          <center>
-            {% if status != "moderator" %}
-              <a href="{% url 'yaksh:view_module' module.id course.id %}" class="btn btn-primary btn-lg" name="home">
-                <i class="fa fa-step-backward"></i>
-                Go Back
-              </a>
-            {% else %}
-              <a href="{% url 'yaksh:index' %}" class="btn btn-primary btn-lg" name="home">
-                <i class="fa fa-step-backward"></i>
-                Go Back
-              </a>
-            {% endif %}
-          </center>
-        </div>
-        <div class="col-md-6">
-          {% if not questionpaper.quiz.is_expired %}
-              <form action="{% url 'yaksh:start_quiz' attempt_num module.id questionpaper.id course.id %}" method="post" align="center">
-               {% csrf_token %}
-                <button class="btn btn-success btn-lg" type="submit" name="start">
-                  Start <i class="fa fa-play"></i>
-                </button>
-              </form>
-          {% endif %}
-        </div>
+      <div class="alert alert-error">
+          This Quiz has expired. You can no longer attempt this Quiz.
       </div>
+      {% else %}
+      <div class="alert alert-info">
+          You can attempt this Quiz at any time between <b>{{ questionpaper.quiz.start_date_time }}</b> and <b>{{ questionpaper.quiz.end_date_time }}</b>
+      </div>
+      {% endif %}
+
+      <p> Welcome <strong>{{user.get_full_name|title}}</strong>, to the programming quiz! </p>
+
+      {{ questionpaper.quiz.instructions|safe }}
+
+      <div class="text-center mt-4">
+
+        {% if not questionpaper.quiz.is_expired %}
+
+        <!-- Start Button -->
+        <form action="{% url 'yaksh:start_quiz' attempt_num module.id questionpaper.id course.id %}"
+              method="post">
+          {% csrf_token %}
+          <button class="btn btn-success btn-lg mb-4"
+                  type="submit"
+                  name="start">
+            Start <i class="fa fa-play"></i>
+          </button>
+        </form>
+
+        <!-- Attempt Information -->
+        <div class="alert alert-info mx-auto mb-4"
+             style="max-width:650px;">
+
+          <strong>
+            This is your Attempt {{ attempt_num }} of
+            {% if questionpaper.quiz.attempts_allowed == -1 %}
+              Infinite
+            {% else %}
+              {{ questionpaper.quiz.attempts_allowed }}
+            {% endif %}.
+          </strong>
+
+          {% if is_retry %}
+          <br>
+          Your previous attempt ended due to Safe Browser violations.
+          Please follow all Safe Browser rules during this attempt.
+          {% endif %}
+
+        </div>
+
+        {% endif %}
+
+        <!-- Single Go Back Button -->
+        {% if status != "moderator" %}
+        <a href="{% url 'yaksh:view_module' module.id course.id %}"
+           class="btn btn-primary btn-lg">
+          <i class="fa fa-step-backward"></i>
+          Go Back
+        </a>
+        {% else %}
+        <a href="{% url 'yaksh:index' %}"
+           class="btn btn-primary btn-lg">
+          <i class="fa fa-step-backward"></i>
+          Go Back
+        </a>
+        {% endif %}
+
+      </div>
+
     </div>
   </div>
 </div>

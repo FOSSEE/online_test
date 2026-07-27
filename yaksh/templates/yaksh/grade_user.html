@@ -227,8 +227,27 @@ function searchNames() {
                 </div>
                 {% endif %}
               {% endwith %}
+              {% if capture %}
+<hr>
+
+<div class="text-center">
+    <h5>Student Photo</h5>
+
+    <img src="{{ capture.image.url }}"
+         alt="Student Photo"
+         class="img-thumbnail"
+         style="max-width:220px;">
+
+    <p class="mt-2 mb-0">
+        <strong>Captured at:</strong>
+        {{ capture.captured_at }}
+    </p>
+</div>
+
+{% endif %}
           </div>
         </div>
+       
         <hr>
         {% if data.papers %}
           {% with data.papers.0 as paper %}
