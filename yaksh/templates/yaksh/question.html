@@ -32,6 +32,7 @@
 <script src="{% static 'yaksh/js/codemirror/mode/r/r.js' %}"></script>
 <script type="text/javascript" src="{% static 'yaksh/js/mathjax/MathJax.js' %}?config=TeX-MML-AM_CHTML"></script>
 <script src="{% static 'yaksh/js/jquery-sortable.js' %}"></script>
+<script src="{% static 'yaksh/js/safe_browser.js' %}"></script>
 
 <script>
 init_val = '{{ last_attempt|escape_quotes|safe }}';
@@ -119,309 +120,28 @@ question_type = "{{ question.type }}";
 </script>
 
 <script>
+// Safe-browser / proctoring config, built from Django context.
+// All the actual logic lives in yaksh/js/safe_browser.js
+var safeBrowserConfig = {
+    safe_browser: {{ quiz.safe_browser|yesno:"true,false" }},
+    enable_right_click: {{ quiz.enable_right_click|yesno:"true,false" }},
+    enable_fullscreen: {{ quiz.enable_fullscreen|yesno:"true,false" }},
+    enable_camera: {{ quiz.enable_camera|yesno:"true,false" }},
+    enable_microphone: {{ quiz.enable_microphone|yesno:"true,false" }},
+    enable_tab_switch: {{ quiz.enable_tab_switch|yesno:"true,false" }},
+    enable_screenshot_detection: {{ quiz.enable_screenshot_detection|yesno:"true,false" }},
+    paper_id: "{{ paper.id }}",
+    attempt_number: {{ paper.attempt_number }},
+    questionpaper_id: {{ paper.question_paper.id }},
+    csrf_token: "{{ csrf_token }}",
+    report_violation_url: "{% url 'yaksh:report_violation' %}",
+    save_student_photo_url: "{% url 'yaksh:save_student_photo' %}",
+    quit_quiz_url: "{% url 'yaksh:quit_quiz' paper.attempt_number module.id paper.question_paper.id course.id %}"
+};
 
-let violationCount = 0;
-const MAX_VIOLATIONS = 3;
-
-function addViolation(reason) {
-
-    violationCount++;
-
-    showNotification(
-        reason + "<br><strong>Violation " +
-        violationCount + " of " +
-        MAX_VIOLATIONS + "</strong>",
-        "danger"
-    );
-
-    fetch("{% url 'yaksh:report_violation' %}", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}"
-    },
-    body: JSON.stringify({
-        attempt_number: {{ paper.attempt_number }},
-        questionpaper_id: {{ paper.question_paper.id }},
-        reason: reason
-    })
-})
-.then(response => response.json())
-.then(data => {
-
-    if (data.terminated) {
-
-        showNotification(
-            "Maximum violations reached. Ending exam...",
-            "danger"
-        );
-
-        setTimeout(function () {
-
-            window.location.href =
-            "{% url 'yaksh:quit_quiz' paper.attempt_number module.id paper.question_paper.id course.id %}";
-
-        }, 1500);
-
-    }
-
-});
-}
-
-   function showNotification(message, type = "warning") {
-
-    const box = document.getElementById("examNotification");
-
-    box.className = "alert alert-" + type + " shadow";
-
-    box.innerHTML = message;
-
-    box.style.display = "block";
-
-    setTimeout(function () {
-        box.style.display = "none";
-    }, 3000);
-}
-window.addEventListener("load", async function () {
-
+window.addEventListener("load", function () {
     updateTime();
-
-    // If Regular Quiz, don't enable Safe Browser
-    if (!{{ quiz.safe_browser|yesno:"true,false" }}) {
-        return;
-    }
-
-
-    updateTime();
-
-    // Disable right click
-
-if ({{ quiz.enable_right_click|yesno:"true,false" }}) {
-
-    document.addEventListener("contextmenu", function(e){
-        e.preventDefault();
-    });
-
-}
-   // Fullscreen for Safe Browser Quiz
-if ({{ quiz.enable_fullscreen|yesno:"true,false" }}) {
-
-    try {
-        if (!document.fullscreenElement) {
-            await document.documentElement.requestFullscreen();
-        }
-    } catch (e) {
-        console.log("Automatic fullscreen blocked:", e);
-
-        const fullscreenLock =
-            document.getElementById("fullscreen-lock");
-
-        if (fullscreenLock) {
-            fullscreenLock.style.display = "flex";
-        }
-    }
-
-}
-// Mandatory fullscreen fallback button
-const enterFullscreenBtn =
-    document.getElementById("enter-fullscreen-btn");
-
-if (enterFullscreenBtn) {
-
-    enterFullscreenBtn.addEventListener("click", async function () {
-
-        try {
-            if (!document.fullscreenElement) {
-                await document.documentElement.requestFullscreen();
-            }
-
-            const fullscreenLock =
-                document.getElementById("fullscreen-lock");
-
-            if (fullscreenLock) {
-                fullscreenLock.style.display = "none";
-            }
-
-        } catch (e) {
-            console.log("Fullscreen request failed:", e);
-        }
-
-    });
-
-}
-
-// Lock browser shortcuts silently while fullscreen is active
-document.addEventListener("keydown", function (e) {
-
-    // Lock only during fullscreen
-    if (!document.fullscreenElement) {
-        return;
-    }
-
-    const key = e.key.toLowerCase();
-
-    // Ctrl on Windows/Linux, Command on macOS
-    const commandKey = e.ctrlKey || e.metaKey;
-
-
-    // 1. Block Ctrl/Command + Shift shortcuts first
-    const blockedShiftKeys = [
-        "i",  // Developer tools
-        "j",  // Console
-        "c",  // Inspect tools
-        "t",  // Reopen closed tab
-        "n"   // Incognito/private window
-    ];
-
-    if (
-        commandKey &&
-        e.shiftKey &&
-        blockedShiftKeys.includes(key)
-    ) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        return false;
-    }
-
-
-    // 2. Block normal Ctrl/Command shortcuts
-    const blockedCtrlKeys = [
-        "t",  // New tab
-        "n",  // New window
-        "w",  // Close tab
-        "l",  // Address bar
-        "r",  // Reload
-        "p",  // Print
-        "s",  // Save
-        "u",  // View source
-        "f",  // Find
-        "h",  // History
-        "j",  // Downloads
-        "o"   // Open file
-    ];
-
-    if (
-        commandKey &&
-        blockedCtrlKeys.includes(key)
-    ) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        return false;
-    }
-
-
-    // 3. Block function keys
-    const blockedFunctionKeys = [
-        "F5",   // Reload
-        "F11",  // Fullscreen toggle
-        "F12"   // Developer tools
-    ];
-
-    if (blockedFunctionKeys.includes(e.key)) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        return false;
-    }
-
-
-    // 4. Block Alt browser navigation shortcuts
-    if (
-        e.altKey &&
-        (
-            key === "arrowleft" ||
-            key === "arrowright" ||
-            key === "home"
-        )
-    ) {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        return false;
-    }
-
-}, true);
-
-    // Camera + Microphone
-  
-if ({{ quiz.enable_camera|yesno:"true,false" }} ||
-    {{ quiz.enable_microphone|yesno:"true,false" }}) {
-
-    try {
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {{ quiz.enable_camera|yesno:"true,false" }},
-            audio: {{ quiz.enable_microphone|yesno:"true,false" }}
-        });
-
-        const video = document.getElementById("cameraPreview");
-
-        if (video) {
-            video.srcObject = stream;
-        }
-
-    } catch (err) {
-        showNotification("Please allow Camera and Microphone.");
-    }
-
-}
-
-   if ({{ quiz.enable_tab_switch|yesno:"true,false" }}) {
-
-    document.addEventListener("visibilitychange", function () {
-
-        if (document.hidden) {
-            addViolation("Tab Switching Detected");
-        }
-
-    });
-
-}
-if ({{ quiz.enable_tab_switch|yesno:"true,false" }}) {
-
-    window.addEventListener("blur", function () {
-
-        addViolation("Window Focus Lost");
-
-    });
-
-}
-if ({{ quiz.enable_screenshot_detection|yesno:"true,false" }}) {
-
-    document.addEventListener("keydown", function (e) {
-
-        if (e.key === "PrintScreen") {
-
-            addViolation("Screenshot Attempt Detected");
-
-        }
-
-    });
-
-}
-
-   // Detect fullscreen exit only when fullscreen is enabled
-if ({{ quiz.enable_fullscreen|yesno:"true,false" }}) {
-
-    document.addEventListener("fullscreenchange", function () {
-
-        if (!document.fullscreenElement) {
-
-            const fullscreenLock =
-                document.getElementById("fullscreen-lock");
-
-            if (fullscreenLock) {
-                fullscreenLock.style.display = "flex";
-            }
-
-            addViolation("Fullscreen Exited");
-        }
-
-    });
-
-}
+    initSafeBrowser(safeBrowserConfig);
 });
 </script>
 
@@ -431,37 +151,7 @@ if ({{ quiz.enable_fullscreen|yesno:"true,false" }}) {
 
 {% block main %}
 
-{% if quiz.safe_browser and quiz.enable_fullscreen %}
-<div id="fullscreen-lock" style="
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 99999;
-    background: rgba(0, 0, 0, 0.96);
-    color: white;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-">
-    <div>
-        <h2>Safe Browser Mode</h2>
 
-        <p>
-            Fullscreen mode is required to continue this quiz.
-        </p>
-
-        <button
-            id="enter-fullscreen-btn"
-            type="button"
-            class="btn btn-success btn-lg">
-            Enter Fullscreen
-        </button>
-    </div>
-</div>
-{% endif %}
 
 
 <div>
@@ -791,4 +481,3 @@ if ({{ quiz.enable_fullscreen|yesno:"true,false" }}) {
   </div>
 
 {% endblock main %}
-

@@ -7,27 +7,22 @@
 <div class="container">
   <div class="card">
     <div class="card-header">
-      {{ questionpaper.quiz.description }}
+      {{questionpaper.quiz.description}}
     </div>
 
     <div class="card-body">
 
       {% if questionpaper.quiz.is_expired %}
       <div class="alert alert-error">
-        This Quiz has expired. You can no longer attempt this Quiz.
+          This Quiz has expired. You can no longer attempt this Quiz.
       </div>
       {% else %}
       <div class="alert alert-info">
-        You can attempt this Quiz at any time between
-        <b>{{ questionpaper.quiz.start_date_time }}</b> and
-        <b>{{ questionpaper.quiz.end_date_time }}</b>
+          You can attempt this Quiz at any time between <b>{{ questionpaper.quiz.start_date_time }}</b> and <b>{{ questionpaper.quiz.end_date_time }}</b>
       </div>
       {% endif %}
 
-      <p>
-        Welcome <strong>{{ user.get_full_name|title }}</strong>,
-        to the programming quiz!
-      </p>
+      <p> Welcome <strong>{{user.get_full_name|title}}</strong>, to the programming quiz! </p>
 
       {{ questionpaper.quiz.instructions|safe }}
 
@@ -51,8 +46,12 @@
              style="max-width:650px;">
 
           <strong>
-            This is your Attempt {{ attempt_num }}
-            of {{ questionpaper.quiz.attempts_allowed }}.
+            This is your Attempt {{ attempt_num }} of
+            {% if questionpaper.quiz.attempts_allowed == -1 %}
+              Infinite
+            {% else %}
+              {{ questionpaper.quiz.attempts_allowed }}
+            {% endif %}.
           </strong>
 
           {% if is_retry %}

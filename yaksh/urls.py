@@ -282,4 +282,9 @@ urlpatterns = [
         views.report_violation,
         name='report_violation'
     ),
+        path(
+        'save_student_photo/',
+        views.save_student_photo,
+        name='save_student_photo'
+    ),
 ]

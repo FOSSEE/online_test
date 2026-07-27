@@ -8,6 +8,7 @@ from django.http import Http404
 from django.db.models import Max, Q, F
 from django.db import models
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
@@ -22,7 +23,10 @@ from django.contrib import messages
 from taggit.models import Tag
 from django.urls import reverse
 from django.conf import settings
+from django.core.files.base import ContentFile
 import json
+import base64
+import uuid
 from textwrap import dedent
 import zipfile
 import markdown
@@ -44,11 +48,11 @@ from yaksh.models import (
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
     Topic, TableOfContents, LessonQuizAnswer, MicroManager, QRcode,
-    QRcodeHandler, dict_to_yaml
+    QRcodeHandler, SafeBrowserCapture, dict_to_yaml
 )
 from stats.models import TrackLesson
 from yaksh.forms import (
-    UserRegisterForm, UserLoginForm, QuizForm,SafeBrowserForm,QuestionForm,
+    UserRegisterForm, UserLoginForm, QuizForm, SafeBrowserForm, QuestionForm,
     QuestionFilterForm, CourseForm, ProfileForm,
     UploadFileForm, FileForm, QuestionPaperForm, LessonForm,
     LessonFileForm, LearningModuleForm, ExerciseForm, TestcaseForm,
@@ -1072,14 +1076,33 @@ def _update_paper(request, uid, result):
 def quit(request, reason=None, attempt_num=None, questionpaper_id=None,
          course_id=None, module_id=None):
     """Show the quit page when the user logs out."""
-    paper = AnswerPaper.objects.get(user=request.user,
-                                    attempt_number=attempt_num,
-                                    question_paper=questionpaper_id,
-                                    course_id=course_id)
-    context = {'paper': paper, 'message': reason, 'course_id': course_id,
-               'module_id': module_id}
-    return my_render_to_response(request, 'yaksh/quit.html', context)
+    paper = AnswerPaper.objects.get(
+        user=request.user,
+        attempt_number=attempt_num,
+        question_paper=questionpaper_id,
+        course_id=course_id
+    )
 
+    # If quiz was terminated by Safe Browser,
+    # don't show the Quit confirmation page.
+    if paper.terminated_by_safe_browser:
+        return complete(
+            request,
+            reason="Exam terminated due to maximum Safe Browser violations.",
+            attempt_num=attempt_num,
+            questionpaper_id=questionpaper_id,
+            course_id=course_id,
+            module_id=module_id
+        )
+
+    context = {
+        'paper': paper,
+        'message': reason,
+        'course_id': course_id,
+        'module_id': module_id
+    }
+
+    return my_render_to_response(request, 'yaksh/quit.html', context)
 
 @login_required
 @email_verified
@@ -1254,8 +1277,8 @@ def course_detail(request, course_id):
 
     return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
-import json
-from django.views.decorators.http import require_POST
+
+
 
 
 @require_POST
@@ -1296,6 +1319,46 @@ def report_violation(request):
         "terminated": paper.terminated_by_safe_browser
     })
 
+
+@require_POST
+@login_required
+def save_student_photo(request):
+    try:
+        paper = AnswerPaper.objects.get(
+            id=request.POST.get("paper_id"),
+            user=request.user
+        )
+
+        image_data = request.POST.get("image")
+
+        if not image_data:
+            return JsonResponse({
+                "success": False,
+                "message": "No image received."
+            })
+
+        format, imgstr = image_data.split(";base64,")
+        ext = format.split("/")[-1]
+
+        filename = f"{uuid.uuid4()}.{ext}"
+
+        capture = SafeBrowserCapture(
+            answer_paper=paper
+)
+
+        capture.image.save(
+            filename,
+            ContentFile(base64.b64decode(imgstr)),
+            save=True
+)
+
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "message": str(e)
+        })
 
 @login_required
 @email_verified
@@ -2043,6 +2106,13 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
             data = AnswerPaper.objects.get_user_data(
                 user, questionpaper_id, course_id, attempt_number
             )
+            paper = data["papers"][0] if data["papers"] else None
+
+            capture = None
+            if paper:
+                capture = SafeBrowserCapture.objects.filter(
+                    answer_paper=paper
+                ).order_by("-captured_at").first()
             context = {
                 "data": data,
                 "quiz_id": quiz_id,
@@ -2053,7 +2123,8 @@ def grade_user(request, quiz_id=None, user_id=None, attempt_number=None,
                 "has_user_assignments": has_user_assignments,
                 "has_quiz_assignments": has_quiz_assignments,
                 "course_id": course_id,
-                "status": "grade"
+                "status": "grade",
+                "capture": capture,
             }
     if request.method == "POST":
         papers = data['papers']

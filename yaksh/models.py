@@ -533,7 +533,7 @@ class Quiz(models.Model):
     is_exercise = models.BooleanField(default=False)
     creator = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
 
-    # ---------------- Safe Browser Settings ---------------- #
+    # Safe Browser Settings
 
     safe_browser = models.BooleanField(
         "Enable Safe Browser",
@@ -1618,15 +1618,15 @@ class Question(models.Model):
 
     def get_ordered_test_cases(self, answerpaper):
         try:
-            testcase_order = TestCaseOrder.objects.get(
+            order = TestCaseOrder.objects.get(
                 answer_paper=answerpaper,
                 question=self
             )
 
             ids = [
-                int(x)
-                for x in testcase_order.order.split(",")
-                if x.strip()
+                int(tc_id)
+                for tc_id in testcase_order.order.split(",")
+                if tc_id.strip()
             ]
 
             return [
@@ -1649,10 +1649,7 @@ class Question(models.Model):
         files_list = []
         for f in files:
             zip_file.writestr(
-                os.path.join(
-                    "additional_files",
-                    os.path.basename(f.file.name)
-                ),
+                os.path.join("additional_files", os.path.basename(f.file.name)),
                 f.file.read()
             )
             files_list.append(
@@ -2334,6 +2331,8 @@ class AnswerPaper(models.Model):
     violation_count = models.IntegerField(default=0)
     terminated_by_safe_browser = models.BooleanField(default=False)
     violation_reason = models.TextField(blank=True, default="")
+    
+   
 
     objects = AnswerPaperManager()
 
@@ -3448,3 +3447,17 @@ class QRcodeHandler(models.Model):
 
     def can_use(self):
         return self.answerpaper.is_attempt_inprogress()
+class SafeBrowserCapture(models.Model):
+    answer_paper = models.ForeignKey(
+        AnswerPaper,
+        on_delete=models.CASCADE,
+        related_name="safe_browser_captures"
+    )
+    image = models.ImageField(upload_to="safe_browser_photos/")
+    captured_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return (
+            f"{self.answer_paper.user.username} - "
+            f"{self.captured_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        )
