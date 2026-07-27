@@ -1577,7 +1577,7 @@ class Question(models.Model):
                                               question=self
                                               ).order.split(",")
             return [self.get_test_case(id=int(tc_id))
-                    for tc_id in order
+                    for tc_id in order if tc_id.strip()
                     ]
         except TestCaseOrder.DoesNotExist:
             return self.get_test_cases()
