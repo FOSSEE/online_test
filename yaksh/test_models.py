@@ -7,7 +7,7 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
     create_group, legend_display_types, Post, Comment, MicroManager, QRcode, \
-    QRcodeHandler
+    QRcodeHandler, TestCaseOrder
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
@@ -25,6 +25,7 @@ import os
 import shutil
 import tempfile
 import hashlib
+import random
 from threading import Thread
 from collections import defaultdict
 from yaksh import settings
@@ -541,6 +542,45 @@ class QuestionTestCases(unittest.TestCase):
             snippet='def fact()', user=self.user2
         )
 
+        self.question_tc_order = Question.objects.create(
+            summary='TestCase Order', language='python', type='mcq',
+            active=True, description='Select A', points=2.0,
+            user=self.user2
+        )
+
+        self.question_no_tc_order = Question.objects.create(
+            summary='TestCase No Order', language='python', type='mcq',
+            active=True, description='Select B', points=2.0,
+            user=self.user2
+        )
+
+        self.mcq_testcase_1 = McqTestCase.objects.create(
+            options='a', correct=True, question=self.question_tc_order,
+            type='mcqtestcase'
+        )
+
+        self.mcq_testcase_2 = McqTestCase.objects.create(
+            options='b', correct=False, question=self.question_tc_order,
+            type='mcqtestcase'
+        )
+
+        self.course = Course.objects.get(name="Python Course")
+        self.quiz = Quiz.objects.create(
+            attempts_allowed=-1, time_between_attempts=0,
+            description='Testcase Order Test', pass_criteria=40
+        )
+
+        self.question_paper = QuestionPaper.objects.create(quiz=self.quiz)
+        self.question_paper.fixed_questions.add(
+            self.question_tc_order, self.question_no_tc_order
+        )
+        self.answerpaper = AnswerPaper.objects.create(
+            start_time=datetime(2026, 1, 3, 10, 8, 15, 0, tzinfo=pytz.utc),
+            end_time=datetime(2026, 1, 3, 10, 28, 15, 0, tzinfo=pytz.utc),
+            user=self.user1, question_paper=self.question_paper,
+            course=self.course, attempt_number=1,
+        )
+
         # create a temp directory and add files for loading questions test
         file_path = os.path.join(tempfile.gettempdir(), "test.txt")
         self.load_tmp_path = tempfile.mkdtemp()
@@ -774,6 +814,57 @@ class QuestionTestCases(unittest.TestCase):
         self.assertEqual(expected_tc_options, obtained_tc_options)
         for que, tc_option in zip(que_list, other_tc_options):
             self.assertEqual(que.get_test_case_options()[0], tc_option)
+
+    def test_get_ordered_test_cases(self):
+        """
+        Test if the order string is proper converted to list.
+        """
+        # Given
+        testcases = self.question_tc_order.get_test_cases()
+        self.assertEqual(len(testcases), 2)
+
+        random.shuffle(testcases)
+        testcases_ids = ",".join(str(tc.id) for tc in testcases)
+        TestCaseOrder.objects.create(
+            answer_paper=self.answerpaper, question=self.question_tc_order,
+            order=testcases_ids
+        )
+
+        # When
+        ordered_test_cases = self.question_tc_order.get_ordered_test_cases(
+            self.answerpaper
+        )
+
+        # Then
+        self.assertIn(self.mcq_testcase_1, ordered_test_cases)
+        self.assertIn(self.mcq_testcase_2, ordered_test_cases)
+        self.assertEqual(len(ordered_test_cases), 2)
+
+    def test_get_ordered_test_cases_empty_cases(self):
+        """
+        Test if the order string is empty then no error.
+        Means the MCQ or MCC has no options.
+        """
+
+        # Given
+        testcases = self.question_no_tc_order.get_test_cases()
+        self.assertEqual(len(testcases), 0)
+
+        testcases_ids = ",".join(str(tc.id) for tc in testcases)
+        self.assertEqual(testcases_ids, "")
+
+        TestCaseOrder.objects.create(
+            answer_paper=self.answerpaper, question=self.question_no_tc_order,
+            order=testcases_ids
+        )
+
+        # When
+        ordered_test_cases = self.question_no_tc_order.get_ordered_test_cases(
+            self.answerpaper
+        )
+
+        # Then
+        self.assertEqual(len(ordered_test_cases), 0)
 
 
 ###############################################################################
