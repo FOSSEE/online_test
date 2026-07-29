@@ -20,6 +20,7 @@ from django.contrib.auth import authenticate
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 import json
+import hashlib
 
 
 class QuestionList(APIView):
@@ -81,7 +82,6 @@ class StartQuiz(APIView):
                         'seb_file_url': request.build_absolute_uri(quiz.seb_config_file.url) if quiz.seb_config_file else None
                     }, status=status.HTTP_403_FORBIDDEN)
                 
-                import hashlib
                 requested_url = request.build_absolute_uri()
                 expected_hash = hashlib.sha256((requested_url + quiz.seb_config_key).encode('utf-8')).hexdigest()
                 
