@@ -65,6 +65,7 @@ from .decorators import email_verified, has_profile
 from .tasks import regrade_papers, update_user_marks
 from notifications_plugin.models import Notification
 import hashlib
+import plistlib
 
 
 def my_redirect(url):
@@ -572,6 +573,7 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
             if not seb_hash_header:
                 msg = 'This quiz requires Safe Exam Browser. Please launch the quiz using the provided .seb configuration file.'
                 return view_module(request, module_id=module_id, course_id=course_id, msg=msg)
+            
             requested_url = request.build_absolute_uri()
             expected_hash = hashlib.sha256((requested_url + quest_paper.quiz.seb_config_key).encode('utf-8')).hexdigest()
             
@@ -4259,7 +4261,6 @@ def upload_download_course_md(request, course_id):
             'is_upload_download_md': True,
         }
         return my_render_to_response(request, 'yaksh/course_detail.html', context)
-
 
 
 def download_seb_config(request, quiz_id, module_id, course_id):

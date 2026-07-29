@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('yaksh', '0031_auto_20260630_0516'),
+        ('yaksh', '0030_alter_answerpaper_user_ip_max_len'),
     ]
 
     operations = [

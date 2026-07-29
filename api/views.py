@@ -7,7 +7,6 @@ from api.serializers import (
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from rest_framework import status
 from rest_framework import permissions
