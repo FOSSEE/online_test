@@ -1,6 +1,7 @@
 from yaksh.models import (
     Question, Quiz, QuestionPaper, QuestionSet, AnswerPaper, Course, Answer
 )
+from yaksh.seb_utils import check_seb_access
 from api.serializers import (
     QuestionSerializer, QuizSerializer, QuestionPaperSerializer,
     AnswerPaperSerializer, CourseSerializer
@@ -19,7 +20,6 @@ from django.contrib.auth import authenticate
 from yaksh.code_server import get_result as get_result_from_code_server
 from yaksh.settings import SERVER_POOL_PORT, SERVER_HOST_NAME
 import json
-import hashlib
 
 
 class QuestionList(APIView):
@@ -64,32 +64,18 @@ class StartQuiz(APIView):
 
         # Safe Exam Browser Check
         if quiz.is_seb_required:
-            user_agent = request.META.get('HTTP_USER_AGENT', '')
-            if 'SEB' not in user_agent:
+            course = Course.objects.get(id=course_id)
+            module = course.learning_module.filter(learning_unit__quiz=quiz).first()
+            module_id = module.id if module else 0
+            
+            seb_valid, seb_msg = check_seb_access(request, quiz, module_id, course_id)
+            if not seb_valid:
+                seb_file_url = request.build_absolute_uri(reverse('yaksh:download_seb_config', args=[quiz.id, module_id, course_id])) if (quiz.seb_settings or quiz.seb_config_file) else None
                 return Response({
-                    'message': 'This quiz requires Safe Exam Browser. Please launch the quiz using the provided .seb configuration file.',
+                    'message': seb_msg,
                     'requires_seb': True,
-                    'seb_file_url': request.build_absolute_uri(reverse('yaksh:download_seb_config', args=[quiz.id, 0, course_id])) if quiz.seb_settings else (request.build_absolute_uri(quiz.seb_config_file.url) if quiz.seb_config_file else None)
+                    'seb_file_url': seb_file_url
                 }, status=status.HTTP_403_FORBIDDEN)
-
-            if quiz.seb_config_key:
-                seb_hash_header = request.META.get('HTTP_X_SAFEEXAMBROWSER_CONFIGKEYHASH')
-                if not seb_hash_header:
-                    return Response({
-                        'message': 'This quiz requires Safe Exam Browser. Please launch the quiz using the provided .seb configuration file.',
-                        'requires_seb': True,
-                        'seb_file_url': request.build_absolute_uri(quiz.seb_config_file.url) if quiz.seb_config_file else None
-                    }, status=status.HTTP_403_FORBIDDEN)
-                
-                requested_url = request.build_absolute_uri()
-                expected_hash = hashlib.sha256((requested_url + quiz.seb_config_key).encode('utf-8')).hexdigest()
-                
-                if seb_hash_header.lower() != expected_hash.lower():
-                    return Response({
-                        'message': 'Safe Exam Browser configuration mismatch. Please use the exact .seb file provided by your instructor.',
-                        'requires_seb': True,
-                        'seb_file_url': request.build_absolute_uri(quiz.seb_config_file.url) if quiz.seb_config_file else None
-                    }, status=status.HTTP_403_FORBIDDEN)
 
         last_attempt = AnswerPaper.objects.get_user_last_attempt(
             questionpaper, user, course_id)

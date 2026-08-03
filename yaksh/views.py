@@ -2,6 +2,7 @@ import os
 import csv
 import plistlib
 import hashlib
+from .seb_utils import check_seb_access
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
@@ -64,8 +65,6 @@ from .send_emails import (send_user_mail,
 from .decorators import email_verified, has_profile
 from .tasks import regrade_papers, update_user_marks
 from notifications_plugin.models import Notification
-import hashlib
-import plistlib
 
 
 def my_redirect(url):
@@ -562,24 +561,9 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     learning_unit = learning_module.learning_unit.get(quiz=quest_paper.quiz.id)
 
     # Safe Exam Browser Check
-    if quest_paper.quiz.is_seb_required:
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
-        if 'SEB' not in user_agent:
-            msg = 'This quiz requires Safe Exam Browser. Please launch the quiz using the provided .seb configuration file.'
-            return view_module(request, module_id=module_id, course_id=course_id, msg=msg)
-
-        if quest_paper.quiz.seb_config_key:
-            seb_hash_header = request.META.get('HTTP_X_SAFEEXAMBROWSER_CONFIGKEYHASH')
-            if not seb_hash_header:
-                msg = 'This quiz requires Safe Exam Browser. Please launch the quiz using the provided .seb configuration file.'
-                return view_module(request, module_id=module_id, course_id=course_id, msg=msg)
-            
-            requested_url = request.build_absolute_uri()
-            expected_hash = hashlib.sha256((requested_url + quest_paper.quiz.seb_config_key).encode('utf-8')).hexdigest()
-            
-            if seb_hash_header.lower() != expected_hash.lower():
-                msg = 'Safe Exam Browser configuration mismatch. Please use the exact .seb file provided by your instructor.'
-                return view_module(request, module_id=module_id, course_id=course_id, msg=msg)
+    seb_valid, seb_msg = check_seb_access(request, quest_paper.quiz, module_id, course_id)
+    if not seb_valid:
+        return view_module(request, module_id=module_id, course_id=course_id, msg=seb_msg)
 
     # unit module active status
     if not learning_module.active:
@@ -4263,6 +4247,7 @@ def upload_download_course_md(request, course_id):
         return my_render_to_response(request, 'yaksh/course_detail.html', context)
 
 
+@login_required
 def download_seb_config(request, quiz_id, module_id, course_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
     

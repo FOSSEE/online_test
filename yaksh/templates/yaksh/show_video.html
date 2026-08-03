@@ -70,7 +70,7 @@
                                                   <i class="fa fa-download"></i> Download SEB Config
                                               </a>
                                               {% elif unit.quiz.seb_config_file %}
-                                              <a href="{{ unit.quiz.seb_config_file.url }}" class="list-group-item list-group-item-info text-dark" style="font-size: 0.85em; padding-left: 40px; border-top: 0;">
+                                              <a href="{% url 'yaksh:download_seb_config' unit.quiz.id module.id course.id %}" class="list-group-item list-group-item-info text-dark" style="font-size: 0.85em; padding-left: 40px; border-top: 0;">
                                                   <i class="fa fa-download"></i> Download SEB Config
                                               </a>
                                               {% endif %}
