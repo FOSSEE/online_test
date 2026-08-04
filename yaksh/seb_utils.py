@@ -1,5 +1,6 @@
 import hashlib
 import plistlib
+import hmac
 from django.urls import reverse
 
 def check_seb_access(request, quiz, module_id, course_id):
@@ -40,6 +41,7 @@ def check_seb_access(request, quiz, module_id, course_id):
             'showReloadButton': bool(settings.get('seb_show_reload')),
             'showTime': bool(settings.get('seb_show_time')),
             'showKeyboardLayout': bool(settings.get('seb_show_keyboard')),
+            'hashedQuitPassword': hashlib.sha256(settings.get('seb_quit_password', 'yaksh').encode('utf-8')).hexdigest(),
         }
         plist_bytes = plistlib.dumps(config, fmt=plistlib.FMT_XML)
         config_key = hashlib.sha256(plist_bytes).hexdigest()
@@ -52,7 +54,7 @@ def check_seb_access(request, quiz, module_id, course_id):
         # But we still enforce SEB User-Agent, which is already checked
         return True, None
 
-    if seb_hash_header.lower() != expected_hash.lower():
+    if not hmac.compare_digest(seb_hash_header.lower(), expected_hash.lower()):
         return False, 'Safe Exam Browser configuration mismatch. Please use the exact .seb file provided by your instructor.'
 
     return True, None

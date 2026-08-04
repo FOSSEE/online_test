@@ -370,7 +370,10 @@ def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
                 )
             if created:
                 module.learning_unit.add(unit.id)
-            messages.success(request, "Quiz saved successfully")
+            if added_quiz.is_seb_required and added_quiz.seb_settings:
+                messages.success(request, "Quiz saved successfully. Dynamic SEB configuration generated.")
+            else:
+                messages.success(request, "Quiz saved successfully")
             return redirect(
                 reverse("yaksh:edit_quiz",
                         args=[course_id, module_id, added_quiz.id])
@@ -779,6 +782,11 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None,
     )
     question = get_object_or_404(Question, pk=q_id)
 
+    # Safe Exam Browser Validation
+    seb_valid, seb_msg = check_seb_access(request, paper.question_paper.quiz, module_id, course_id)
+    if not seb_valid:
+        return view_module(request, module_id=module_id, course_id=course_id, msg=seb_msg)
+
     if paper.question_paper.quiz.is_exercise:
         paper.start_time = timezone.now()
         paper.save()
@@ -814,6 +822,12 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         question_paper=questionpaper_id,
         course_id=course_id
     )
+
+    # Safe Exam Browser Validation
+    seb_valid, seb_msg = check_seb_access(request, paper.question_paper.quiz, module_id, course_id)
+    if not seb_valid:
+        return view_module(request, module_id=module_id, course_id=course_id, msg=seb_msg)
+        
     current_question = get_object_or_404(Question, pk=q_id)
     def is_valid_answer(answer):
         status = True
@@ -4270,6 +4284,7 @@ def download_seb_config(request, quiz_id, module_id, course_id):
         'showReloadButton': bool(settings.get('seb_show_reload')),
         'showTime': bool(settings.get('seb_show_time')),
         'showKeyboardLayout': bool(settings.get('seb_show_keyboard')),
+        'hashedQuitPassword': hashlib.sha256(settings.get('seb_quit_password', 'yaksh').encode('utf-8')).hexdigest(),
     }
     
     plist_bytes = plistlib.dumps(config, fmt=plistlib.FMT_XML)

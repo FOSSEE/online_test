@@ -204,6 +204,18 @@ class AnswerValidator(APIView):
         user = request.user
         answerpaper = self.get_answerpaper(answerpaper_id, user)
         question = self.get_question(question_id, answerpaper)
+        
+        # Check SEB for every request during the quiz
+        quiz = answerpaper.question_paper.quiz
+        if quiz.is_seb_required:
+            course_id = answerpaper.course.id if answerpaper.course else 0
+            module = answerpaper.course.learning_module.filter(learning_unit__quiz=quiz).first() if answerpaper.course else None
+            module_id = module.id if module else 0
+            
+            seb_valid, seb_msg = check_seb_access(request, quiz, module_id, course_id)
+            if not seb_valid:
+                return Response({'message': seb_msg}, status=status.HTTP_403_FORBIDDEN)
+                
         try:
             if question.type == 'mcq' or question.type == 'mcc':
                 user_answer = request.data['answer']

@@ -66,10 +66,22 @@
                                         </a>
                                           {% if unit.quiz.is_seb_required and unit.quiz.active %}
                                               {% if unit.quiz.seb_settings %}
+                                              <div class="list-group-item" style="font-size: 0.8em; padding-left: 40px; border-top: 0; background-color: #f8f9fa;">
+                                                  <strong>SEB Instructions:</strong><br>
+                                                  1. Download the config below.<br>
+                                                  2. Double click the `.seb` file to start.<br>
+                                                  3. To exit, click the quit button (password: "yaksh" if prompted).
+                                              </div>
                                               <a href="{% url 'yaksh:download_seb_config' unit.quiz.id module.id course.id %}" class="list-group-item list-group-item-info text-dark" style="font-size: 0.85em; padding-left: 40px; border-top: 0;">
                                                   <i class="fa fa-download"></i> Download SEB Config
                                               </a>
                                               {% elif unit.quiz.seb_config_file %}
+                                              <div class="list-group-item" style="font-size: 0.8em; padding-left: 40px; border-top: 0; background-color: #f8f9fa;">
+                                                  <strong>SEB Instructions:</strong><br>
+                                                  1. Download the config below.<br>
+                                                  2. Double click the `.seb` file to start.<br>
+                                                  3. To exit, click the quit button.
+                                              </div>
                                               <a href="{% url 'yaksh:download_seb_config' unit.quiz.id module.id course.id %}" class="list-group-item list-group-item-info text-dark" style="font-size: 0.85em; padding-left: 40px; border-top: 0;">
                                                   <i class="fa fa-download"></i> Download SEB Config
                                               </a>
