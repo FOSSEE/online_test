@@ -1,12 +1,14 @@
 from yaksh.models import (
     Question, Quiz, QuestionPaper, QuestionSet, AnswerPaper, Course, Answer
 )
+from yaksh.seb_utils import check_seb_access
 from api.serializers import (
     QuestionSerializer, QuizSerializer, QuestionPaperSerializer,
     AnswerPaperSerializer, CourseSerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.urls import reverse
 from rest_framework import status
 from rest_framework import permissions
 from rest_framework.authtoken.models import Token
@@ -59,6 +61,21 @@ class StartQuiz(APIView):
         user = request.user
         quiz = self.get_quiz(quiz_id, user)
         questionpaper = quiz.questionpaper_set.first()
+
+        # Safe Exam Browser Check
+        if quiz.is_seb_required:
+            course = Course.objects.get(id=course_id)
+            module = course.learning_module.filter(learning_unit__quiz=quiz).first()
+            module_id = module.id if module else 0
+            
+            seb_valid, seb_msg = check_seb_access(request, quiz, module_id, course_id)
+            if not seb_valid:
+                seb_file_url = request.build_absolute_uri(reverse('yaksh:download_seb_config', args=[quiz.id, module_id, course_id])) if (quiz.seb_settings or quiz.seb_config_file) else None
+                return Response({
+                    'message': seb_msg,
+                    'requires_seb': True,
+                    'seb_file_url': seb_file_url
+                }, status=status.HTTP_403_FORBIDDEN)
 
         last_attempt = AnswerPaper.objects.get_user_last_attempt(
             questionpaper, user, course_id)
@@ -187,6 +204,18 @@ class AnswerValidator(APIView):
         user = request.user
         answerpaper = self.get_answerpaper(answerpaper_id, user)
         question = self.get_question(question_id, answerpaper)
+        
+        # Check SEB for every request during the quiz
+        quiz = answerpaper.question_paper.quiz
+        if quiz.is_seb_required:
+            course_id = answerpaper.course.id if answerpaper.course else 0
+            module = answerpaper.course.learning_module.filter(learning_unit__quiz=quiz).first() if answerpaper.course else None
+            module_id = module.id if module else 0
+            
+            seb_valid, seb_msg = check_seb_access(request, quiz, module_id, course_id)
+            if not seb_valid:
+                return Response({'message': seb_msg}, status=status.HTTP_403_FORBIDDEN)
+                
         try:
             if question.type == 'mcq' or question.type == 'mcc':
                 user_answer = request.data['answer']

@@ -11,6 +11,8 @@ urlpatterns = [
     url(r'^new_activation/$', views.new_activation, name='new_activation'),
     url(r'^toggle_moderator/$', views.toggle_moderator_role,
         name='toggle_moderator'),
+    url(r'^download_seb_config/(?P<quiz_id>\d+)/(?P<module_id>\d+)/(?P<course_id>\d+)/$',
+        views.download_seb_config, name='download_seb_config'),
     url(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
     url(r'^results/$', views.results_user),
     url(r'^start/(?P<questionpaper_id>\d+)/(?P<module_id>\d+)/'

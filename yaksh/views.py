@@ -1,5 +1,8 @@
 import os
 import csv
+import plistlib
+import hashlib
+from .seb_utils import check_seb_access
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
@@ -62,7 +65,6 @@ from .send_emails import (send_user_mail,
 from .decorators import email_verified, has_profile
 from .tasks import regrade_papers, update_user_marks
 from notifications_plugin.models import Notification
-import hashlib
 
 
 def my_redirect(url):
@@ -368,7 +370,10 @@ def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
                 )
             if created:
                 module.learning_unit.add(unit.id)
-            messages.success(request, "Quiz saved successfully")
+            if added_quiz.is_seb_required and added_quiz.seb_settings:
+                messages.success(request, "Quiz saved successfully. Dynamic SEB configuration generated.")
+            else:
+                messages.success(request, "Quiz saved successfully")
             return redirect(
                 reverse("yaksh:edit_quiz",
                         args=[course_id, module_id, added_quiz.id])
@@ -557,6 +562,11 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     course = Course.objects.get(id=course_id)
     learning_module = course.learning_module.get(id=module_id)
     learning_unit = learning_module.learning_unit.get(quiz=quest_paper.quiz.id)
+
+    # Safe Exam Browser Check
+    seb_valid, seb_msg = check_seb_access(request, quest_paper.quiz, module_id, course_id)
+    if not seb_valid:
+        return view_module(request, module_id=module_id, course_id=course_id, msg=seb_msg)
 
     # unit module active status
     if not learning_module.active:
@@ -772,6 +782,11 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None,
     )
     question = get_object_or_404(Question, pk=q_id)
 
+    # Safe Exam Browser Validation
+    seb_valid, seb_msg = check_seb_access(request, paper.question_paper.quiz, module_id, course_id)
+    if not seb_valid:
+        return view_module(request, module_id=module_id, course_id=course_id, msg=seb_msg)
+
     if paper.question_paper.quiz.is_exercise:
         paper.start_time = timezone.now()
         paper.save()
@@ -807,6 +822,12 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         question_paper=questionpaper_id,
         course_id=course_id
     )
+
+    # Safe Exam Browser Validation
+    seb_valid, seb_msg = check_seb_access(request, paper.question_paper.quiz, module_id, course_id)
+    if not seb_valid:
+        return view_module(request, module_id=module_id, course_id=course_id, msg=seb_msg)
+        
     current_question = get_object_or_404(Question, pk=q_id)
     def is_valid_answer(answer):
         status = True
@@ -3045,8 +3066,13 @@ def get_next_unit(request, course_id, module_id, current_unit_id=None,
                 next_module.id, course.id))
 
     if next_unit.type == "quiz":
-        return my_redirect("/exam/start/{0}/{1}/{2}".format(
-            next_unit.quiz.questionpaper_set.get().id, module_id, course_id))
+        questionpaper = next_unit.quiz.questionpaper_set.first()
+        if questionpaper:
+            return my_redirect("/exam/start/{0}/{1}/{2}".format(
+                questionpaper.id, module_id, course_id))
+        else:
+            msg = "Quiz does not have a Question Paper. Please contact your instructor."
+            return view_module(request, module_id=module_id, course_id=course_id, msg=msg)
     else:
         return my_redirect("/exam/show_lesson/{0}/{1}/{2}".format(
             next_unit.lesson.id, module_id, course_id))
@@ -4233,3 +4259,36 @@ def upload_download_course_md(request, course_id):
             'is_upload_download_md': True,
         }
         return my_render_to_response(request, 'yaksh/course_detail.html', context)
+
+
+@login_required
+def download_seb_config(request, quiz_id, module_id, course_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    
+    questionpaper = quiz.questionpaper_set.first()
+    if not questionpaper:
+        return HttpResponse('Quiz does not have a Question Paper.', status=400)
+    
+    start_url = request.build_absolute_uri(
+        reverse('yaksh:start_quiz', args=[questionpaper.id, module_id, course_id])
+    )
+    
+    settings = quiz.seb_settings or {}
+    
+    config = {
+        'startURL': start_url,
+        'sebMode': 0, 
+        'browserViewMode': 1 if settings.get('seb_use_fullscreen') else 0,
+        'enableZoomPage': bool(settings.get('seb_enable_zoom')),
+        'enableZoomText': bool(settings.get('seb_enable_zoom')),
+        'showReloadButton': bool(settings.get('seb_show_reload')),
+        'showTime': bool(settings.get('seb_show_time')),
+        'showKeyboardLayout': bool(settings.get('seb_show_keyboard')),
+        'hashedQuitPassword': hashlib.sha256(settings.get('seb_quit_password', 'yaksh').encode('utf-8')).hexdigest(),
+    }
+    
+    plist_bytes = plistlib.dumps(config, fmt=plistlib.FMT_XML)
+    
+    response = HttpResponse(plist_bytes, content_type='application/seb')
+    response['Content-Disposition'] = 'attachment; filename="quiz_{0}.seb"'.format(quiz_id)
+    return response
