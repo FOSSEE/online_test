@@ -35,7 +35,7 @@
     "use strict";
 
     var violationCount = 0;
-    var MAX_VIOLATIONS = 3;
+    var maxViolations = 0;
     var config = null;
 
     function showNotification(message, type) {
@@ -59,7 +59,8 @@
         showNotification(
             reason + "<br><strong>Violation " +
             violationCount + " of " +
-            MAX_VIOLATIONS + "</strong>",
+                maxViolations + "</strong>",
+
             "danger"
         );
 
@@ -198,8 +199,18 @@
             };
         })
         .catch(function () {
-            showNotification("Please allow Camera and Microphone.");
-        });
+
+        showNotification(
+            "Camera and/or Microphone permission is required to start the exam.",
+            "danger"
+    );
+
+        alert("Camera and/or Microphone permission is required to start the exam.");
+
+        // Prevent the student from continuing
+        window.location.href = document.referrer || "/exam/quizzes/";
+
+    });
     }
 
     function setupTabSwitchWatch() {
@@ -252,10 +263,11 @@
      */
     function initSafeBrowser(cfg) {
         config = cfg;
+        maxViolations = config.max_violations;
 
         if (!config || !config.safe_browser) {
             return;
-        }
+    }
 
         setupRightClickBlock();
         setupFullscreenWatch();
@@ -263,8 +275,7 @@
         setupTabSwitchWatch();
         setupScreenshotDetection();
         setupCameraAndMic();
-    }
-
+}
     /**
      * Call this directly from the onclick handler of the "Start Quiz"
      * button/link. Because it runs inside the click's call stack, the

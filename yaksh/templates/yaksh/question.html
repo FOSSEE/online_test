@@ -130,6 +130,7 @@ var safeBrowserConfig = {
     enable_microphone: {{ quiz.enable_microphone|yesno:"true,false" }},
     enable_tab_switch: {{ quiz.enable_tab_switch|yesno:"true,false" }},
     enable_screenshot_detection: {{ quiz.enable_screenshot_detection|yesno:"true,false" }},
+    max_violations: {{ quiz.max_violations }},
     paper_id: "{{ paper.id }}",
     attempt_number: {{ paper.attempt_number }},
     questionpaper_id: {{ paper.question_paper.id }},

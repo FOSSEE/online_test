@@ -368,7 +368,7 @@ def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
                 else:
                     order = module.get_unit_order("quiz", quiz)
 
-            added_quiz = form.save(commit=False)
+                added_quiz = form.save(commit=False)
             # Save Exam Mode selected by teacher
             added_quiz.safe_browser = request.POST.get("exam_mode") == "safe"
            
@@ -688,7 +688,10 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
             'attempt_num': attempt_number,
             'course': course,
             'module': learning_module,
-            'is_retry': attempt_number > 1,
+            'is_retry': (
+                last_attempt is not None
+                and last_attempt.terminated_by_safe_browser
+            ),
         }
         if is_moderator(user):
             context["status"] = "moderator"
@@ -1283,20 +1286,44 @@ def course_detail(request, course_id):
 
 @require_POST
 @login_required
+@email_verified
 def report_violation(request):
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"error": "Invalid JSON."},
+            status=400
+    )
 
     attempt_number = data.get("attempt_number")
     questionpaper_id = data.get("questionpaper_id")
     reason = data.get("reason")
-
-    paper = AnswerPaper.objects.get(
-        user=request.user,
-        attempt_number=attempt_number,
-        question_paper_id=questionpaper_id
+    if not attempt_number or not questionpaper_id or not reason:
+        return JsonResponse(
+            {"error": "Missing required fields."},
+            status=400
     )
 
-    paper.violation_count += 1
+    try:
+        paper = AnswerPaper.objects.get(
+            user=request.user,
+            attempt_number=attempt_number,
+            question_paper_id=questionpaper_id
+    )
+    except AnswerPaper.DoesNotExist:
+        return JsonResponse(
+            {"error": "Answer paper not found."},
+            status=404
+    )
+
+    if not paper.question_paper.quiz.safe_browser:
+        return JsonResponse(
+            {"error": "Safe Browser is not enabled for this quiz."},
+            status=400
+    )
+
+    paper.violation_count += 1  
     paper.violation_reason = reason
 
     if paper.violation_count >= paper.question_paper.quiz.max_violations:
@@ -1304,16 +1331,11 @@ def report_violation(request):
         paper.status = "completed"
         paper.end_time = timezone.now()
 
-        print("SAFE BROWSER TERMINATED =", paper.terminated_by_safe_browser)
+
 
     paper.save()
 
-    print(
-        "Saved:",
-        paper.violation_count,
-        paper.terminated_by_safe_browser
-        )
-
+    
     return JsonResponse({
         "count": paper.violation_count,
         "terminated": paper.terminated_by_safe_browser

@@ -15,7 +15,7 @@ from django.contrib.auth import authenticate
 from django.urls import reverse, resolve
 from django.test import TestCase
 from django.test import Client
-from django.http import Http404
+from django.http import Http404, response
 from django.utils import timezone
 from django.core import mail
 from django.conf import settings
@@ -8093,6 +8093,147 @@ class TestStartExam(TestCase):
         })
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+    
+    def test_start_terminated_safe_browser_attempt_does_not_resume(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+    )
+
+        self.question_paper2.fixed_questions.add(self.question1)
+
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module2.learning_unit.get(
+            quiz=self.question_paper2.quiz.id
+    )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        self.question_paper2.quiz.safe_browser = True
+        self.question_paper2.quiz.attempts_allowed = 2
+        self.question_paper2.quiz.save()
+        
+
+        paper = self.question_paper2.make_answerpaper(
+            self.student,
+            "127.0.0.1",
+            1,
+            self.user1_course1.id
+    )
+
+        paper.terminated_by_safe_browser = True
+        paper.save()
+
+        url = reverse(
+            "yaksh:start_quiz",
+            kwargs={
+                "questionpaper_id": self.question_paper2.id,
+                "module_id": self.learning_module2.id,
+                "course_id": self.user1_course1.id
+            }
+        )
+        
+        print(
+            self.question_paper2.can_attempt_now(
+                self.student,
+                self.user1_course1.id
+    )
+)
+
+        response = self.client.post(
+            reverse(
+                "yaksh:start_quiz",
+                kwargs={
+                    "attempt_num": 2,
+                    "module_id": self.learning_module2.id,
+                    "questionpaper_id": self.question_paper2.id,
+                    "course_id": self.user1_course1.id,
+            },
+        ),
+            data={"start": "start"},
+            follow=True,
+)
+
+        
+
+        self.assertEqual(
+            AnswerPaper.objects.filter(
+                question_paper=self.question_paper2,
+                user=self.student
+        ).count(),
+        2
+    )
+    def test_start_inprogress_attempt_still_resumes(self):
+        self.client.login(
+            username=self.student.username,
+            password=self.student_plaintext_pass
+    )
+
+        self.question_paper2.fixed_questions.add(self.question1)
+
+        self.learning_module2.active = True
+        self.learning_module2.check_prerequisite = False
+        self.learning_module2.check_prerequisite_passes = False
+        self.learning_module2.save()
+
+        self.user1_course1.students.add(self.student)
+        self.user1_course1.is_trial = True
+        self.user1_course1.save()
+
+        learning_unit = self.learning_module2.learning_unit.get(
+            quiz=self.question_paper2.quiz.id
+    )
+        learning_unit.check_prerequisite = False
+        learning_unit.save()
+
+        self.question_paper2.quiz.safe_browser = True
+        self.question_paper2.quiz.attempts_allowed = 2
+        self.question_paper2.quiz.save()
+
+        paper = self.question_paper2.make_answerpaper(
+            self.student,
+            "127.0.0.1",
+            1,
+            self.user1_course1.id
+    )
+
+        # Attempt is still running
+        paper.terminated_by_safe_browser = False
+        paper.status = "inprogress"
+        paper.save()
+
+        url = reverse(
+            "yaksh:start_quiz",
+            kwargs={
+                "questionpaper_id": self.question_paper2.id,
+                "module_id": self.learning_module2.id,
+                "course_id": self.user1_course1.id,
+        }
+    )
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+
+        # Should resume existing attempt (no new AnswerPaper)
+        self.assertEqual(
+            AnswerPaper.objects.filter(
+                question_paper=self.question_paper2,
+                user=self.student
+            ).count(),
+            1
+    )
+
+
+
 
     def test_start_allowed_to_start_for_moderator(self):
         self.client.login(
@@ -9000,3 +9141,114 @@ class TestLessonContents(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get('Content-Disposition'),
                          'attachment; filename="sample_lesson_toc.yaml"')
+class TestReportViolation(TestCase):
+
+        def setUp(self):
+            self.client = Client()
+
+            self.password = "demo123"
+
+            self.user = User.objects.create_user(
+                username="student",
+                password=self.password
+        )
+
+            self.course = Course.objects.create(
+                name="Python",
+                enrollment="Enroll Request",
+                creator=self.user
+        )
+
+            self.quiz = Quiz.objects.create(
+                description="Safe Browser Quiz",
+                safe_browser=True,
+                max_violations=3
+        )
+
+            self.question = Question.objects.create(
+                summary="Dummy Question",
+                points=1,
+                type="code",
+                user=self.user
+        )
+
+            self.question_paper = QuestionPaper.objects.create(
+                quiz=self.quiz,
+                total_marks=1
+        )
+
+            self.question_paper.fixed_questions.add(self.question)
+
+            self.answerpaper = AnswerPaper.objects.create(
+                user=self.user,
+                question_paper=self.question_paper,
+                course=self.course,
+                attempt_number=1,
+                start_time=timezone.now(),
+                end_time=timezone.now(),
+                user_ip="127.0.0.1"
+        )
+
+            self.client.login(
+                username="student",
+                password=self.password
+        )
+
+        def test_report_violation_increments_count(self):
+
+            response = self.client.post(
+                reverse("yaksh:report_violation"),
+                data=json.dumps({
+                    "attempt_number": 1,
+                    "questionpaper_id": self.question_paper.id,
+                    "reason": "Tab Switch"
+                }),
+                content_type="application/json"
+        )
+
+            self.answerpaper.refresh_from_db()
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(self.answerpaper.violation_count, 1)
+            self.assertFalse(self.answerpaper.terminated_by_safe_browser)
+
+        def test_report_violation_terminates_at_max_violations(self):
+
+            self.answerpaper.violation_count = 2
+            self.answerpaper.save()
+
+            response = self.client.post(
+                reverse("yaksh:report_violation"),
+                data=json.dumps({
+                    "attempt_number": 1,
+                    "questionpaper_id": self.question_paper.id,
+                    "reason": "Fullscreen Exit"
+                }),
+                content_type="application/json"
+        )
+
+            self.answerpaper.refresh_from_db()
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(self.answerpaper.violation_count, 3)
+            self.assertTrue(self.answerpaper.terminated_by_safe_browser)
+        def test_report_violation_rejects_non_safe_browser_quiz(self):
+
+            self.quiz.safe_browser = False
+            self.quiz.save()
+
+            response = self.client.post(
+                reverse("yaksh:report_violation"),
+                data=json.dumps({
+                    "attempt_number": 1,
+                    "questionpaper_id": self.question_paper.id,
+                    "reason": "Tab Switch"
+            }),
+                content_type="application/json"
+        )
+
+            self.answerpaper.refresh_from_db()
+
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(self.answerpaper.violation_count, 0)
+            self.assertFalse(self.answerpaper.terminated_by_safe_browser)
