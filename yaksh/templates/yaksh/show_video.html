@@ -64,7 +64,28 @@
                                             {% endif %}
                                             {{ unit.quiz.description }}
                                         </a>
-                                    {% endif %}
+					{% if unit.quiz.seb %}
+					{% if unit.quiz.seb.enabled %}
+					<div class="alert alert-warning">
+						<h3>This quiz requires Safe Exam Browser.</h3>
+						<ol>
+							<li>Install Safe Exam Browser.</li>
+							<li>Download the quiz SEB config.</li>
+							<li>Open the config file to start the exam.</li>
+						</ol>
+						<p>
+						<a href="https://safeexambrowser.org/download_en.html" target="_blank"> Download SEB </a>
+						</p>
+						{% if unit.quiz.seb.config_file %}
+						<p>
+						<a href="{% url 'yaksh:download_seb_config' unit.quiz.id %}"> Download Quiz Config</a>
+						</p>
+						{% endif %}
+					</div>
+					{% endif %}
+					{% endif %}
+
+				    {% endif %}
                                 {% else %}
                                     <a href="{% url 'yaksh:show_lesson' unit.lesson.id module.id course.id %}" class="list-group-item">
                                         {% if status == "completed" %}

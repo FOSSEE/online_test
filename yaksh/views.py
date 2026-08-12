@@ -4,7 +4,7 @@ from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, Template, loader
-from django.http import Http404
+from django.http import Http404, FileResponse
 from django.db.models import Max, Q, F
 from django.db import models
 from django.views.decorators.csrf import csrf_exempt
@@ -63,6 +63,8 @@ from .decorators import email_verified, has_profile
 from .tasks import regrade_papers, update_user_marks
 from notifications_plugin.models import Notification
 import hashlib
+from .seb import (is_quiz_without_seb, is_valid_seb_request,
+                  require_seb_for_answerpaper, set_answerpaper_seb_verified)
 
 
 def my_redirect(url):
@@ -354,7 +356,7 @@ def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
 
     context = {}
     if request.method == "POST":
-        form = QuizForm(request.POST, instance=quiz)
+        form = QuizForm(request.POST, request.FILES, instance=quiz)
         if form.is_valid():
             if quiz is None:
                 last_unit = module.get_learning_units().last()
@@ -362,7 +364,9 @@ def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
                 form.instance.creator = user
             else:
                 order = module.get_unit_order("quiz", quiz)
-            added_quiz = form.save()
+            added_quiz = form.save(commit=False)
+            added_quiz.save()
+            form.save_seb(added_quiz)
             unit, created = LearningUnit.objects.get_or_create(
                     type="quiz", quiz=added_quiz, order=order
                 )
@@ -509,6 +513,10 @@ def special_start(request, micromanager_id=None):
         msg = 'Your special attempts are exhausted for {0}'.format(
             quiz.description)
         return quizlist_user(request, msg=msg)
+    if not is_quiz_without_seb(request, quiz):
+        valid, msg = is_valid_seb_request(request, quiz)
+        if not valid:
+            return quizlist_user(request, msg=msg)
 
     last_attempt = AnswerPaper.objects.get_user_last_attempt(
         quest_paper, user, course.id)
@@ -525,6 +533,10 @@ def special_start(request, micromanager_id=None):
     ip = request.META['REMOTE_ADDR']
     new_paper = quest_paper.make_answerpaper(user, ip, attempt_num, course.id,
                                              special=True)
+    valid, msg = set_answerpaper_seb_verified(request, new_paper)
+    if valid is not None:
+        if not valid:
+            return quizlist_user(request, msg=msg)
     micromanager.increment_attempts_utilised()
     return show_question(request, new_paper.current_question(), new_paper,
                          course_id=course.id, module_id=module.id)
@@ -558,6 +570,10 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
     learning_module = course.learning_module.get(id=module_id)
     learning_unit = learning_module.learning_unit.get(quiz=quest_paper.quiz.id)
 
+    if not is_quiz_without_seb(request, quest_paper.quiz):
+        valid, msg = is_valid_seb_request(request, quest_paper.quiz)
+        if not valid:
+            return quizlist_user(request, msg=msg)
     # unit module active status
     if not learning_module.active:
         return view_module(request, module_id, course_id)
@@ -656,6 +672,11 @@ def start(request, questionpaper_id=None, attempt_num=None, course_id=None,
             raise Http404(msg)
         new_paper = quest_paper.make_answerpaper(user, ip, attempt_number,
                                                  course_id)
+        valid, msg = set_answerpaper_seb_verified(request, new_paper)
+        if valid is not None:
+            if not valid:
+                return quizlist_user(request, msg=msg)
+
         if new_paper.status == 'inprogress':
             return show_question(
                 request, new_paper.current_question(),
@@ -678,6 +699,14 @@ def show_question(request, question, paper, error_message=None,
     can_skip = False
     assignment_files = []
     qrcode = []
+    valid, msg = require_seb_for_answerpaper(request, paper)
+    if not valid:
+        return quizlist_user(request, msg=msg)
+    if not is_quiz_without_seb(request, quiz):
+        valid, msg = is_valid_seb_request(request, quiz)
+        if not valid:
+            return quizlist_user(request, msg=msg)
+
     if previous_question:
         delay_time = paper.time_left_on_question(previous_question)
     else:
@@ -770,6 +799,10 @@ def skip(request, q_id, next_q=None, attempt_num=None, questionpaper_id=None,
         AnswerPaper, user=request.user, attempt_number=attempt_num,
         question_paper=questionpaper_id, course_id=course_id
     )
+    valid, msg = require_seb_for_answerpaper(request, paper)
+    if not valid:
+        return quizlist_user(request, msg=msg)
+
     question = get_object_or_404(Question, pk=q_id)
 
     if paper.question_paper.quiz.is_exercise:
@@ -807,6 +840,9 @@ def check(request, q_id, attempt_num=None, questionpaper_id=None,
         question_paper=questionpaper_id,
         course_id=course_id
     )
+    valid, msg = require_seb_for_answerpaper(request, paper)
+    if not valid:
+        return quizlist_user(request, msg=msg)
     current_question = get_object_or_404(Question, pk=q_id)
     def is_valid_answer(answer):
         status = True
@@ -1026,6 +1062,9 @@ def quit(request, reason=None, attempt_num=None, questionpaper_id=None,
                                     attempt_number=attempt_num,
                                     question_paper=questionpaper_id,
                                     course_id=course_id)
+    valid, msg = require_seb_for_answerpaper(request, paper)
+    if not valid:
+        return quizlist_user(request, msg=msg)
     context = {'paper': paper, 'message': reason, 'course_id': course_id,
                'module_id': module_id}
     return my_render_to_response(request, 'yaksh/quit.html', context)
@@ -4233,3 +4272,19 @@ def upload_download_course_md(request, course_id):
             'is_upload_download_md': True,
         }
         return my_render_to_response(request, 'yaksh/course_detail.html', context)
+
+
+@login_required
+@email_verified
+def download_seb_config(request, quiz_id):
+    quiz = get_object_or_404(Quiz, pk=quiz_id)
+    seb = getattr(quiz, 'seb', None)
+
+    if not seb or not seb.enabled:
+        raise Http404('SEB config not available')
+
+    if not seb.config_file:
+        raise Http404('SEB config file not uploaded')
+
+    return FileResponse(seb.config_file.open('rb'), as_attachment=True,
+                        filename=seb.config_file.name.split('/')[-1])
