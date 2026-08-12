@@ -2,7 +2,7 @@ from django import forms
 from yaksh.models import (
     get_model_class, Profile, Quiz, Question, Course, QuestionPaper, Lesson,
     LearningModule, TestCase, languages, question_types, Post, Comment,
-    Topic
+    Topic, SEB
 )
 from grades.models import GradingSystem
 from django.contrib.auth import authenticate
@@ -227,6 +227,14 @@ class QuizForm(forms.ModelForm):
     """Creates a form to add or edit a Quiz.
     It has the related fields and functions required."""
 
+    enabled = forms.BooleanField(required=False,
+                                 label='Require Safe Exam Browser')
+    config_file = forms.FileField(required=False,
+                                  widget=forms.ClearableFileInput,
+                                  label='SEB Config File')
+    config_key = forms.CharField(required=False, max_length=300,
+                                 label='SEB Config Key')
+
     def __init__(self, *args, **kwargs):
         super(QuizForm, self).__init__(*args, **kwargs)
 
@@ -257,6 +265,15 @@ class QuizForm(forms.ModelForm):
         self.fields['pass_criteria'].widget.attrs.update(
             {'class': form_input_class}
         )
+        self.fields['enabled'].widget.attrs.update(
+            {'class': 'form_check_input'}
+        )
+        self.fields['config_file'].widget.attrs.update(
+            {'class': form_input_class}
+        )
+        self.fields['config_key'].widget.attrs.update(
+            {'class': form_input_class}
+        )
 
         self.fields["instructions"].initial = dedent("""\
             <p>
@@ -284,6 +301,32 @@ class QuizForm(forms.ModelForm):
             </li></ul>
             <p>We hope you enjoy taking this exam !!!</p>
         """)
+        if self.instance and self.instance.pk:
+            seb =  getattr(self.instance, 'seb', None)
+
+            if seb:
+                self.fields['enabled'].initial = seb.enabled
+                self.fields['config_file'].initial = seb.config_file
+                self.fields['config_key'].initial = seb.config_key
+
+    def save_seb(self, quiz):
+
+        enabled = self.cleaned_data.get('enabled', False)
+        config_key = self.cleaned_data.get('config_key')
+        uploaded_file = self.cleaned_data.get('config_file')
+        has_seb_data = enabled or config_key or uploaded_file
+        old_seb = getattr(quiz, 'seb', None)
+
+        if has_seb_data:
+            seb, created = SEB.objects.get_or_create(quiz=quiz)
+            seb.enabled = enabled
+            seb.config_key = config_key
+
+            if uploaded_file:
+                seb.config_file = uploaded_file
+                seb.save()
+        elif old_seb:
+            old_seb.delete()
 
     class Meta:
         model = Quiz

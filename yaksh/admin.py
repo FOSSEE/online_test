@@ -2,16 +2,20 @@ from yaksh.models import Question, Quiz, QuestionPaper, Profile
 from yaksh.models import (TestCase, StandardTestCase, StdIOBasedTestCase,
                           Course, AnswerPaper, CourseStatus, LearningModule,
                           Lesson, Post, Comment, Topic, TableOfContents,
-                          LessonQuizAnswer, Answer, AssignmentUpload
+                          LessonQuizAnswer, Answer, AssignmentUpload, SEB
                           )
 from django.contrib import admin
 
 
 class AnswerPaperAdmin(admin.ModelAdmin):
+    list_display = ["id", "user", "status", "seb_verified",]
+
     search_fields = ['user__first_name', 'user__last_name', 'user__username',
-                     "question_paper__quiz__description", "user_ip"]
-    list_filter = ['course__is_trial']
-    readonly_fields = ["course", "question_paper"]
+                     "question_paper__quiz__description", "user_ip",
+                     'seb_config_key',]
+    list_filter = ['course__is_trial', 'status', 'seb_verified',]
+    readonly_fields = ["course", "question_paper", "seb_verified",
+                       "seb_config_key", "seb_user_agent",]
 
     def get_form(self, request, obj=None, **kwargs):
         self.exclude = ("answers", "questions_unanswered",
@@ -45,6 +49,17 @@ class LessonAdmin(admin.ModelAdmin):
 class QuizAdmin(admin.ModelAdmin):
     list_filter = ['active', 'is_trial']
 
+class SEBAdmin(admin.ModelAdmin):
+    list_display = ['quiz', 'enabled', 'config_key',
+                    'created_at', 'updated_at',]
+    search_fields = ['quiz__title', 'config_key',]
+    list_filter = ['enabled',]
+
+class SEBInline(admin.StackedInline):
+    model = SEB
+    extra = 0
+    can_delete = True
+
 
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Question)
@@ -65,3 +80,4 @@ admin.site.register(TableOfContents)
 admin.site.register(LessonQuizAnswer)
 admin.site.register(Answer)
 admin.site.register(AssignmentUpload)
+admin.site.register(SEB)

@@ -2272,6 +2272,12 @@ class AnswerPaper(models.Model):
 
     is_special = models.BooleanField(default=False)
 
+    seb_verified = models.BooleanField(default=False)
+
+    seb_config_key = models.CharField(max_length=300, blank=True)
+
+    seb_user_agent = models.TextField(blank=True)
+
     objects = AnswerPaperManager()
 
     class Meta:
@@ -3385,3 +3391,17 @@ class QRcodeHandler(models.Model):
 
     def can_use(self):
         return self.answerpaper.is_attempt_inprogress()
+
+class SEB(models.Model):
+    quiz = models.OneToOneField("Quiz", on_delete=models.CASCADE,
+                                related_name="seb")
+    enabled = models.BooleanField(default=False)
+    config_file = models.FileField(upload_to="seb_configs/", blank=True,
+                                   null=True)
+    config_key = models.CharField(max_length=300, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'SEB settings for {self.quiz}'
