@@ -15,7 +15,7 @@ celery==4.4.2
 redis==3.4.1
 notifications-plugin==0.1.2
 django-celery-beat==2.0.0
-django-celery-results==1.2.1
+django-celery-results==2.4.0
 djangorestframework==3.11.2
 django-cors-headers==3.1.0
 Pillow
