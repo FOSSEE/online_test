@@ -2,12 +2,12 @@ version: '2'
 services:
   yaksh-django:
     build:
-      context: .
-      dockerfile: Dockerfile_django
+      context: ..
+      dockerfile: docker/Dockerfile_django
     image: yaksh.django
     container_name: yaksh_django
-    volumes:
-      - ../.:/Sites/online_test
+    env_file:
+    - docker.env     
     depends_on:
       - yaksh-db
       - yaksh-codeserver
@@ -18,24 +18,25 @@ services:
       - 8000:80
     restart: always
 
-
   yaksh-codeserver:
     build:
-      context: .
-      dockerfile: Dockerfile_codeserver
+      context: ..
+      dockerfile: docker/Dockerfile_codeserver
     image: yaksh.codeserver
     container_name: yaksh_codeserver
-    volumes:
-      - ..:/Sites/online_test
+    env_file:
+    - docker.env
     restart: always 
-
 
   yaksh-db:
     image: mariadb:10.2
     container_name: yaksh_db
     volumes:
-      - ./mysql:/var/lib/mysql
+      - mysql:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: yaksh
     restart: always 
+
+volumes:
+    mysql:

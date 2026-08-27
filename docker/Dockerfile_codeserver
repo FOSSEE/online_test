@@ -1,20 +1,22 @@
-FROM ubuntu:16.04
+FROM centos:latest
 
 MAINTAINER FOSSEE <pythonsupport@fossee.in>
 
-RUN apt-get update && \
-apt-get install git python3-pip libmysqlclient-dev sudo default-jre default-jdk -y 
+RUN yum update -y && \
+yum install git python3-pip mariadb-devel sudo java-1.8.0-openjdk java-1.8.0-openjdk-devel gcc make python3-devel -y
 
-VOLUME /Sites/online_test
+RUN mkdir -p /Sites/online_test
 
-ADD Files/requirements-* /tmp/
+COPY . /Sites/online_test
 
-RUN pip3 install -r /tmp/requirements-codeserver.txt && mkdir -p /Sites/online_test/yaksh_data/output /Sites/online_test/yaksh_data/data
+RUN pip3 install -r /Sites/online_test/requirements/requirements-codeserver.txt
+
+COPY docker/Files/Start-codeserver.sh /Sites
 
 WORKDIR /Sites/online_test
 
-ADD Files/Start-codeserver.sh /Sites
+RUN mkdir -p yaksh_data/output yaksh_data/data 
 
-EXPOSE 53579
+EXPOSE 55555
 
 CMD [ "/bin/bash" , "/Sites/Start-codeserver.sh" ]
