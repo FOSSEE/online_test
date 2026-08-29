@@ -1,4 +1,6 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 MAINTAINER FOSSEE <pythonsupport@fossee.in>
 
@@ -10,7 +12,7 @@ VOLUME /Sites/online_test
 
 ADD Files/requirements-* /tmp/
 
-RUN cd /Sites/online_test && pip3 install -r /tmp/requirements-py3.txt 
+RUN cd /Sites/online_test && pip3 install -r /tmp/requirements-common.txt && pip3 install -r /tmp/requirements-production.txt 
 
 ADD Files/000-default.conf /etc/apache2/sites-enabled/
 
