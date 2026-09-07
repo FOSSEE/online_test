@@ -37,7 +37,7 @@ class JavaStdIOEvaluator(StdIOEvaluator):
         return output_path
 
     def get_commands(self):
-        compile_command = 'javac {0}'.format(self.submit_code_path)
+        compile_command = ['javac', self.submit_code_path]
         return compile_command
 
     def compile_code(self):
@@ -66,8 +66,8 @@ class JavaStdIOEvaluator(StdIOEvaluator):
         proc, stdnt_out, stdnt_stderr = self.compiled_user_answer
         stdnt_stderr = self._remove_null_substitute_char(stdnt_stderr)
         if stdnt_stderr == '' or "error" not in stdnt_stderr:
-            proc = subprocess.Popen("java Test",
-                                    shell=True,
+            proc = subprocess.Popen(["java", "Test"],
+                                    shell=False,
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
