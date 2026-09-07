@@ -2753,3 +2753,52 @@ class QRcodeTestCase(unittest.TestCase):
 
         # Then
         self.assertFalse(can_use)
+
+
+class CalculatePercentageZeroWeightageTestCase(unittest.TestCase):
+    def setUp(self):
+        user = User.objects.get(username='creator')
+        self.course = Course.objects.create(name="Test Course", creator=user,
+                                            enrollment="Enroll Request")
+        self.module = LearningModule.objects.create(name='M1', creator=user,
+                                                    description='module one')
+        self.quiz = Quiz.objects.create(time_between_attempts=0, weightage=0,
+                                         description='Test quiz')
+        question = Question.objects.first()
+        self.qpaper = QuestionPaper.objects.create(quiz=self.quiz)
+        self.qpaper.fixed_questions.add(question)
+        self.qpaper.update_total_marks()
+        self.qpaper.save()
+        self.unit_1_quiz = LearningUnit.objects.create(order=1, type='quiz',
+                                                       quiz=self.quiz)
+        self.module.learning_unit.add(self.unit_1_quiz)
+        self.module.save()
+        self.course.learning_module.add(self.module)
+        student = User.objects.get(username='course_user')
+        self.course.students.add(student)
+        self.course.save()
+        attempt = 1
+        ip = '127.0.0.1'
+        self.answerpaper = self.qpaper.make_answerpaper(student, ip, attempt,
+                                                        self.course.id)
+        self.course_status = CourseStatus.objects.create(course=self.course,
+                                                         user=student)
+
+    def tearDown(self):
+        self.course_status.delete()
+        self.answerpaper.delete()
+        self.qpaper.delete()
+        self.quiz.delete()
+        self.unit_1_quiz.delete()
+        self.module.delete()
+        self.course.delete()
+
+    def test_calculate_percentage_zero_weightage(self):
+        # Given
+        self.answerpaper.update_marks()
+
+        # When
+        self.course_status.calculate_percentage()
+
+        # Then
+        self.assertEqual(self.course_status.percentage, 0)

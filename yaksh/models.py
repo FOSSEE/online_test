@@ -1262,14 +1262,20 @@ class CourseStatus(models.Model):
         quizzes = self.course.get_quizzes()
         if self.is_course_complete() and quizzes:
             total_weightage = 0
-            sum = 0
+            total_marks = 0
             for quiz in quizzes:
-                total_weightage += quiz.weightage
+                question_paper = quiz.questionpaper_set.first()
+                if question_paper is None or not question_paper.total_marks:
+                    continue
+                out_of = question_paper.total_marks
                 marks = AnswerPaper.objects.get_user_best_of_attempts_marks(
                         quiz, self.user.id, self.course.id)
-                out_of = quiz.questionpaper_set.first().total_marks
-                sum += (marks/out_of)*quiz.weightage
-            self.percentage = (sum/total_weightage)*100
+                total_weightage += quiz.weightage
+                total_marks += (marks/out_of)*quiz.weightage
+            if total_weightage:
+                self.percentage = (total_marks/total_weightage)*100
+            else:
+                self.percentage = 0
             self.save()
 
     def is_course_complete(self):
