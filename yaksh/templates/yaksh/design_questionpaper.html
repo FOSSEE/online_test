@@ -281,6 +281,14 @@
                 </label> <br><br>
                 <input class="btn btn-success btn-lg" type="submit" name="save" id="save" value="Save">
                 <br>
+                {% if module_id %}
+                    <br>
+                    <a href="{% url 'yaksh:edit_quiz' course_id module_id qpaper.quiz.id %}#seb_setup"
+                       class="btn btn-outline-primary" id="seb_settings">
+                        <i class="fa fa-lock">&nbsp Set Up Exam Browser </i>
+                    </a>
+                    <br>
+                {% endif %}
                 <div class="pull-left">
                     <a class="btn btn-info" id="finish-prev">&lt; Previous</a>
                 </div>

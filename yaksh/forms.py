@@ -11,6 +11,7 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.conf import settings
 from django.utils import timezone
 from django.template.defaultfilters import filesizeformat
+from django.core.files.uploadedfile import UploadedFile
 from textwrap import dedent
 try:
     from string import letters
@@ -236,6 +237,8 @@ class QuizForm(forms.ModelForm):
     config_key = forms.CharField(required=False, max_length=300,
                                  label='SEB Config Key')
 
+    SEB_FIELDS = ('enabled', 'config_file' , 'config_key')
+
     def __init__(self, *args, **kwargs):
         super(QuizForm, self).__init__(*args, **kwargs)
 
@@ -303,31 +306,67 @@ class QuizForm(forms.ModelForm):
             <p>We hope you enjoy taking this exam !!!</p>
         """)
         if self.instance and self.instance.pk:
-            seb =  getattr(self.instance, 'seb', None)
+            seb = getattr(self.instance, 'seb', None)
 
             if seb:
                 self.fields['enabled'].initial = seb.enabled
-                self.fields['config_file'].initial = seb.config_file
+                if seb.config_file:
+                    self.fields['config_file'].initial = seb.config_file
                 self.fields['config_key'].initial = seb.config_key
+
+        self.has_question_paper = bool(self.instance and self.instance.pk and
+            self.instance.questionpaper_set.exists())
+
+        if not self.has_question_paper:
+            for name in self.SEB_FIELDS:
+                self.fields[name].disabled = True
+
+    def quiz_fields(self):
+        return [field for field in self if field.name not in self.SEB_FIELDS]
+
+    def seb_fields(self):
+        return [self[name] for name in self.SEB_FIELDS]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not self.has_question_paper:
+            return cleaned_data
+        if cleaned_data.get('enabled'):
+            if not(cleaned_data.get('config_key') or '').strip():
+                self.add_error(
+                    'config_key',
+                    'Enter the Config Key for Safe Exam Browser.'
+                )
+            if not cleaned_data.get('config_file'):
+                self.add_error(
+                    'config_file',
+                    'Upload the .seb config file for Safe Exam.'
+                )
+        return cleaned_data
+
 
     def save_seb(self, quiz):
 
         enabled = self.cleaned_data.get('enabled', False)
-        config_key = self.cleaned_data.get('config_key')
+        config_key = (self.cleaned_data.get('config_key') or '').strip()
         uploaded_file = self.cleaned_data.get('config_file')
         has_seb_data = enabled or config_key or uploaded_file
-        old_seb = getattr(quiz, 'seb', None)
+        seb = getattr(quiz, 'seb', None)
 
-        if has_seb_data:
+        if not has_seb_data:
+            if seb:
+                seb.delete()
+            return
+
+        if seb is None:
             seb, created = SEB.objects.get_or_create(quiz=quiz)
-            seb.enabled = enabled
-            seb.config_key = config_key
-
-            if uploaded_file:
-                seb.config_file = uploaded_file
-                seb.save()
-        elif old_seb:
-            old_seb.delete()
+        seb.enabled = enabled
+        seb.config_key = config_key
+        if uploaded_file is False:
+            seb.config_file = None
+        elif isinstance(uploaded_file, UploadedFile):
+            seb.config_file = uploaded_file
+        seb.save()
 
     class Meta:
         model = Quiz
