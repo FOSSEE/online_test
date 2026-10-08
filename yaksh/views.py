@@ -124,6 +124,19 @@ def formfield_callback(field):
     return field.formfield()
 
 
+def get_seb_start_url(request, quiz, course_id, module_id):
+    """Absolute start URL of the quiz, for the SEB config.
+    None if quiz is not first saved and has a question paper"""
+    if not (quiz and course_id and module_id ):
+        return None
+    question_paper = quiz.questionpaper_set.first()
+    if question_paper is None:
+        return None
+    return request.build_absolute_uri(reverse("yaksh:start_quiz",
+        kwargs={"questionpaper_id": question_paper.id, "module_id": module_id,
+                "course_id": course_id}))
+
+
 @email_verified
 def index(request, next_url=None):
     """The start page.
@@ -382,6 +395,8 @@ def add_quiz(request, course_id=None, module_id=None, quiz_id=None):
     context["course_id"] = course_id
     context["quiz"] = quiz
     context["form"] = form
+    context["seb_start_url"] = get_seb_start_url(request, quiz, course_id,
+                                                 module_id)
     return my_render_to_response(request, 'yaksh/add_quiz.html', context)
 
 
@@ -1648,6 +1663,8 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
     question_paper.save()
     random_sets = question_paper.random_questions.all()
     fixed_questions = question_paper.get_ordered_questions()
+    module = course.learning_module.filter(learning_unit__quiz_id=quiz_id).first()
+    module_id = module.id if module else None
     context = {
         'qpaper_form': qpaper_form,
         'filter_form': filter_form,
@@ -1657,7 +1674,8 @@ def design_questionpaper(request, course_id, quiz_id, questionpaper_id=None):
         'state': state,
         'random_sets': random_sets,
         'course_id': course_id,
-        'all_tags': all_tags
+        'all_tags': all_tags,
+        'module_id': module_id,
     }
     return my_render_to_response(
         request, 'yaksh/design_questionpaper.html', context

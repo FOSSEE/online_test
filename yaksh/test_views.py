@@ -31,7 +31,7 @@ from yaksh.models import (
     AssignmentUpload, McqTestCase, IntegerTestCase, StringTestCase,
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
     LessonFile, CourseStatus, dict_to_yaml, Post, Comment, Topic,
-    TableOfContents, LessonQuizAnswer
+    TableOfContents, LessonQuizAnswer, SEB
 )
 from yaksh.views import add_as_moderator, course_forum, post_comments
 from yaksh.forms import PostForm, CommentForm
@@ -9079,3 +9079,176 @@ class TestSocialPasswordReset(TestCase):
         # Then
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(mail.outbox), 0)
+
+
+class TestQuizSEBSettings(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.mod_group = Group.objects.create(name='moderator')
+        tzone = pytz.timezone('UTC')
+        self.user_plaintext_pass = 'demo'
+        self.user = User.objects.create_user(
+            username='seb_moderator', password=self.user_plaintext_pass,
+            first_name='first_name', last_name='last_name',
+            email='seb_moderator@test.com'
+        )
+        Profile.objects.create(
+            user=self.user, roll_number=10, institute='IIT',
+            department='Chemical', position='Moderator', timezone='UTC',
+            is_moderator=True
+        )
+        self.mod_group.user_set.add(self.user)
+
+        self.course = Course.objects.create(
+            name="SEB Course", enrollment="Enroll Request", creator=self.user
+        )
+        self.module = LearningModule.objects.create(
+            name="SEB module", creator=self.user, description="Test"
+        )
+        self.course.learning_module.add(self.module)
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2025, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2099, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='seb quiz', pass_criteria=40, creator=self.user
+        )
+        unit = LearningUnit.objects.create(
+            type="quiz", quiz=self.quiz, order=1)
+        self.module.learning_unit.add(unit.id)
+
+        self.url = reverse('yaksh:edit_quiz', kwargs={
+            'course_id': self.course.id, 'module_id': self.module.id,
+            'quiz_id': self.quiz.id
+        })
+        self.client.login(
+            username=self.user.username, password=self.user_plaintext_pass
+        )
+
+    def tearDown(self):
+        seb = SEB.objects.filter(quiz=self.quiz).first()
+        if seb and seb.config_file:
+            seb.config_file.delete(save=False)
+        self.client.logout()
+        self.quiz.delete()
+        self.course.delete()
+        self.module.delete()
+        self.user.delete()
+        self.mod_group.delete()
+
+    def _quiz_data(self, **seb_data):
+        data = {
+            'start_date_time': '2026-01-10 09:00:15',
+            'end_date_time': '2099-01-15 09:00:15',
+            'duration': 30, 'active': True, 'attempts_allowed': -1,
+            'time_between_attempts': 0, 'description': 'seb quiz',
+            'pass_criteria': 40, 'instructions': "Demo Instructions",
+            'weightage': 1.0
+        }
+        data.update(seb_data)
+        return data
+
+    def _seb_file(self):
+        return SimpleUploadedFile('exam.seb', b'<plist></plist>',
+                                  content_type='application/octet-stream')
+
+
+    def test_seb_disabled_until_question_paper_exists(self):
+        # When
+        response = self.client.get(self.url)
+        form = response.context['form']
+
+        # Then
+        self.assertIsNone(response.context['seb_start_url'])
+        self.assertTrue(form.fields['enabled'].disabled)
+        self.assertTrue(form.fields['config_file'].disabled)
+        self.assertTrue(form.fields['config_key'].disabled)
+        self.assertContains(response, 'Create the question paper first')
+        self.assertContains(response, reverse(
+            'yaksh:designquestionpaper', kwargs={
+                'course_id': self.course.id, 'quiz_id': self.quiz.id
+            }))
+
+
+    def test_seb_ignored_on_post_without_question_paper(self):
+        # When
+        self.client.post(self.url, data=self._quiz_data(
+            enabled='on', config_key='abc', config_file=self._seb_file()
+        ))
+
+        # Then
+        self.assertFalse(SEB.objects.filter(quiz=self.quiz).exists())
+
+    def test_start_url_shown_once_question_paper_exists(self):
+        # When
+        question_paper = QuestionPaper.objects.create(quiz=self.quiz)
+        response = self.client.get(self.url)
+        expected = 'http://testserver' + reverse('yaksh:start_quiz', kwargs={
+                'questionpaper_id': question_paper.id,
+                'module_id': self.module.id, 'course_id': self.course.id
+            })
+        # Then
+        self.assertEqual(response.context['seb_start_url'], expected)
+        self.assertContains(response, expected)
+        self.assertFalse(response.context['form'].fields['enabled'].disabled)
+
+    def test_enable_seb_with_file_and_key(self):
+        # When
+        QuestionPaper.objects.create(quiz=self.quiz)
+        self.client.post(self.url, data=self._quiz_data(
+            enabled='on', config_key='abc123', config_file=self._seb_file()
+        ))
+        seb = SEB.objects.get(quiz=self.quiz)
+
+        # Then
+        self.assertTrue(seb.enabled)
+        self.assertTrue(seb.config_file)
+        self.assertEqual(seb.config_key, 'abc123')
+
+    def test_enable_seb_requires_file_and_key(self):
+        # When
+        QuestionPaper.objects.create(quiz=self.quiz)
+        response = self.client.post(self.url, data=self._quiz_data(enabled='on'))
+
+        # Then
+        self.assertEqual(response.status_code, 200)
+
+        # When
+        form = response.context['form']
+        self.assertIn('config_key', form.errors)
+        self.assertIn('config_file', form.errors)
+        self.assertFalse(SEB.objects.filter(quiz=self.quiz).exists())
+
+    def test_disable_seb_without_new_file_is_saved(self):
+        """
+        Changing SEB settings without uploading a new file must still be
+        saved, and the existing file kept
+        """
+        # When
+        QuestionPaper.objects.create(quiz=self.quiz)
+        self.client.post(self.url, data=self._quiz_data(
+            enabled='on', config_key='abc123', config_file=self._seb_file()
+        ))
+        self.client.post(self.url, data=self._quiz_data(
+            config_key='xyz789'
+        ))
+        seb = SEB.objects.get(quiz=self.quiz)
+
+        # Then
+        self.assertFalse(seb.enabled)
+        self.assertEqual(seb.config_key, 'xyz789')
+        self.assertTrue(seb.config_file)
+
+    def test_question_paper_page_links_to_seb_settings(self):
+        # When
+        question_paper = QuestionPaper.objects.create(quiz=self.quiz)
+        response = self.client.get(reverse('yaksh:designquestionpaper',
+            kwargs={'course_id': self.course.id, 'quiz_id': self.quiz.id,
+                    'questionpaper_id': question_paper.id
+            }
+        ))
+        # Then
+        self.assertEqual(response.context['module_id'], self.module.id)
+        self.assertContains(response, self.url + '#seb_setup')
+
+
