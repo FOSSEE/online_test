@@ -183,6 +183,11 @@ function autosubmit()
 }
 
 $(document).ready(() => {
+    $("#id_negative_marks").closest("tr").hide()
+    let qtype = $("#id_type").val();
+    if (qtype === "mcq" || qtype === "mcc") {
+        $("#id_negative_marks").closest("tr").show()
+    }
     let option = $('#id_language').val();
     if(option === 'other') {
         $('#id_topic').closest('tr').show();
@@ -210,5 +215,10 @@ $(document).ready(() => {
         } else {
             $('#id_language').children("option[value='other']").show();
         }
-    })
+        if (value === "mcq" || value === "mcc") {
+            $("#id_negative_marks").closest("tr").show()
+        } else {
+            $("#id_negative_marks").closest("tr").hide()
+        }
+    });
 });
