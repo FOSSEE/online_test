@@ -8,6 +8,7 @@ from django.http import Http404, FileResponse
 from django.db.models import Max, Q, F
 from django.db import models
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
@@ -28,6 +29,8 @@ import zipfile
 import markdown
 import ruamel
 import pandas as pd
+from uuid import uuid4
+import requests
 try:
     from StringIO import StringIO as string_io
 except ImportError:
@@ -36,6 +39,7 @@ import re
 # Local imports.
 from online_test.celery_settings import app
 from yaksh.code_server import get_result as get_result_from_code_server
+from yaksh.code_server import submit as submit_to_code_server
 from yaksh.models import (
     Answer, AnswerPaper, AssignmentUpload, Course, FileUpload, FloatTestCase,
     HookTestCase, IntegerTestCase, McqTestCase, Profile,
@@ -1066,6 +1070,76 @@ def _update_paper(request, uid, result):
     paper.update_marks('inprogress')
     paper.set_end_time(timezone.now())
     return next_question, error_message, paper
+
+
+RUN_UID_PREFIX = 'run'
+
+
+def _run_uid(paper):
+    return '{0}-{1}-{2}'.format(RUN_UID_PREFIX, paper.id, uuid4().hex)
+
+
+def _paper_id_from_run_uid(uid):
+    parts = uid.split("-")
+    if len(parts) != 3 or parts[0] != RUN_UID_PREFIX or not parts[1].isdigit():
+        return None
+    return int(parts[1])
+
+
+@login_required
+@email_verified
+@require_POST
+def run_code(request, q_id, attempt_num, module_id, questionpaper_id,
+             course_id):
+    paper = get_object_or_404(
+        AnswerPaper, user=request.user, attempt_number=attempt_num,
+        question_paper=questionpaper_id, course_id=course_id
+    )
+    valid, msg = require_seb_for_answerpaper(request, paper)
+    if not valid:
+        return JsonResponse({'status': 'error', 'message': msg}, status=403)
+    if paper.status != 'inprogress' or (
+            paper.time_left() <=0 and not paper.question_paper.quiz.is_exercise):
+        msg = 'The attempt is over'
+        return JsonResponse({'status': 'error', 'message': msg}, status=403)
+    question = get_object_or_404(paper.questions, pk=q_id)
+    if question.type != 'code' or question.language != 'python':
+        msg = 'Run is available only for Python code questions'
+        return JsonResponse({'status': 'error', 'message': msg}, status=400)
+
+    user_answer = request.POST.get('answer', '')
+    data = json.loads(question.consolidate_answer_data(user_answer,
+                                                       request.user))
+    data['test_case_data'] = []
+    stdin = request.POST.get('stdin', '')
+    data['metadata'].update(run_only=True, stdin=stdin)
+    uid = _run_uid(paper)
+    url = '{0}:{1}'.format(SERVER_HOST_NAME, SERVER_POOL_PORT)
+    try:
+        submit_to_code_server(url, uid, json.dumps(data),
+                              request.user.profile.get_user_dir())
+    except requests.exceptions.RequestException:
+        msg = 'Could not reach the server, try again later.'
+        return JsonResponse({'status': 'error', 'message': msg,}, status=503)
+    return JsonResponse({'status': 'running', 'uid': uid})
+
+
+@login_required
+def get_run_result(request, uid):
+    paper_id = _paper_id_from_run_uid(uid)
+    if paper_id is None or not AnswerPaper.objects.filter(
+            id=paper_id, user=request.user).exists():
+        raise Http404('No such run')
+    url = '{0}:{1}'.format(SERVER_HOST_NAME, SERVER_POOL_PORT)
+    try:
+        state = get_result_from_code_server(url, uid)
+    except requests.exceptions.RequestException:
+        msg = 'Could not reach the server, try again later.'
+        return JsonResponse({'status': 'error', 'message': msg}, status=503)
+    response = {'status': state.get('status')}
+    if response['status'] == 'done':
+        response.update(json.loads(state.get('result')))
+    return JsonResponse(response)
 
 
 @login_required

@@ -12,6 +12,10 @@ import traceback
 from .settings import SERVER_TIMEOUT
 from .language_registry import create_evaluator_instance
 from .error_messages import prettify_exceptions
+from .python_code_runner import PythonCodeRunner
+
+# Languages whose code can be run without grading, and get the output.
+CODE_RUNNERS = {'python': PythonCodeRunner}
 
 MY_DIR = abspath(dirname(__file__))
 registry = None
@@ -95,7 +99,13 @@ class Grader(object):
         -------
 
         A tuple: (success, error, weight).
+
+        If metadata has ``run_only`` set, the code is run once without test
+        cases and the result of ``run`` is returned instead
         """
+        metadata = kwargs.get('metadata') or {}
+        if metadata.get('run_only'):
+            return self.run(metadata)
         self.setup()
         test_case_instances = self.get_evaluator_objects(kwargs)
         with change_dir(self.in_dir):
@@ -104,6 +114,19 @@ class Grader(object):
 
         result = {'success': success, 'error': error, 'weight': weight}
         return result
+
+    def run(self, metadata):
+        language = metadata.get('language')
+        runner_class = CODE_RUNNERS.get(language)
+        if runner_class is None:
+            return {
+                'output': '', 'exitcode': None, 'timed_out': False,
+                'truncated': False, 'error_line': None,
+                'hint': 'Run is not available for {0} code'.format(language)
+            }
+        self.setup()
+        with change_dir(self.in_dir):
+            return runner_class(metadata).run()
 
     # Private Protocol ##########
     def setup(self):

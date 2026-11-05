@@ -9,6 +9,8 @@ except ImportError:
     from io import BytesIO as string_io
 import zipfile
 import shutil
+import requests
+from unittest.mock import patch
 from markdown import Markdown
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
@@ -1384,6 +1386,239 @@ class TestAddQuiz(TestCase):
         self.assertEqual(new_exercise.description, 'Demo Exercise')
         self.assertEqual(new_exercise.pass_criteria, 0)
         self.assertTrue(new_exercise.is_exercise)
+
+
+class TestRunCode(TestCase):
+    def setUp(self):
+        self.client = Client()
+        tzone = pytz.timezone('UTC')
+        self.teacher = User.objects.create_user(
+            username='run_teacher', password='demo',
+            email='run_teacher@test.com'
+        )
+        Profile.objects.create(
+            user=self.teacher, roll_number=1, institute='IIT',
+            department='CS', position='Faculty', timezone='UTC',
+            is_moderator=True, is_email_verified=True
+        )
+        self.student_pass = 'demo_student'
+        self.student = User.objects.create_user(
+            username='run_student', password=self.student_pass,
+            email='run_student@test.com'
+        )
+        Profile.objects.create(
+            user=self.student, roll_number=2, institute='IIT',
+            department='CS', position='Student', timezone='UTC',
+            is_email_verified=True
+        )
+        self.other_student = User.objects.create_user(
+            username='run_other', password=self.student_pass,
+            email='run_other@test.com'
+        )
+        Profile.objects.create(
+            user=self.other_student, roll_number=3, institute='IIT',
+            department='CS', position='Student', timezone='UTC',
+            is_email_verified=True
+        )
+        self.course = Course.objects.create(
+            name="Run Course", enrollment="Open Enrollment",
+            creator=self.teacher
+        )
+        self.quiz = Quiz.objects.create(
+            start_date_time=datetime(2014, 10, 9, 10, 8, 15, 0, tzone),
+            end_date_time=datetime(2199, 10, 9, 10, 8, 15, 0, tzone),
+            duration=30, active=True, instructions="Demo Instructions",
+            attempts_allowed=-1, time_between_attempts=0,
+            description='run quiz', pass_criteria=40, creator=self.teacher
+        )
+        self.module = LearningModule.objects.create(
+            order=1, name="run module", description="test",
+            creator=self.teacher, check_prerequisite=False
+        )
+        unit = LearningUnit.objects.create(order=1, type="quiz",
+                                           quiz=self.quiz)
+        self.module.learning_unit.add(unit.id)
+        self.course.learning_module.add(self.module)
+        self.course.students.add(self.student)
+
+        self.question = Question.objects.create(
+            summary="Add", description="Add two numbers", points=1.0,
+            language="python", type="code", user=self.teacher
+        )
+        self.c_question = Question.objects.create(
+            summary="Add in C", description="Add two numbers", points=1.0,
+            language="c", type="code", user=self.teacher
+        )
+        self.question_paper = QuestionPaper.objects.create(
+            quiz=self.quiz, total_marks=2.0,
+            fixed_question_order='{0},{1}'.format(self.question.id,
+                                                  self.c_question.id)
+        )
+        self.question_paper.fixed_questions.add(self.question,
+                                                self.c_question)
+        self.paper = self.question_paper.make_answerpaper(
+            self.student, '127.0.0.1', 1, self.course.id
+        )
+        self.client.login(username=self.student.username,
+                          password=self.student_pass)
+
+    def tearDown(self):
+        self.client.logout()
+        self.course.delete()
+        self.quiz.delete()
+        self.question.delete()
+        self.c_question.delete()
+        self.module.delete()
+        for user in (self.teacher, self.student, self.other_student):
+            user.delete()
+
+    def _run_url(self, question=None, paper=None):
+        question = question or self.question
+        paper = paper or self.paper
+        return reverse('yaksh:run_code', kwargs={
+            'q_id': question.id, 'attempt_num': paper.attempt_number,
+            'module_id': self.module.id,
+            'questionpaper_id': self.question_paper.id,
+            'course_id': self.course.id
+        })
+
+    def test_run_submits_code_without_test_cases(self):
+        answers_before = Answer.objects.count()
+        with patch('yaksh.views.submit_to_code_server') as submit:
+            response = self.client.post(self._run_url(), data={
+                'answer': "print('hello')", 'stdin': '5\n'
+            })
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'running')
+        self.assertTrue(data['uid'].startswith(
+            'run-{0}-'.format(self.paper.id)))
+
+        url, uid, json_data, user_dir = submit.call_args[0]
+        self.assertEqual(uid, data['uid'])
+        sent = json.loads(json_data)
+        self.assertEqual(sent['test_case_data'], [])
+        self.assertTrue(sent['metadata']['run_only'])
+        self.assertEqual(sent['metadata']['user_answer'], "print('hello')")
+        self.assertEqual(sent['metadata']['stdin'], '5\n')
+        self.assertEqual(sent['metadata']['language'], 'python')
+        # Nothing is recorded
+        self.assertEqual(Answer.objects.count(), answers_before)
+
+    def test_run_requires_post(self):
+        response = self.client.get(self._run_url())
+        self.assertEqual(response.status_code, 405)
+
+    def test_run_rejects_non_python_question(self):
+        with patch('yaksh.views.submit_to_code_server') as submit:
+            response = self.client.post(self._run_url(self.c_question),
+                                        data={'answer': 'int main(){}'})
+        self.assertEqual(response.status_code, 400)
+        submit.assert_not_called()
+
+    def test_run_rejects_question_not_in_paper(self):
+        other = Question.objects.create(
+            summary="Other", description="Not in paper", points=1.0,
+            language="python", type="code", user=self.teacher
+        )
+        with patch('yaksh.views.submit_to_code_server') as submit:
+            response = self.client.post(self._run_url(other),
+                                        data={'answer': "print(1)"})
+        self.assertEqual(response.status_code, 404)
+        submit.assert_not_called()
+        other.delete()
+
+    def test_run_rejects_finished_attempt(self):
+        self.paper.status = 'completed'
+        self.paper.save()
+        with patch('yaksh.views.submit_to_code_server') as submit:
+            response = self.client.post(self._run_url(),
+                                        data={'answer': "print(1)"})
+        self.assertEqual(response.status_code, 403)
+        submit.assert_not_called()
+
+    def test_run_rejects_other_users_paper(self):
+        self.client.logout()
+        self.client.login(username=self.other_student.username,
+                          password=self.student_pass)
+        with patch('yaksh.views.submit_to_code_server') as submit:
+            response = self.client.post(self._run_url(),
+                                        data={'answer': "print(1)"})
+        self.assertEqual(response.status_code, 404)
+        submit.assert_not_called()
+
+    def test_run_reports_unreachable_code_server(self):
+        with patch('yaksh.views.submit_to_code_server',
+                   side_effect=requests.exceptions.ConnectionError):
+            response = self.client.post(self._run_url(),
+                                        data={'answer': "print(1)"})
+        self.assertEqual(response.status_code, 503)
+        self.assertIn('not reach', response.json()['message'])
+
+    def test_get_run_result_returns_output_when_done(self):
+        uid = 'run-{0}-abc123'.format(self.paper.id)
+        result = {'output': 'hello\n', 'exit_code': 0, 'timed_out': False,
+                  'truncated': False, 'error_line': None, 'hint': None}
+        with patch('yaksh.views.get_result_from_code_server',
+                   return_value={'status': 'done',
+                                 'result': json.dumps(result)}) as get:
+            response = self.client.get(
+                reverse('yaksh:get_run_result', kwargs={'uid': uid}))
+        self.assertEqual(get.call_args[0][1], uid)
+        data = response.json()
+        self.assertEqual(data['status'], 'done')
+        self.assertEqual(data['output'], 'hello\n')
+        self.assertEqual(data['exit_code'], 0)
+
+    def test_get_run_result_while_running(self):
+        uid = 'run-{0}-abc123'.format(self.paper.id)
+        with patch('yaksh.views.get_result_from_code_server',
+                   return_value={'status': 'running'}):
+            response = self.client.get(
+                reverse('yaksh:get_run_result', kwargs={'uid': uid}))
+        self.assertEqual(response.json(), {'status': 'running'})
+
+    def test_get_run_result_only_for_paper_owner(self):
+        uid = 'run-{0}-abc123'.format(self.paper.id)
+        self.client.logout()
+        self.client.login(username=self.other_student.username,
+                          password=self.student_pass)
+        with patch('yaksh.views.get_result_from_code_server') as get:
+            response = self.client.get(
+                reverse('yaksh:get_run_result', kwargs={'uid': uid}))
+        self.assertEqual(response.status_code, 404)
+        get.assert_not_called()
+
+    def test_get_run_result_rejects_other_uids(self):
+        for uid in ('123', 'run-abc-def', 'grade-1-abc'):
+            with patch('yaksh.views.get_result_from_code_server') as get:
+                response = self.client.get(
+                    reverse('yaksh:get_run_result', kwargs={'uid': uid}))
+            self.assertEqual(response.status_code, 404)
+            get.assert_not_called()
+
+    def _question_page(self):
+        return self.client.get(reverse('yaksh:start_quiz', kwargs={
+            'attempt_num': 1, 'module_id': self.module.id,
+            'questionpaper_id': self.question_paper.id,
+            'course_id': self.course.id
+        }))
+
+    def test_question_page_shows_run_for_python(self):
+        response = self._question_page()
+        self.assertEqual(response.context['question'], self.question)
+        self.assertContains(response, 'id="run_code"')
+        self.assertContains(response, self._run_url())
+        self.assertContains(response, 'id="run_stdin"')
+
+    def test_question_page_hides_run_for_other_languages(self):
+        self.paper.questions_order = '{0},{1}'.format(self.c_question.id,
+                                                      self.question.id)
+        self.paper.save()
+        response = self._question_page()
+        self.assertEqual(response.context['question'], self.c_question)
+        self.assertNotContains(response, 'id="run_code"')
+        self.assertNotContains(response, 'id="run_stdin"')
 
 
 class TestAddAsModerator(TestCase):
