@@ -17,6 +17,29 @@
         background: #FBC2C4 !important;
         color: #8a1f11 !important;
       }
+    #run_output {
+        max-height: 320px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin: 0;
+        padding: 12px 16px;
+        background: #f8f9fa;
+        font-size: 14px;
+      }
+    #run_output .run-error {
+        color: #b02a37;
+      }
+    .run-hint {
+        padding: 8px 16px;
+        border-top: 1px solid #dee2e6;
+        background: #eef4ff;
+        color: #1f4e99;
+      }
+    #run_stdin {
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 14px;
+      }
 </style>
 {% endblock %}
 
@@ -25,6 +48,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.8.1/min/dropzone.min.js"></script>
 <script src="{% static 'yaksh/js/requesthandler.js' %}"></script>
+<script src="{% static 'yaksh/js/run_code.js' %}"></script>
 <script src="{% static 'yaksh/js/codemirror/lib/codemirror.js' %}"></script>
 <script src="{% static 'yaksh/js/codemirror/mode/python/python.js' %}"></script>
 <script src="{% static 'yaksh/js/codemirror/mode/clike/clike.js' %}"></script>
@@ -336,6 +360,20 @@ question_type = "{{ question.type }}";
             <div>
               <textarea  autofocus name="answer" id="answer"></textarea>
             </div>
+
+            {% if question.language == "python" %}
+            <div class="mt-2">
+              <a href="#" id="toggle_stdin" aria-expanded="false"
+                 aria-controls="stdin_box">
+                <i class="fa fa-keyboard-o"></i>&nbsp;Input for Run (optional)
+              </a>
+              <div id="stdin_box" style="display: none">
+                <textarea id="run_stdin" class="form-control mt-2" rows="3"
+                          placeholder="Text your program reads with input(), one line per input() call"></textarea>
+              </div>
+            </div>
+            {% endif %}
+
           {% endif %}
 
           <!-- Submit Buttons -->
@@ -348,6 +386,15 @@ question_type = "{{ question.type }}";
             {% elif question.type == "arrange" %}
               <br><button class="btn btn-success" type="submit" name="check" id="check" onClick="return user_arranged_options();">Submit Answer</button>
             {% else %}
+             {% if question.type == "code" and question.language == "python" %}
+                <button class="btn btn-outline-primary" type="button" id="run_code"
+                        title="Run your code and see its output (Ctrl+Enter). Nothing is submitted."
+                        data-run-url="{% url 'yaksh:run_code' question.id paper.attempt_number module.id paper.question_paper.id course.id %}"
+                        data-result-url="{% url 'yaksh:get_run_result' 'RUN_UID' %}">
+                  <i class="fa fa-play"></i>&nbsp;Run
+                </button>
+              {% endif %}
+
               {% if question in paper.get_questions_unanswered or quiz.is_exercise %}
                 <button class="btn btn-success" type="submit" name="check" id="check" >
                   Check Answer
@@ -371,6 +418,23 @@ question_type = "{{ question.type }}";
               {% endif %}
             {% endif %}
           </div>
+          {% if question.type == "code" and question.language == "python" %}
+          <div class="card mt-3" id="run_panel" style="display: none">
+            <div class="card-header d-flex align-items-center py-2">
+              <strong>Output</strong>
+              <span id="run_status" class="small text-muted ml-3" role="status" aria-live="polite"></span>
+              <button type="button" class="close ml-auto" id="run_close" aria-label="Close output">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <pre id="run_output"></pre>
+            <div id="run_hint" class="run-hint small" style="display: none"></div>
+            <div class="card-footer small text-muted py-2">
+              Run only shows what your code prints; it does not check or save your answer.
+              Use <strong>Check Answer</strong> to submit.
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
