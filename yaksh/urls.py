@@ -26,6 +26,10 @@ urlpatterns = [
         '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.complete,
         name="complete"),
     url(r'^register/$', views.user_register, name="register"),
+    path('<int:q_id>/run/<int:attempt_num>/<int:module_id>/'
+         '<int:questionpaper_id>/<int:course_id>/', views.run_code,
+         name="run_code"),
+    path('run_result/<str:uid>/', views.get_run_result, name="get_run_result"),
     url(r'^(?P<q_id>\d+)/check/$', views.check, name="check"),
     url(r'^get_result/(?P<uid>\d+)/(?P<course_id>\d+)/(?P<module_id>\d+)/$',
         views.get_result),
