@@ -2435,8 +2435,11 @@ class AnswerPaper(models.Model):
         """Updates the percent gained by the student for this paper."""
         total_marks = self.question_paper.total_marks
         if self.marks_obtained is not None:
-            percent = self.marks_obtained/total_marks*100
-            self.percent = round(percent, 2)
+            if total_marks:
+                percent = self.marks_obtained/total_marks*100
+                self.percent = round(percent, 2)
+            else:
+                self.percent = 0.0
 
     def _update_passed(self):
         """
