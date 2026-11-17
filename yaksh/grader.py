@@ -120,7 +120,7 @@ class Grader(object):
         runner_class = CODE_RUNNERS.get(language)
         if runner_class is None:
             return {
-                'output': '', 'exitcode': None, 'timed_out': False,
+                'output': '', 'exit_code': None, 'timed_out': False,
                 'truncated': False, 'error_line': None,
                 'hint': 'Run is not available for {0} code'.format(language)
             }

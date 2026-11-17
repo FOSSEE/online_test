@@ -14,12 +14,13 @@ class PythonCodeRunnerTestCase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.in_dir)
 
-    def run_code(self, code, stdin='', file_paths=None, language='python'):
+    def run_code(self, code, stdin='', file_paths=None, language='python',
+                 show_lines=False):
         kwargs = {
             'metadata': {
                 'user_answer': code, 'stdin': stdin, 'language': language,
                 'file_paths': file_paths, 'partial_grading': False,
-                'run_only': True,
+                'run_only': True, 'show_lines': show_lines,
             },
             'test_case_data': [],
         }
@@ -212,6 +213,89 @@ class PythonCodeRunnerTestCase(unittest.TestCase):
         # Then
         self.assertEqual(result['output'], '')
         self.assertIn('not available', result['hint'])
+
+    def test_call_on_its_own_line_shows_value(self):
+        # Given
+        code = textwrap.dedent("""\
+            \"\"\"Adds two numbers.\"\"\"
+            def add(a, b):
+                return a + b
+
+            add(2, 3)
+            x = add(1, 1)
+            print('x is', x)
+            print(add(0, 0))
+        """)
+
+        # When
+        result = self.run_code(code, show_lines=True)
+
+        # Then: like the Python prompt, each line is shown before its
+        # output; definitions, the docstring and None are not shown
+        self.assertEqual(result['output'], textwrap.dedent("""\
+            >>> add(2, 3)
+            5
+            >>> x = add(1, 1)
+            >>> print('x is', x)
+            x is 2
+            >>> print(add(0, 0))
+            0
+        """))
+
+        self.assertEqual(result['exit_code'], 0)
+
+    def test_error_in_called_function(self):
+        # Given
+        code = textwrap.dedent("""\
+            def average(numbers):
+                return sum(numbers) / len(numbers)
+
+            average([])
+            average([2])
+        """)
+
+        # When
+        result = self.run_code(code, show_lines=True)
+
+        # Then: stops at the error; the loader's own frame is not shown
+        output = result['output']
+        self.assertTrue(output.startswith(
+            ">>> average([])\nTraceback (most recent call last):\n"))
+        self.assertIn('File "main.py", line 4, in <module>', output)
+        self.assertIn('File "main.py", line 2, in average', output)
+        self.assertIn('ZeroDivisionError', output)
+        self.assertNotIn('<string>', output)
+        self.assertNotIn('2.0', output)
+        self.assertEqual(result['error_line'], 2)
+
+    def test_calls_under_main_guard_show_values(self):
+        # Given
+        code = textwrap.dedent("""\
+            def area(r):
+                return 3 * r * r
+
+            if __name__ == "__main__":
+                area(2)
+        """)
+
+        # When
+        result = self.run_code(code, show_lines=True)
+
+        # Then: a block is shown with "... " lines, as at the prompt
+        self.assertEqual(result['output'],
+                         '>>> if __name__ == "__main__":\n'
+                         '...     area(2)\n'
+                         '12\n')
+
+    def test_programs_run_as_they_are(self):
+        # Given: a program for a stdio question (not show_lines)
+        code = "x = 2 + 3\nx\nprint('done')\n"
+
+        # When
+        result = self.run_code(code)
+
+        # Then: no ">>>" lines and no values, as with "python main.py"
+        self.assertEqual(result['output'], "done\n")
 
     def _chdir(self):
         in_dir = self.in_dir

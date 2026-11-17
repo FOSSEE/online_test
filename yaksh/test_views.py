@@ -31,6 +31,7 @@ from django.test import SimpleTestCase
 from yaksh.models import (
     User, Profile, Question, Quiz, QuestionPaper, AnswerPaper, Answer, Course,
     AssignmentUpload, McqTestCase, IntegerTestCase, StringTestCase,
+    StdIOBasedTestCase,
     FloatTestCase, FIXTURES_DIR_PATH, LearningModule, LearningUnit, Lesson,
     LessonFile, CourseStatus, dict_to_yaml, Post, Comment, Topic,
     TableOfContents, LessonQuizAnswer, SEB
@@ -1502,8 +1503,21 @@ class TestRunCode(TestCase):
         self.assertEqual(sent['metadata']['user_answer'], "print('hello')")
         self.assertEqual(sent['metadata']['stdin'], '5\n')
         self.assertEqual(sent['metadata']['language'], 'python')
+        self.assertTrue(sent['metadata']['show_lines'])
         # Nothing is recorded
         self.assertEqual(Answer.objects.count(), answers_before)
+
+    def test_run_is_not_with_show_lines_for_stdio_question(self):
+        StdIOBasedTestCase.objects.create(
+            question=self.question, type='stdiobasedtestcase',
+            expected_input='21', expected_output='42'
+        )
+        with patch('yaksh.views.submit_to_code_server') as submit:
+            self.client.post(self._run_url(), data={
+                'answer': "print(int(input()) * 2)", 'stdin': '21'
+            })
+        sent = json.loads(submit.call_args[0][2])
+        self.assertFalse(sent['metadata']['show_lines'])
 
     def test_run_requires_post(self):
         response = self.client.get(self._run_url())

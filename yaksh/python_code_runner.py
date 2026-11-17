@@ -28,12 +28,52 @@ _MAX_OUTPUT_BYTES = MAX_OUTPUT_CHARS * 4
 _ERROR_LINE_RE = re.compile(r'File "{0}", line (\d+)'.format(SCRIPT_NAME))
 _NEEDS_INPUT_HINT = ('Your program needs input, type it in the Input box and '
                      'run again.')
-
+_LOADER =  """\
+import ast, sys, traceback
+path = sys.argv[1]
+show_lines = sys.argv[2:] == ['show_lines']
+sys.argv= [path]
+try:
+    with open(path) as f:
+        source = f.read()
+    if show_lines:
+        tree = ast.parse(source, path)
+        body = []
+        for node in tree.body:
+            if isinstance(node, ast.Expr) and isinstance(node.value,
+                                                         ast.Constant):
+                continue
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef,
+                                     ast.ClassDef, ast.Import,
+                                     ast.ImportFrom)):
+                line = ast.get_source_segment(source, node)
+                echo = ast.Expr(ast.Call(
+                    ast.Name('print', ast.Load()),
+                    ))
+                echo = ast.Expr(ast.Call(
+                    ast.Name('print', ast.Load()),
+                    [ast.Constant('>>> ' + line.replace('\\n', '\\n... '))],
+                    []))
+                body.append(ast.copy_location(echo, node))
+            body.append(node)
+        code = compile(ast.fix_missing_locations(ast.Interactive(body=body)),
+                       path, 'single')
+    else:
+        code = compile(source, path, 'exec')
+    exec(code, {'__name__': '__main__', '__file__': path})
+except SystemExit:
+    raise
+except BaseException as exc:
+    tb = None if isinstance(exc, SyntaxError) else exc.__traceback__.tb_next
+    traceback.print_exception(type(exc), exc, tb)
+    sys.exit(1)
+"""
 
 class PythonCodeRunner(object):
     def __init__(self, metadata, timeout=None):
         self.user_answer = metadata.get('user_answer') or ''
         self.stdin = (metadata.get('stdin') or '')[:MAX_INPUT_CHARS]
+        self.show_lines = bool(metadata.get('show_lines'))
         self.file_paths = metadata.get('file_paths')
         self.timeout = timeout if timeout is not None else SERVER_TIMEOUT
         self.files = []
@@ -85,7 +125,9 @@ class PythonCodeRunner(object):
         # The working directory stays the user's directory, so that the
         # files attached to the questions can be opened and imported.
 
-        cmd = [sys.executable, '-u', '-E' , '-s', script_path]
+        cmd = [sys.executable, '-u', '-E' , '-s', '-c', _LOADER,  script_path]
+        if self.show_lines:
+            cmd.append('show_lines')
         proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT, preexec_fn=os.setpgrp
