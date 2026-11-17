@@ -1440,6 +1440,10 @@ class Question(models.Model):
         ]
     }
 
+    def has_stdio_test_cases(self):
+        return self.testcase_set.filter(type='stdiobasedtestcase').exists()
+
+
     def consolidate_answer_data(self, user_answer, user=None, regrade=False):
         question_data = {}
         metadata = {}

@@ -30,6 +30,9 @@
     #run_output .run-error {
         color: #b02a37;
       }
+    #run_output .run-prompt {
+        color: #6c757d;
+      }
     .run-hint {
         padding: 8px 16px;
         border-top: 1px solid #dee2e6;
@@ -362,16 +365,19 @@ question_type = "{{ question.type }}";
             </div>
 
             {% if question.language == "python" %}
+            {# Programs that read input (stdio questions) show the box open #}
+            {% with stdio=question.has_stdio_test_cases %}
             <div class="mt-2">
-              <a href="#" id="toggle_stdin" aria-expanded="false"
-                 aria-controls="stdin_box">
+              <a href="#" id="toggle_stdin" aria-controls="stdin_box"
+                 aria-expanded="{% if stdio %}true{% else %}false{% endif %}">
                 <i class="fa fa-keyboard-o"></i>&nbsp;Input for Run (optional)
               </a>
-              <div id="stdin_box" style="display: none">
+              <div id="stdin_box" {% if not stdio %}style="display: none"{% endif %}>
                 <textarea id="run_stdin" class="form-control mt-2" rows="3"
                           placeholder="Text your program reads with input(), one line per input() call"></textarea>
               </div>
             </div>
+            {% endwith %}
             {% endif %}
 
           {% endif %}

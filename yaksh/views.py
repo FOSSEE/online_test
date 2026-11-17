@@ -1112,7 +1112,10 @@ def run_code(request, q_id, attempt_num, module_id, questionpaper_id,
                                                        request.user))
     data['test_case_data'] = []
     stdin = request.POST.get('stdin', '')
-    data['metadata'].update(run_only=True, stdin=stdin)
+    # Programs read input and print (stdio test cases) and run as they are;
+    # for function questions, Run works like the Python prompt.
+    show_lines = not question.has_stdio_test_cases()
+    data['metadata'].update(run_only=True, stdin=stdin, show_lines=show_lines)
     uid = _run_uid(paper)
     url = '{0}:{1}'.format(SERVER_HOST_NAME, SERVER_POOL_PORT)
     try:
