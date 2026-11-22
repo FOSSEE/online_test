@@ -32,14 +32,18 @@ class QuestionListTestCase(TestCase):
         self.password = 'demo'
         self.user = User.objects.create_user(username=self.username,
                                              password=self.password)
+        self.otheruser = User.objects.create_user(username='other',
+                                             password=self.password)
         Question.objects.create(summary='test question 1', language='python',
                                 type='mcq', user=self.user)
         Question.objects.create(summary='test question 2', language='python',
                                 type='mcq', user=self.user)
+        Question.objects.create(summary='test question 3', language='python',
+                                type='mcq', user=self.otheruser)
 
     def test_get_all_questions_anonymous(self):
         # When
-        response = self.client.get(reverse('api:questions'))
+        response = self.client.get(reverse('api:question-list'))
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -49,7 +53,7 @@ class QuestionListTestCase(TestCase):
         serializer = QuestionSerializer(questions, many=True)
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('api:questions'))
+        response = self.client.get(reverse('api:question-list'))
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
@@ -60,7 +64,7 @@ class QuestionListTestCase(TestCase):
         data = {'summary': 'Add test question', 'user': self.user.id}
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.post(reverse('api:questions'), data)
+        response = self.client.post(reverse('api:question-list'), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(Question.objects.filter(
@@ -72,11 +76,13 @@ class QuestionListTestCase(TestCase):
                 'language': 'python', 'type': 'mcq', 'user': self.user.id}
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.post(reverse('api:questions'), data)
+        response = self.client.post(reverse('api:question-list'), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Question.objects.filter(
                         summary='Add test question').exists())
+        question = Question.objects.get(summary='Add test question')
+        self.assertTrue(self.user, question.user)
 
     def tearDown(self):
         self.client.logout()
@@ -108,7 +114,7 @@ class QuestionDetailTestCase(TestCase):
         # Given
         question = Question.objects.get(summary='test question')
         # When
-        response = self.client.get(reverse('api:question',
+        response = self.client.get(reverse('api:question-detail',
                                    kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -118,7 +124,7 @@ class QuestionDetailTestCase(TestCase):
         invalid_pk = 3243
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('api:question',
+        response = self.client.get(reverse('api:question-detail',
                                    kwargs={'pk': invalid_pk}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -129,7 +135,7 @@ class QuestionDetailTestCase(TestCase):
         serializer = QuestionSerializer(question)
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('api:question',
+        response = self.client.get(reverse('api:question-detail',
                                    kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -140,7 +146,7 @@ class QuestionDetailTestCase(TestCase):
         question = Question.objects.get(summary='Created by other user')
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('api:question',
+        response = self.client.get(reverse('api:question-detail',
                                    kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -151,7 +157,7 @@ class QuestionDetailTestCase(TestCase):
         data = {'summary': 'Edited test question', 'description': 'test',
                 'language': 'python', 'type': 'mcq', 'user': self.user.id}
         # When
-        response = self.client.put(reverse('api:question',
+        response = self.client.put(reverse('api:question-detail',
                                    kwargs={'pk': question.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -162,7 +168,7 @@ class QuestionDetailTestCase(TestCase):
         data = {'summary': 'Edited test question', 'user': self.user.id}
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.put(reverse('api:question',
+        response = self.client.put(reverse('api:question-detail',
                                    kwargs={'pk': question.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -174,7 +180,7 @@ class QuestionDetailTestCase(TestCase):
                 'language': 'python', 'type': 'mcq', 'user': self.user.id}
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.put(reverse('api:question',
+        response = self.client.put(reverse('api:question-detail',
                                    kwargs={'pk': question.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -185,7 +191,7 @@ class QuestionDetailTestCase(TestCase):
         # Given
         question = Question.objects.get(summary='delete question')
         # When
-        response = self.client.delete(reverse('api:question',
+        response = self.client.delete(reverse('api:question-detail',
                                       kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -195,7 +201,7 @@ class QuestionDetailTestCase(TestCase):
         question = Question.objects.get(summary='Created by other user')
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.delete(reverse('api:question',
+        response = self.client.delete(reverse('api:question-detail',
                                       kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -206,7 +212,7 @@ class QuestionDetailTestCase(TestCase):
         question = Question.objects.get(summary='delete question')
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.delete(reverse('api:question',
+        response = self.client.delete(reverse('api:question-detail',
                                       kwargs={'pk': question.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -307,6 +313,7 @@ class QuestionPaperListTestCase(TestCase):
         # Then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(QuestionPaper.objects.filter(quiz=self.quiz4).exists())
+        qp = QuestionPaper.objects.get(quiz=self.quiz4)
 
     def test_create_questionpaper_not_own_quiz(self):
         # Given
@@ -391,6 +398,19 @@ class QuestionPaperListTestCase(TestCase):
         questionpaper = QuestionPaper.objects.get(pk=questionpaper.id)
         self.assertEqual(questionpaper.quiz.id, self.quiz5.id)
 
+    def test_edit_questionpaper_not_own(self):
+        # Given
+        questionpaper = self.questionpaper2
+        data = {'quiz': self.quiz5.id,
+                'fixed_questions': [self.question1.id, self.question2.id],
+                'random_questions': [self.questionset.id]}
+        # When
+        self.client.login(username=self.otherusername, password=self.password)
+        response = self.client.put(reverse('api:questionpaper',
+                                   kwargs={'pk': questionpaper.id}), data)
+        # Then
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_delete_questionpaper(self):
         # Given
         questionpaper = self.questionpaper2
@@ -420,12 +440,15 @@ class QuizListTestCase(TestCase):
         self.password = 'demo'
         self.user = User.objects.create_user(username=self.username,
                                              password=self.password)
+        self.other = User.objects.create_user(username='other',
+                                             password=self.password)
         Quiz.objects.create(description='Test Quiz 1', creator=self.user)
         Quiz.objects.create(description='Test Quiz 2', creator=self.user)
+        Quiz.objects.create(description='Test Quiz 2', creator=self.other)
 
     def test_get_all_quizzes_anonymous(self):
         # When
-        response = self.client.get(reverse('api:quizzes'))
+        response = self.client.get(reverse('api:quiz-list'))
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -435,7 +458,7 @@ class QuizListTestCase(TestCase):
         serializer = QuizSerializer(quizzes, many=True)
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('api:quizzes'))
+        response = self.client.get(reverse('api:quiz-list'))
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
@@ -446,7 +469,7 @@ class QuizListTestCase(TestCase):
         data = {'creator': self.user.id}
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.post(reverse('api:quizzes'), data)
+        response = self.client.post(reverse('api:quiz-list'), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -455,7 +478,7 @@ class QuizListTestCase(TestCase):
         data = {'description': 'Added quiz', 'creator': self.user.id}
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.post(reverse('api:quizzes'), data)
+        response = self.client.post(reverse('api:quiz-list'), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Quiz.objects.filter(description='Added quiz').exists())
@@ -487,7 +510,8 @@ class QuizDetailTestCase(TestCase):
         # Given
         quiz = Quiz.objects.get(description='Quiz1')
         # When
-        response = self.client.get(reverse('api:quiz', kwargs={'pk': quiz.id}))
+        response = self.client.get(reverse('api:quiz-detail',
+                                           kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -496,7 +520,7 @@ class QuizDetailTestCase(TestCase):
         invalid_pk = 3242
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('api:quiz',
+        response = self.client.get(reverse('api:quiz-detail',
                                    kwargs={'pk': invalid_pk}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -507,7 +531,7 @@ class QuizDetailTestCase(TestCase):
         serializer = QuizSerializer(quiz)
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('api:quiz',
+        response = self.client.get(reverse('api:quiz-detail',
                                    kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -518,7 +542,8 @@ class QuizDetailTestCase(TestCase):
         quiz = Quiz.objects.get(description='Quiz3')
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.get(reverse('api:quiz', kwargs={'pk': quiz.id}))
+        response = self.client.get(reverse('api:quiz-detail',
+                                   kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -527,8 +552,8 @@ class QuizDetailTestCase(TestCase):
         quiz = Quiz.objects.get(description='Quiz1')
         data = {'description': 'Quiz1 Edited', 'creator': self.user.id}
         # When
-        response = self.client.put(reverse('api:quiz', kwargs={'pk': quiz.id}),
-                                   data)
+        response = self.client.put(reverse('api:quiz-detail',
+                                           kwargs={'pk': quiz.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -538,8 +563,8 @@ class QuizDetailTestCase(TestCase):
         data = {'creator': self.user.id}
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.put(reverse('api:quiz', kwargs={'pk': quiz.id}),
-                                   data)
+        response = self.client.put(reverse('api:quiz-detail',
+                                           kwargs={'pk': quiz.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -549,8 +574,8 @@ class QuizDetailTestCase(TestCase):
         data = {'description': 'Quiz2 edited', 'creator': self.user.id}
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.put(reverse('api:quiz', kwargs={'pk': quiz.id}),
-                                   data)
+        response = self.client.put(reverse('api:quiz-detail',
+                                           kwargs={'pk': quiz.id}), data)
         # Then
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         quiz = Quiz.objects.get(pk=quiz.id)
@@ -560,7 +585,7 @@ class QuizDetailTestCase(TestCase):
         # Given
         quiz = Quiz.objects.get(description='delete quiz')
         # When
-        response = self.client.delete(reverse('api:quiz',
+        response = self.client.delete(reverse('api:quiz-detail',
                                       kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -570,7 +595,7 @@ class QuizDetailTestCase(TestCase):
         quiz = Quiz.objects.get(description='Quiz3')
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.delete(reverse('api:quiz',
+        response = self.client.delete(reverse('api:quiz-detail',
                                       kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -581,7 +606,7 @@ class QuizDetailTestCase(TestCase):
         quiz = Quiz.objects.get(description='delete quiz')
         # When
         self.client.login(username=self.username, password=self.password)
-        response = self.client.delete(reverse('api:quiz',
+        response = self.client.delete(reverse('api:quiz-detail',
                                       kwargs={'pk': quiz.id}))
         # Then
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
