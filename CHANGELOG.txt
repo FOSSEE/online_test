@@ -1,3 +1,23 @@
+=== 0.32.0 (23-11-2026) ===
+
+* Add Safe Exam Browser (SEB) for quizzes, and show SEB start URL to
+  moderators on the quiz page.
+* Add a Run button for Python code questions to see the output of the code
+  before submitting.
+* Improve feedback for failed test cases for Python assertion based code
+  questions; add custom equal and almost equal check helper for tests.
+* Enable password reset for social-auth users
+* Increase user_ip length in AnswerPaper to support IPv6 addresses.
+* Show active courses on search, sorted by enrollment start time.
+* Fix ZeroDivisionError for paper with zero total marks and in percentage
+  calculation.
+* Fix missing question paper in get_next_unit, file upload paths and test case
+  ordering for MCQ/MCC questions with out test cases.
+* Pin numpy, pandas and pytz, add a constraints file for Python 3.9, and update
+  the timezone choices for the new pytz
+* Bump django 3.0.7 to 3.1.7
+* Requires Python 3.9.
+
 === 0.31.1 (24-03-2021) ===
 
 * Add support for QR code generation in local or S3 storage
