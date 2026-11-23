@@ -719,6 +719,7 @@ class AnswerValidatorTestCase(TestCase):
 
     @classmethod
     def setUpClass(self):
+        super().setUpClass()
         self.client = APIClient()
         self.username = 'demo'
         self.password = 'demo'
@@ -816,6 +817,7 @@ class AnswerValidatorTestCase(TestCase):
         self.server_thread.join()
         settings.code_evaluators['python']['standardtestcase'] = \
             "python_assertion_evaluator.PythonAssertionEvaluator"
+        super().tearDownClass()
 
     def test_correct_mcq(self):
         # Given
