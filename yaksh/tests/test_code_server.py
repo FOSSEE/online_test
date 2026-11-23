@@ -168,7 +168,7 @@ class TestCodeServer(unittest.TestCase):
             t.start()
 
         for t in threads:
-            if t.isAlive():
+            if t.is_alive():
                 t.join()
 
         # Then

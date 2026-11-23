@@ -1809,7 +1809,7 @@ class AnswerPaperTestCases(unittest.TestCase):
         self.assertEqual(next_question_id.summary, "Q2")
 
         # Given, wrong question id
-        current_question_id = 12
+        current_question_id = Question.objects.order_by('-id').first().id + 1
 
         # When
         next_question_id = self.answerpaper.next_question(current_question_id)

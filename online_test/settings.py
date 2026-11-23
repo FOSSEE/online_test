@@ -77,6 +77,10 @@ ROOT_URLCONF = 'online_test.urls'
 
 WSGI_APPLICATION = 'online_test.wsgi.application'
 
+# notifications-plugin (from pip) has no migrations; keep them here.
+MIGRATION_MODULES = {
+    'notifications_plugin': 'online_test.notifications_migrations',
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
