@@ -72,6 +72,9 @@ class RCodeEvaluator(BaseEvaluator):
             err = stderr + add_err
         if err:
             err = re.sub(r'.*?: ', '', err, count=1)
+            # R 4.x adds a "Calls: check -> stopifnot" line, which reveals
+            # the hidden test code; remove it like the "Error in...:" prefix.
+            err = re.sub(r'Calls: .*\n', '', err, flags=re.MULTILINE)
             err = prettify_exceptions('Error', err)
         return success, err, mark_fraction
 

@@ -63,8 +63,12 @@ class ScilabCodeEvaluator(BaseEvaluator):
                                 )
         proc, stdout, stderr = ret
 
-        # Get only the error.
-        stderr = self._get_error(stdout)
+        # Get only the error. Scilab 5 prints errors to stdout as "!--error";
+        # Scilab 6 and newer print them to stderr instead.
+        error = self._get_error(stdout)
+        if error is None and proc.returncode != 5 and stderr.strip():
+            error = stderr.strip()
+        stderr = error
         if stderr is None:
             # Clean output
             stdout = self._strip_output(stdout)
