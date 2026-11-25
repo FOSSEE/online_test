@@ -1,0 +1,130 @@
+name: Backend Test Suite
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  #Fails if a model changed without a migration being committed.
+  migrations:
+    name: Migrations check (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+
+      - name: Use pip < 24.1
+        run: python -m pip install "pip<24.1"
+
+      - name: Install requirements
+        run: pip install -r requirements/requirements-common.txt
+
+      - name: No missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+  tests:
+    name: Tests ${{ matrix.app }} (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9"]
+        # Each app runs in its own job, in parallel.
+        app: [yaksh, stats, grades, api]
+
+    services:
+      # Celery broker (CELERY_BROKER_URL = redis://localhost).
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+
+      # The evaluator tests run real code: g++ and Java are already on the
+      # runner; Scilab and R are not.
+      - name: Install Scilab and R
+        if: matrix.app == 'yaksh'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends scilab-cli r-base-core
+          g++ --version | head -1
+          javac -version
+          scilab-cli -version | head -1 || true
+          Rscript --version
+      
+      - name: Use pip < 24.1
+        run: python -m pip install "pip<24.1"
+      
+      - name: Install requirements
+        run: pip install -r requirements/requirements-common.txt
+
+      - name: Start Celery worker
+        run: celery multi start 1 -A online_test worker -B --logfile=celery-%n.log --pidfile=celery-%n.pid
+
+      - name: Run tests
+        run: |
+          coverage erase
+          coverage run -p manage.py test -v 2 ${{ matrix.app }}
+
+      - name: Stop celery worker
+        if: always()
+        run: celery multi stop 1 --pidfile=celery-%n.pid || true
+
+      - name: Coverage report
+        if: always()
+        run: |
+          coverage combine || true
+          coverage report || true
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: log-${{ matrix.app }}-py${{ matrix.python-version }}
+          path: |
+            celery-*.log
+          if-no-files-found: ignore
+
+  # Single required check for branch protection: passes only if every job
+  # above passed, so the matrix can change without editing repo settings.
+  all-test-pass:
+    name: All tests pass
+    if: always()
+    needs: [migrations, tests]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check job results
+        run: |
+          echo "migrations: ${{ needs.migrations.result }}"
+          echo "tests: ${{ needs.tests.result }}"
+          test "${{ needs.migrations.result }}" = "success"
+          test "${{ needs.tests.result }}" = "success"
+

@@ -218,8 +218,8 @@ Authors
 Copyright (c) 2011-2017 `FOSSEE <https://fossee.in>`_
 
 
-.. |Build Status| image:: https://travis-ci.org/FOSSEE/online_test.svg?branch=master
-   :target: https://travis-ci.org/FOSSEE/online_test
+.. |Build Status| image:: https://github.com/FOSSEE/online_test/actions/workflows/tests.yml/badge.svg?branch=master
+   :target: https://github.com/FOSSEE/online_test/actions/workflows/tests.yml
 .. |Documentation Status| image:: https://readthedocs.org/projects/yaksh/badge/?version=latest
    :target: http://yaksh.readthedocs.io/en/latest/?badge=latest
 .. |Version Status| image:: https://badge.fury.io/gh/fossee%2Fonline_test.svg
