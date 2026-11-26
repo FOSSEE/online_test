@@ -412,14 +412,34 @@ class QuestionForm(forms.ModelForm):
         exclude = ['user', 'active']
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    """File input that lets the user select several files.
+
+    Since Django 3.2.19 (CVE-2023-31047), ClearableFileInput raises
+    ValueError for attrs={'multiple': True}; a widget must opt in with
+    allow_multiple_selected.
+    """
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    """FileField that validates each of several uploaded files."""
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            return [single_file_clean(d, initial) for d in data]
+        return single_file_clean(data, initial)
+
+
 class FileForm(forms.Form):
-    file_field = forms.FileField(widget=forms.ClearableFileInput(
-                                attrs={
-                                    'multiple': True,
-                                    'class': 'custom-file-input'
-                                    }
-                                ),
-                                required=False)
+    file_field = MultipleFileField(
+        widget=MultipleFileInput(
+            attrs={'multiple': True, 'class': 'custom-file-input'}),
+        required=False)
 
 
 class RandomQuestionForm(forms.Form):
@@ -676,8 +696,8 @@ class LessonForm(forms.ModelForm):
 
 
 class LessonFileForm(forms.Form):
-    Lesson_files = forms.FileField(
-        widget=forms.ClearableFileInput(
+    Lesson_files = MultipleFileField(
+        widget=MultipleFileInput(
             attrs={'multiple': True, 'class': "custom-file-input"}),
         required=False)
 

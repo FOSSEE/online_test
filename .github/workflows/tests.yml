@@ -28,9 +28,6 @@ jobs:
           cache: pip
           cache-dependency-path: requirements/*.txt
 
-      - name: Use pip < 24.1
-        run: python -m pip install "pip<24.1"
-
       - name: Install requirements
         run: pip install -r requirements/requirements-common.txt
 
@@ -80,19 +77,26 @@ jobs:
           scilab-cli -version | head -1 || true
           Rscript --version
       
-      - name: Use pip < 24.1
-        run: python -m pip install "pip<24.1"
-      
       - name: Install requirements
         run: pip install -r requirements/requirements-common.txt
 
+      # The exact versions installed, to compare with (or regenerate)
+      # requirements/constraints-py39.txt.
+      - name: Show installed packages
+        if: matrix.app == 'yaksh'
+        run: pip freeze
+
       - name: Start Celery worker
-        run: celery multi start 1 -A online_test worker -B --logfile=celery-%n.log --pidfile=celery-%n.pid
+        run: celery multi start 1 -A online_test -B --logfile=celery-%n.log --pidfile=celery-%n.pid
 
       - name: Run tests
+        # If the tests hang, stop them after 20 minutes with SIGABRT;
+        # PYTHONFAULTHANDLER then prints where every thread is waiting.
+        env:
+          PYTHONFAULTHANDLER: "1"
         run: |
           coverage erase
-          coverage run -p manage.py test -v 2 ${{ matrix.app }}
+          timeout -s ABRT 20m coverage run -p manage.py test -v 2 ${{ matrix.app }}
 
       - name: Stop celery worker
         if: always()
