@@ -13,6 +13,7 @@ run as many servers as desired.
 # Standard library imports
 from __future__ import unicode_literals
 from argparse import ArgumentParser
+import asyncio
 import json
 from multiprocessing import Process, Queue, Manager
 import os
@@ -22,11 +23,13 @@ try:
 except ImportError:
     pass
 import sys
+import threading
 import time
 
 # Library imports
 import requests
-from tornado.ioloop import IOLoop
+from tornado.httpserver import HTTPServer
+from tornado.netutil import bind_sockets
 from tornado.web import Application, RequestHandler
 import urllib
 
@@ -88,13 +91,18 @@ class ServerPool(object):
             processes.append(p)
         self.processes = processes
         self.app = self._make_app()
+        # Bind the port now, so an error (port in use) shows up here and
+        # requests sent before run() wait in the socket's queue. The sockets
+        # are served by the event loop of the thread that calls run().
+        self._sockets = bind_sockets(int(self.my_port))
+        self._started = threading.Event()
+        self._loop = None
+        self._stop_event = None
 
     def _make_app(self):
-        app = Application([
+        return Application([
             (r"/.*", MainHandler, dict(server=self)),
         ])
-        app.listen(self.my_port)
-        return app
 
     def _make_process(self, pid):
         return Process(
@@ -153,14 +161,35 @@ class ServerPool(object):
         """
         # We start the code servers here to ensure they are run as nobody.
         self._start_code_servers()
-        IOLoop.current().start()
+        # Tornado 5+ runs on asyncio, which has one event loop per thread;
+        # tests call run() in a new thread. asyncio.run() gives this thread
+        # its own loop, as Tornado's documentation recommends.
+        asyncio.run(self._serve())
+
+    async def _serve(self):
+        self._loop = asyncio.get_running_loop()
+        self._stop_event = asyncio.Event()
+        http_server = HTTPServer(self.app)
+        http_server.add_sockets(self._sockets)
+        self._started.set()
+        try:
+            await self._stop_event.wait()
+        finally:
+            http_server.stop()
+            await http_server.close_all_connections()
 
     def stop(self):
         """Stop all the code server processes.
         """
         for proc in self.processes:
             proc.terminate()
-        IOLoop.current().stop()
+        if self._started.wait(timeout=10):
+            # stop() is usually called from another thread: ask the loop's
+            # own thread to finish _serve().
+            self._loop.call_soon_threadsafe(self._stop_event.set)
+        else:
+            for sock in self._sockets:
+                sock.close()
 
 
 class MainHandler(RequestHandler):

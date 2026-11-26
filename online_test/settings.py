@@ -241,6 +241,9 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TIMEZONE = 'Asia/Kolkata'
 CELERY_BROKER_URL = 'redis://localhost'
 CELERY_RESULT_BACKEND = 'django-db'
+# Celery 5.3+ warns unless this is set; True keeps Celery 4's behaviour of
+# retrying the broker connection when the worker starts.
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
