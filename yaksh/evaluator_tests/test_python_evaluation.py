@@ -476,6 +476,65 @@ class PythonAssertionEvaluationTestCases(EvaluatorBaseTest):
         self.assertIn('did not match the output', error['message'])
 
 
+    def test_correct_answer_with_nose_names(self):
+        # Test cases written for nose: names from "from nose.tools import *",
+        # an explicit nose import, and aliases unittest removed in 3.12.
+        user_answer = dedent("""\
+                             def add(a, b):
+                                return a + b
+                            """)
+        test_cases = [
+            'assert_equal(add(1, 2), 3)',
+            'from nose.tools import assert_equal\nassert_equal(add(2, 2), 4)',
+            'import nose.tools\nnose.tools.assert_true(add(1, 1) == 2)',
+            'assert_equals(add(0, 0), 0)',
+            'assert_not_equals(add(1, 1), 3)',
+            'ok_(add(1, 1) == 2)',
+            'eq_(add(2, 3), 5)',
+            'assert_almost_equal(add(0.1, 0.2), 0.3)',
+        ]
+        test_case_data = [{"test_case_type": "standardtestcase",
+                           "test_case": test_case, "weight": 0.0}
+                          for test_case in test_cases]
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
+                  }
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertTrue(result.get("success"), result.get("error"))
+
+    def test_incorrect_answer_with_nose_eq(self):
+        user_answer = dedent("""\
+                             def add(a, b):
+                                return a - b
+                            """)
+        test_case_data = [{"test_case_type": "standardtestcase",
+                           "test_case": 'eq_(add(1, 2), 3)',
+                           "weight": 0.0}]
+        kwargs = {'metadata': {
+                  'user_answer': user_answer,
+                  'file_paths': self.file_paths,
+                  'partial_grading': False,
+                  'language': 'python'},
+                  'test_case_data': test_case_data,
+                  }
+        # When
+        grader = Grader(self.in_dir)
+        result = grader.evaluate(kwargs)
+
+        # Then
+        self.assertFalse(result.get("success"))
+        error = result.get("error")[0]
+        self.assertEqual(error['exception'], 'AssertionError')
+        self.assertIn('did not match the output', error['message'])
+
 class PythonStdIOEvaluationTestCases(EvaluatorBaseTest):
     def setUp(self):
         self.tmp_file = os.path.join(tempfile.gettempdir(), "test.txt")

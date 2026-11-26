@@ -2,8 +2,6 @@ from __future__ import print_function
 import os
 import sys
 import shutil
-from distutils.dir_util import copy_tree
-from distutils.file_util import copy_file
 
 import invoke
 from invoke import task
@@ -125,12 +123,13 @@ def start(ctx, ports=SERVER_POOL_PORT, image=SRC_IMAGE_NAME, unsafe=False,
         create_dir(os.path.join(SCRIPT_DIR, 'yaksh_data', 'data'))
         create_dir(os.path.join(SCRIPT_DIR, 'yaksh_data', 'output'))
 
-        copy_tree(
+        shutil.copytree(
             os.path.join(SCRIPT_DIR, 'yaksh'),
-            os.path.join(SCRIPT_DIR, 'yaksh_data', 'yaksh')
+            os.path.join(SCRIPT_DIR, 'yaksh_data', 'yaksh'),
+            dirs_exist_ok=True
         )
 
-        copy_file(
+        shutil.copy2(
             os.path.join(SCRIPT_DIR, 'requirements',
                          'requirements-codeserver.txt'),
             os.path.join(SCRIPT_DIR, 'yaksh_data')
@@ -183,9 +182,10 @@ def stop(ctx, container=TARGET_CONTAINER_NAME, hide=True):
 def build(ctx):
     run_as_cmd = run_as(OS_NAME)
 
-    copy_tree(
+    shutil.copytree(
         os.path.join(SCRIPT_DIR, 'requirements'),
-        os.path.join(SCRIPT_DIR, 'docker', 'Files')
+        os.path.join(SCRIPT_DIR, 'docker', 'Files'),
+        dirs_exist_ok=True
     )
 
     base_build_cmd = "docker-compose build --no-cache"

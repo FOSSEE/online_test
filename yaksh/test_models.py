@@ -7,12 +7,13 @@ from yaksh.models import User, Profile, Question, Quiz, QuestionPaper,\
     StdIOBasedTestCase, FileUpload, McqTestCase, AssignmentUpload,\
     LearningModule, LearningUnit, Lesson, LessonFile, CourseStatus, \
     create_group, legend_display_types, Post, Comment, MicroManager, QRcode, \
-    QRcodeHandler, TestCaseOrder
+    QRcodeHandler, TestCaseOrder, safe_load_all_yaml
 from yaksh.code_server import (
     ServerPool, get_result as get_result_from_code_server
     )
 import json
-import ruamel.yaml as yaml
+import io
+import ruamel.yaml
 from datetime import datetime, timedelta
 from django.utils import timezone
 import pytz
@@ -29,6 +30,13 @@ import random
 from threading import Thread
 from collections import defaultdict
 from yaksh import settings
+
+
+def safe_dump_all_yaml(documents):
+    """Same as the old ruamel.yaml.safe_dump_all (removed in 0.18)."""
+    stream = io.StringIO()
+    ruamel.yaml.YAML(typ='safe', pure=True).dump_all(documents, stream)
+    return stream.getvalue()
 
 
 def setUpModule():
@@ -631,8 +639,8 @@ class QuestionTestCases(unittest.TestCase):
             "testcase": self.test_case_upload_data,
             "summary": "Yaml Demo 2"
             }]
-        self.yaml_questions_data = yaml.safe_dump_all(questions_data)
-        self.yaml_questions_data_with_missing_fields = yaml.safe_dump_all(
+        self.yaml_questions_data = safe_dump_all_yaml(questions_data)
+        self.yaml_questions_data_with_missing_fields = safe_dump_all_yaml(
                 questions_data_with_missing_fields
                 )
         self.bad_yaml_question_data = '''[{
@@ -646,7 +654,7 @@ class QuestionTestCases(unittest.TestCase):
                                         "test_case_args": "",
                                         "weight": 1.0
                                         }]
-        self.yaml_question_data_without_test_case_type = yaml.safe_dump_all([{
+        self.yaml_question_data_without_test_case_type = safe_dump_all_yaml([{
             "active": True, "points": 1.0, "description": "factorial of a no",
             "language": "Python", "type": "Code",
             "testcase": self.test_case_without_type,
@@ -692,7 +700,7 @@ class QuestionTestCases(unittest.TestCase):
         zip_file.extractall(tmp_path)
         test_case = self.question2.get_test_cases()
         with open("{0}/questions_dump.yaml".format(tmp_path), "r") as f:
-            questions = yaml.safe_load_all(f.read())
+            questions = safe_load_all_yaml(f.read())
             for q in questions:
                 self.assertEqual(self.question2.summary, q['summary'])
                 self.assertEqual(self.question2.language, q['language'])
@@ -1211,7 +1219,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         # test can_attempt_now(self):
         result = (False,
                   u'You cannot attempt demo quiz 1 quiz more than 1 time(s)')
-        self.assertEquals(
+        self.assertEqual(
             self.question_paper.can_attempt_now(self.user, self.course.id),
             result
         )
@@ -1258,7 +1266,7 @@ class QuestionPaperTestCases(unittest.TestCase):
         msg = u'You cannot start the next attempt ' +\
             'for this quiz before1.0 hour(s)'
         result = (False, msg)
-        self.assertEquals(
+        self.assertEqual(
             self.question_paper_with_time_between_attempts.can_attempt_now(
                 self.user, self.course.id), result
         )
@@ -2583,11 +2591,11 @@ class PostModelTestCases(unittest.TestCase):
 
     def test_get_last_comment(self):
         last_comment = self.post1.get_last_comment()
-        self.assertEquals(last_comment.description, 'Post 1 user3 comment 2')
+        self.assertEqual(last_comment.description, 'Post 1 user3 comment 2')
 
     def test_get_comments_count(self):
         count = self.post1.get_comments_count()
-        self.assertEquals(count, 2)
+        self.assertEqual(count, 2)
 
     def tearDown(self):
         self.user1.delete()

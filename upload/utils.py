@@ -9,7 +9,10 @@ import ruamel.yaml
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from yaksh.models import Lesson, Course, LearningUnit, LearningModule, Quiz, TableOfContents
+from yaksh.models import (
+    Lesson, Course, LearningUnit, LearningModule, Quiz, TableOfContents,
+    safe_load_all_yaml
+)
 
 _HEADER_RE = re.compile(r"^---\s*$")
 _BLANK_RE = re.compile(r"^\s*$")
@@ -375,7 +378,7 @@ def convert_md_to_dict(toc, user):
                     toc_file = lq_data.get('toc', None)
                     if toc_file:
                         with open(toc_file, 'r') as tocf:
-                            toc_data = ruamel.yaml.safe_load_all(tocf.read())
+                            toc_data = safe_load_all_yaml(tocf.read())
                             results = TableOfContents.objects.add_contents(
                                 course_data.get('id'), lesson_or_quiz_obj.id , user, toc_data)
                             for status, msg in results:
@@ -390,7 +393,7 @@ def convert_md_to_dict(toc, user):
                     toc_file = lq_data.get('toc', None)
                     if toc_file:
                         with open(toc_file, 'r') as tocf:
-                            toc_data = ruamel.yaml.safe_load_all(tocf.read())
+                            toc_data = safe_load_all_yaml(tocf.read())
                             results = TableOfContents.objects.add_contents(
                                 course_data.get('id'), lesson_or_quiz_obj.id , user, toc_data)
                             for status, msg in results:
