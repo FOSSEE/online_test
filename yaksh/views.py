@@ -27,7 +27,6 @@ import json
 from textwrap import dedent
 import zipfile
 import markdown
-import ruamel
 import pandas as pd
 from uuid import uuid4
 import requests
@@ -48,7 +47,7 @@ from yaksh.models import (
     get_model_class, FIXTURES_DIR_PATH, MOD_GROUP_NAME, Lesson, LessonFile,
     LearningUnit, LearningModule, CourseStatus, question_types, Post, Comment,
     Topic, TableOfContents, LessonQuizAnswer, MicroManager, QRcode,
-    QRcodeHandler, dict_to_yaml
+    QRcodeHandler, dict_to_yaml, safe_load_all_yaml
 )
 from stats.models import TrackLesson
 from yaksh.forms import (
@@ -1591,7 +1590,7 @@ def _get_questions_from_tags(question_tags, user, active=True, questions=None):
     search_tags = []
     search = None
     for tags in question_tags:
-        search_tags.extend(re.split('[; |, |\*|\n]', tags))
+        search_tags.extend(re.split(r'[; |, |\*|\n]', tags))
     if questions:
         search = questions.filter(tags__name__in=search_tags)
     else:
@@ -2883,7 +2882,7 @@ def edit_lesson(request, course_id=None, module_id=None, lesson_id=None):
                 )
             else:
                 try:
-                    toc_data = ruamel.yaml.safe_load_all(toc_file.read())
+                    toc_data = safe_load_all_yaml(toc_file.read())
                     results = TableOfContents.objects.add_contents(
                         course_id, lesson_id, user, toc_data)
                     for status, msg in results:

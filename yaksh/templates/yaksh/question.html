@@ -416,7 +416,7 @@ question_type = "{{ question.type }}";
               {% endif %}
             {% endif %}
 
-            {% if paper.question_paper.quiz.allow_skip and not paper.get_questions_unanswered|length_is:"1" %}
+            {% if paper.question_paper.quiz.allow_skip and paper.get_questions_unanswered|length != 1 %}
               {% if question in paper.get_questions_unanswered %}
               <button class="btn btn-primary"  onclick="call_skip('{{ URL_ROOT }}/exam/{{ question.id }}/skip/{{ paper.attempt_number }}/{{ module.id }}/{{ paper.question_paper.id }}/{{course.id}}/')" name="skip" id="skip">
                 Attempt Later <span class="fa fa-step-forward"></span>

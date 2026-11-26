@@ -13,16 +13,16 @@ urlpatterns = [
     re_path(r'^quizzes/$', views.quizlist_user, name='quizlist_user'),
     re_path(r'^results/$', views.results_user),
     re_path(r'^start/(?P<questionpaper_id>\d+)/(?P<module_id>\d+)/'
-        '(?P<course_id>\d+)/$', views.start, name="start_quiz"),
+        r'(?P<course_id>\d+)/$', views.start, name="start_quiz"),
     re_path(r'^start/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.start,
+        r'(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.start,
         name="start_quiz"),
     re_path(r'^quit/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.quit,
+        r'(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.quit,
         name="quit_quiz"),
     re_path(r'^complete/$', views.complete, name="complete"),
     re_path(r'^complete/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.complete,
+        r'(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$', views.complete,
         name="complete"),
     re_path(r'^register/$', views.user_register, name="register"),
     path('<int:q_id>/run/<int:attempt_num>/<int:module_id>/'
@@ -33,13 +33,13 @@ urlpatterns = [
     re_path(r'^get_result/(?P<uid>\d+)/(?P<course_id>\d+)/(?P<module_id>\d+)/$',
         views.get_result),
     re_path(r'^(?P<q_id>\d+)/check/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
+        r'(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
         views.check, name="check"),
     re_path(r'^(?P<q_id>\d+)/skip/(?P<attempt_num>\d+)/(?P<module_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
+        r'(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
         views.skip, name="skip_question"),
     re_path(r'^(?P<q_id>\d+)/skip/(?P<next_q>\d+)/(?P<attempt_num>\d+)/'
-        '(?P<module_id>\d+)/(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
+        r'(?P<module_id>\d+)/(?P<questionpaper_id>\d+)/(?P<course_id>\d+)/$',
         views.skip, name="skip_question"),
     re_path(r'^enroll_request/(?P<course_id>\d+)/$', views.enroll_request,
         name='enroll_request'),
@@ -48,18 +48,18 @@ urlpatterns = [
     re_path(r'^view_answerpaper/(?P<questionpaper_id>\d+)/(?P<course_id>\d+)$',
         views.view_answerpaper, name='view_answerpaper'),
     re_path(r'^download/user_assignment/(?P<question_id>\d+)/(?P<user_id>\d+)/'
-        '(?P<quiz_id>\d+)/(?P<course_id>\d+)$',
+        r'(?P<quiz_id>\d+)/(?P<course_id>\d+)$',
         views.download_assignment_file, name="download_user_assignment"),
     re_path(r'^show_lesson/(?P<lesson_id>\d+)/(?P<module_id>\d+)/'
-        '(?P<course_id>\d+)/$', views.show_lesson, name='show_lesson'),
+        r'(?P<course_id>\d+)/$', views.show_lesson, name='show_lesson'),
     re_path(r'^quizzes/view_module/(?P<module_id>\d+)/(?P<course_id>\d+)/$',
         views.view_module, name='view_module'),
     re_path(r'^next_unit/(?P<course_id>\d+)/(?P<module_id>\d+)/'
-        '(?P<current_unit_id>\d+)/$', views.get_next_unit, name='next_unit'),
+        r'(?P<current_unit_id>\d+)/$', views.get_next_unit, name='next_unit'),
     re_path(r'^next_unit/(?P<course_id>\d+)/(?P<module_id>\d+)/$',
         views.get_next_unit, name='next_unit'),
     re_path(r'^next_unit/(?P<course_id>\d+)/(?P<module_id>\d+)/'
-        '(?P<current_unit_id>\d+)/(?P<first_unit>\d+)/$',
+        r'(?P<current_unit_id>\d+)/(?P<first_unit>\d+)/$',
         views.get_next_unit, name='next_unit'),
     re_path(r'^course_modules/(?P<course_id>\d+)/$',
         views.course_modules, name='course_modules'),
@@ -93,10 +93,10 @@ urlpatterns = [
     re_path(r'^manage/gradeuser/(?P<quiz_id>\d+)/(?P<course_id>\d+)/$',
         views.grade_user, name="grade_user"),
     re_path(r'^manage/gradeuser/(?P<quiz_id>\d+)/(?P<user_id>\d+)/'
-        '(?P<course_id>\d+)/$',
+        r'(?P<course_id>\d+)/$',
         views.grade_user, name="grade_user"),
     re_path(r'^manage/gradeuser/(?P<quiz_id>\d+)/(?P<user_id>\d+)/'
-        '(?P<attempt_number>\d+)/(?P<course_id>\d+)/$',
+        r'(?P<attempt_number>\d+)/(?P<course_id>\d+)/$',
         views.grade_user, name="grade_user"),
     re_path(r'^manage/questions/$', views.show_all_questions,
         name="show_questions"),
@@ -106,19 +106,19 @@ urlpatterns = [
     re_path(r'^manage/monitor/(?P<quiz_id>\d+)/(?P<course_id>\d+)/(?P<attempt_number>\d+)/$',
         views.monitor, name="monitor"),
     re_path(r'^manage/user_data/(?P<user_id>\d+)/(?P<questionpaper_id>\d+)/'
-        '(?P<course_id>\d+)/$',
+        r'(?P<course_id>\d+)/$',
         views.user_data, name="user_data"),
     re_path(r'^manage/user_data/(?P<user_id>\d+)/$', views.user_data),
     re_path(r'^manage/designquestionpaper/(?P<course_id>\d+)/(?P<quiz_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/$',
+        r'(?P<questionpaper_id>\d+)/$',
         views.design_questionpaper, name='designquestionpaper'),
     re_path(r'^manage/designquestionpaper/(?P<course_id>\d+)/(?P<quiz_id>\d+)/$',
         views.design_questionpaper, name='designquestionpaper'),
     re_path(r'^manage/statistics/question/(?P<questionpaper_id>\d+)/'
-        '(?P<course_id>\d+)/$',
+        r'(?P<course_id>\d+)/$',
         views.show_statistics, name="show_statistics"),
     re_path(r'^manage/statistics/question/(?P<questionpaper_id>\d+)/'
-        '(?P<attempt_number>\d+)/(?P<course_id>\d+)/$',
+        r'(?P<attempt_number>\d+)/(?P<course_id>\d+)/$',
         views.show_statistics, name="show_statistics"),
     re_path(r'^manage/download_quiz_csv/(?P<course_id>\d+)/(?P<quiz_id>\d+)/$',
         views.download_quiz_csv, name="download_quiz_csv"),
@@ -176,24 +176,24 @@ urlpatterns = [
     re_path(r'^manage/upload_questions/$', views.show_all_questions,
         name="upload_questions"),
     re_path(r'^manage/regrade/paper/question/(?P<course_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<question_id>\d+)/$',
+        r'(?P<questionpaper_id>\d+)/(?P<question_id>\d+)/$',
         views.regrade, name='regrade_by_quiz'),
     re_path(r'^manage/regrade/user/(?P<course_id>\d+)/(?P<questionpaper_id>\d+)/'
-        '(?P<answerpaper_id>\d+)/$', views.regrade, name='regrade_by_user'),
+        r'(?P<answerpaper_id>\d+)/$', views.regrade, name='regrade_by_user'),
     re_path(r'^manage/regrade/user/question/(?P<course_id>\d+)/'
-        '(?P<questionpaper_id>\d+)/(?P<answerpaper_id>\d+)/'
-        '(?P<question_id>\d+)/', views.regrade, name='regrade_by_question'),
+        r'(?P<questionpaper_id>\d+)/(?P<answerpaper_id>\d+)/'
+        r'(?P<question_id>\d+)/', views.regrade, name='regrade_by_question'),
     re_path(r'^manage/(?P<mode>godmode|usermode)/(?P<quiz_id>\d+)/'
-        '(?P<course_id>\d+)/$', views.test_quiz, name="test_quiz"),
+        r'(?P<course_id>\d+)/$', views.test_quiz, name="test_quiz"),
     re_path(r'^manage/create_demo_course/$', views.create_demo_course,
         name="create_demo_course"),
     re_path(r'^manage/courses/download_course_csv/(?P<course_id>\d+)/$',
         views.download_course_csv, name="download_course_csv"),
     re_path(r'^manage/download/user_assignment/(?P<question_id>\d+)/'
-        '(?P<user_id>\d+)/(?P<quiz_id>\d+)/(?P<course_id>\d+)$',
+        r'(?P<user_id>\d+)/(?P<quiz_id>\d+)/(?P<course_id>\d+)$',
         views.download_assignment_file, name="download_user_assignment"),
     re_path(r'^manage/download/quiz_assignments/(?P<quiz_id>\d+)/'
-        '(?P<course_id>\d+)$', views.download_assignment_file,
+        r'(?P<course_id>\d+)$', views.download_assignment_file,
         name="download_quiz_assignment"),
     re_path(r'^manage/courses/download_yaml_template/',
         views.download_yaml_template, name="download_yaml_template"),
@@ -206,7 +206,7 @@ urlpatterns = [
     re_path(r'^manage/courses/designmodule/(?P<module_id>\d+)/$',
         views.design_module, name="design_module"),
     re_path(r'^manage/courses/designmodule/(?P<module_id>\d+)/'
-        '(?P<course_id>\d+)/$', views.design_module, name="design_module"),
+        r'(?P<course_id>\d+)/$', views.design_module, name="design_module"),
     re_path(r'^manage/courses/add_module/(?P<course_id>\d+)/$',
         views.add_module, name="add_module"),
     re_path(r'^manage/courses/add_module/(?P<course_id>\d+)/(?P<module_id>\d+)/$',
@@ -244,7 +244,7 @@ urlpatterns = [
     path('mark/notifications', views.mark_notification,
          name="mark_notification"),
     re_path(r'^manage/micromanager/allow_special_attempt/(?P<user_id>\d+)/'
-        '(?P<course_id>\d+)/(?P<quiz_id>\d+)/$',
+        r'(?P<course_id>\d+)/(?P<quiz_id>\d+)/$',
         views.allow_special_attempt, name='allow_special_attempt'),
     re_path(r'^micromanager/special_start/(?P<micromanager_id>\d+)/$',
         views.special_start, name='special_start'),

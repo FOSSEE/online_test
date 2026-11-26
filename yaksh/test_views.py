@@ -1759,7 +1759,7 @@ class TestToggleModerator(TestCase):
             reverse('yaksh:toggle_moderator')
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEquals(self.user.groups.all().count(), 0)
+        self.assertEqual(self.user.groups.all().count(), 0)
 
     def test_toggle_for_student(self):
         self.client.login(
@@ -2481,7 +2481,7 @@ class TestCourses(TestCase):
         self.assertEqual(cloned_qp.__str__(),
                          "Question Paper for demo quiz")
         self.assertTrue(expected_lesson_files.exists())
-        self.assertEquals(expected_lesson_files[0].file.read(), file_content)
+        self.assertEqual(expected_lesson_files[0].file.read(), file_content)
 
         self.all_files.delete()
 
@@ -7472,7 +7472,7 @@ class TestPost(TestCase):
             'course_id': self.course.id
         })
         response = self.client.get(url, follow=True)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'yaksh/course_forum.html')
 
     def test_view_course_forum_not_found_status_code(self):
@@ -7485,7 +7485,7 @@ class TestPost(TestCase):
             'course_id': 99
         })
         response = self.client.get(url)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
     def test_course_forum_url_resolves_course_forum_view(self):
         view = resolve('/exam/forum/course_forum/1/')
@@ -7548,7 +7548,7 @@ class TestPost(TestCase):
         })
         data = {}
         response = self.client.post(url, data)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_new_post_invalid_post_data_empty_fields(self):
         self.client.login(
@@ -7564,7 +7564,7 @@ class TestPost(TestCase):
             "description": '',
         }
         response = self.client.post(url, data)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertFalse(Post.objects.exists())
 
     def test_open_created_post_denies_anonymous_user(self):
@@ -7602,7 +7602,7 @@ class TestPost(TestCase):
         data = {}
         response = self.client.post(url, data)
         form = response.context.get('form')
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(form.errors)
 
     def test_hide_post(self):
@@ -7711,7 +7711,7 @@ class TestPostComment(TestCase):
             'uuid': self.post.uid
         })
         response = self.client.get(url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_post_comments_view_not_found_status_code(self):
         self.client.login(
@@ -7724,13 +7724,13 @@ class TestPostComment(TestCase):
             'uuid': '90da38ad-06fa-451b-9e82-5035e839da90'
         })
         response = self.client.get(url)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
     def test_post_comments_url_resolves_post_comments_view(self):
         view = resolve(
             '/exam/forum/1/post/90da38ad-06fa-451b-9e82-5035e839da89/'
         )
-        self.assertEquals(view.func, post_comments)
+        self.assertEqual(view.func, post_comments)
 
     def test_post_comments_view_contains_link_back_to_course_forum_view(self):
         self.client.login(
@@ -7764,7 +7764,7 @@ class TestPostComment(TestCase):
             'creator': self.user,
         }
         response = self.client.post(url, data)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         result = Comment.objects.filter(post_field__uid=self.post.uid)
         self.assertTrue(result.exists())
 
@@ -7780,7 +7780,7 @@ class TestPostComment(TestCase):
         })
         data = {}
         response = self.client.post(url, data)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_post_comments_post_data_empty_fields(self):
         self.client.login(
@@ -7798,7 +7798,7 @@ class TestPostComment(TestCase):
             'creator': '',
         }
         response = self.client.post(url, data)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertFalse(Comment.objects.exists())
 
     def test_contains_form(self):
@@ -7828,7 +7828,7 @@ class TestPostComment(TestCase):
         data = {}
         response = self.client.post(url, data)
         form = response.context.get('form')
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(form.errors)
 
     def test_hide_post_comment(self):
@@ -7847,7 +7847,7 @@ class TestPostComment(TestCase):
             'uuid': comment.uid
         })
         response = self.client.get(url)
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
 
     def tearDown(self):
         self.client.logout()
