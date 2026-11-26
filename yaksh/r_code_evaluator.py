@@ -60,7 +60,7 @@ class RCodeEvaluator(BaseEvaluator):
                                 )
         proc, stdout, stderr = ret
 
-        if stderr is '':
+        if stderr == '':
             # Clean output
             stdout = self._strip_output(stdout)
             if proc.returncode == 31:

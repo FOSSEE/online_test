@@ -10,6 +10,10 @@ from .error_messages import prettify_exceptions
 from .custom_assertion_message import (
         CustomAssertionError, check_equal, check_almost_equal
 )
+from . import nose_tools
+
+# Test cases may also import nose explicitly ("from nose.tools import ...").
+nose_tools.install_as_nose()
 
 
 class PythonAssertionEvaluator(BaseEvaluator):
@@ -88,7 +92,11 @@ class PythonAssertionEvaluator(BaseEvaluator):
         self.exec_scope["check_equal"] = _check_equal
         self.exec_scope["check_almost_equal"] = _check_almost_equal
         try:
-            exec("from nose.tools import *", self.exec_scope)
+            # Same names "from nose.tools import *" used to provide.
+            self.exec_scope.update(
+                (name, getattr(nose_tools, name))
+                for name in nose_tools.__all__
+            )
             _tests = compile(self.test_case, '<string>', mode='exec')
             exec(_tests, self.exec_scope)
         except TimeoutException:

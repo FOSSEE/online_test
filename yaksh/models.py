@@ -1,6 +1,7 @@
 # Python Imports
 from __future__ import unicode_literals, division
 from datetime import datetime, timedelta
+import io
 import uuid
 import json
 import random
@@ -150,6 +151,13 @@ def get_upload_dir(instance, filename):
     ))
 
 
+def safe_load_all_yaml(stream):
+    """Same as the old ruamel.yaml.safe_load_all (removed in ruamel.yaml
+    0.18): load every document in the stream with the pure-Python safe
+    loader."""
+    return ruamel.yaml.YAML(typ='safe', pure=True).load_all(stream)
+
+
 def dict_to_yaml(dictionary):
     for k, v in dictionary.items():
         if isinstance(v, list):
@@ -158,10 +166,13 @@ def dict_to_yaml(dictionary):
                     dict_to_yaml(nested_v)
         elif v and isinstance(v, str):
             dictionary[k] = PreservedScalarString(v)
-    return ruamel.yaml.round_trip_dump(dictionary, explicit_start=True,
-                                       default_flow_style=False,
-                                       allow_unicode=True,
-                                       )
+    yaml = ruamel.yaml.YAML()  # round-trip, as round_trip_dump was
+    yaml.explicit_start = True
+    yaml.default_flow_style = False
+    yaml.allow_unicode = True
+    stream = io.StringIO()
+    yaml.dump(dictionary, stream)
+    return stream.getvalue()
 
 
 def get_file_dir(instance, filename):
@@ -1512,7 +1523,7 @@ class Question(models.Model):
     def load_questions(self, questions_list, user, file_path=None,
                        files_list=None):
         try:
-            questions = ruamel.yaml.safe_load_all(questions_list)
+            questions = safe_load_all_yaml(questions_list)
             msg = "Questions Uploaded Successfully"
             for question in questions:
                 question['user'] = user

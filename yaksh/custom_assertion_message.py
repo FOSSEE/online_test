@@ -1,4 +1,4 @@
-from nose.tools import assert_almost_equal
+from .nose_tools import assert_almost_equal
 
 try:
     import numpy as np
