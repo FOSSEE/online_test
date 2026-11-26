@@ -621,7 +621,10 @@ class Quiz(models.Model):
         return False
 
     def _create_quiz_copy(self, user):
-        question_papers = self.questionpaper_set.all()
+        # list(): read the question papers now. A lazy queryset would run
+        # after self.id is changed below and find the new quiz's papers
+        # (none) instead of the original's.
+        question_papers = list(self.questionpaper_set.all())
         new_quiz = self
         new_quiz.id = None
         new_quiz.creator = user

@@ -256,7 +256,7 @@ REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 }
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -280,3 +280,10 @@ if USE_AWS:
     AWS_PUBLIC_MEDIA_LOCATION = 'media/public'
     DEFAULT_FILE_STORAGE = 'yaksh.storage_backends.PublicMediaStorage'
 
+# Django 3.2+: keep 32-bit integer ids for models without an explicit
+# primary key (as before 3.2), so no migrations change existing id columns.
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# django-taggit 3.0+ keeps Unicode characters in tag slugs by default.
+# Keep the old behaviour (strip them) so existing tag slugs stay the same.
+TAGGIT_STRIP_UNICODE_WHEN_SLUGIFYING = True
